@@ -45,3 +45,4 @@ In a secondary terminal, spin up the Hacker Dashboard:
 ```bash
 streamlit run dashboard.py
 ```
+![Generated Report](preview_dashboard.png)
