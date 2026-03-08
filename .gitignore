@@ -210,3 +210,11 @@ __marimo__/
 
 # Test files
 test/
+
+logs/
+myvenv/
+venv/
+# Custom Project Files
+myvenv/
+logs/
+.engine_status
