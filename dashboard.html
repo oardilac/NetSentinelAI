@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelAI</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #141b3a;
+            --bg-card: #1a2142;
+            --accent-cyan: #00ffc8;
+            --accent-purple: #9d4edd;
+            --accent-red: #ff006e;
+            --accent-orange: #fb5607;
+            --text-primary: #e0e7ff;
+            --text-secondary: #94a3b8;
+            --border-color: #2d3e6f;
+            --shadow-glow: rgba(0, 255, 200, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.15;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px var(--shadow-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan));
+            opacity: 0.03;
+            transform: skewX(-15deg);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.active {
+            background: var(--accent-cyan);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            font-family: 'JetBrains Mono', monospace;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(157, 78, 221, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Grid layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 25px var(--shadow-glow);
+            transform: translateY(-3px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .card-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* Stats cards */
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin: 10px 0;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .stat-change.up {
+            color: var(--accent-cyan);
+            background: rgba(0, 255, 200, 0.1);
+        }
+
+        /* Lists */
+        .metric-list {
+            list-style: none;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .metric-item:hover {
+            padding-left: 10px;
+            background: rgba(0, 255, 200, 0.05);
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-name {
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .metric-value {
+            color: var(--accent-cyan);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .metric-bar {
+            flex: 1;
+            margin: 0 15px;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        /* Alerts */
+        .alert {
+            background: rgba(255, 0, 110, 0.1);
+            border-left: 4px solid var(--accent-red);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-type {
+            color: var(--accent-red);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .alert-time {
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            margin-top: 5px;
+        }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* Loading spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sentinel AI ⚡</h1>
+            <p class="subtitle">Real-Time Traffic Analysis Dashboard</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Sistema Detenido</span>
+            </div>
+            <div class="controls">
+                <button id="btnStart" onclick="startMonitoring()">▶ Iniciar Monitoreo</button>
+                <button id="btnStop" onclick="stopMonitoring()" disabled>⏹ Detener</button>
+            </div>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="grid grid-4">
+            <div class="card stat-card">
+                <div class="stat-label">Total Paquetes</div>
+                <div class="stat-value" id="totalPackets">0</div>
+                <div class="stat-change up" id="packetsRate">0 pkt/s</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-label">Tráfico Total</div>
+                <div class="stat-value" id="totalTraffic">0 MB</div>
+                <div class="stat-change up" id="trafficRate">0 Mbps</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-label">IPs Únicas (Src)</div>
+                <div class="stat-value" id="uniqueIPs">0</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-label">Tiempo Activo</div>
+                <div class="stat-value" id="uptime">0s</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📊 Tráfico en Tiempo Real</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🔐 Distribución de Protocolos</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="protocolChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Lists -->
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🌐 Top IPs Origen</h3>
+                    <span class="card-badge" id="topSourcesCount">0</span>
+                </div>
+                <ul class="metric-list" id="topSources">
+                    <li class="empty-state">
+                        <div class="empty-state-icon">📡</div>
+                        <div>No hay datos disponibles</div>
+                    </li>
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🎯 Top Puertos Destino</h3>
+                    <span class="card-badge" id="topPortsCount">0</span>
+                </div>
+                <ul class="metric-list" id="topPorts">
+                    <li class="empty-state">
+                        <div class="empty-state-icon">🔌</div>
+                        <div>No hay datos disponibles</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚠️ Alertas de Seguridad</h3>
+                    <span class="card-badge" id="alertsCount">0</span>
+                </div>
+                <div id="alertsContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛡️</div>
+                        <div>Sin alertas detectadas</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🔍 Posibles Port Scans</h3>
+                    <span class="card-badge" id="scanCount">0</span>
+                </div>
+                <ul class="metric-list" id="portScans">
+                    <li class="empty-state">
+                        <div class="empty-state-icon">🔎</div>
+                        <div>No se detectaron escaneos</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- DNS & Additional -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🌍 Top Consultas DNS</h3>
+                    <span class="card-badge" id="dnsCount">0</span>
+                </div>
+                <ul class="metric-list" id="topDNS">
+                    <li class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div>No hay consultas DNS</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trafficChart, protocolChart;
+        let updateInterval;
+
+        // Initialize charts
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#2d3e6f';
+
+        const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+        trafficChart = new Chart(trafficCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Paquetes/seg',
+                    data: [],
+                    borderColor: '#00ffc8',
+                    backgroundColor: 'rgba(0, 255, 200, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#2d3e6f' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        const protocolCtx = document.getElementById('protocolChart').getContext('2d');
+        protocolChart = new Chart(protocolCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        '#00ffc8',
+                        '#9d4edd',
+                        '#ff006e',
+                        '#fb5607',
+                        '#3a86ff',
+                        '#06ffa5'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+
+        async function startMonitoring() {
+            try {
+                const response = await fetch('/api/start');
+                const data = await response.json();
+                
+                document.getElementById('btnStart').disabled = true;
+                document.getElementById('btnStop').disabled = false;
+                document.getElementById('statusDot').classList.add('active');
+                document.getElementById('statusText').textContent = 'Monitoreo Activo';
+                
+                // Start updating metrics
+                updateInterval = setInterval(updateMetrics, 2000);
+                updateMetrics();
+            } catch (error) {
+                console.error('Error starting monitor:', error);
+                alert('Error al iniciar el monitoreo. Asegúrate de ejecutar como Administrador.');
+            }
+        }
+
+        async function stopMonitoring() {
+            try {
+                const response = await fetch('/api/stop');
+                const data = await response.json();
+                
+                document.getElementById('btnStart').disabled = false;
+                document.getElementById('btnStop').disabled = true;
+                document.getElementById('statusDot').classList.remove('active');
+                document.getElementById('statusText').textContent = 'Sistema Detenido';
+                
+                clearInterval(updateInterval);
+            } catch (error) {
+                console.error('Error stopping monitor:', error);
+            }
+        }
+
+        async function updateMetrics() {
+            try {
+                const response = await fetch('/api/metrics');
+                const data = await response.json();
+                
+                updateOverview(data.overview);
+                updateTrafficChart(data.traffic_timeline);
+                updateProtocolChart(data.protocols);
+                updateTopSources(data.top_sources);
+                updateTopPorts(data.top_dst_ports);
+                updateAlerts(data.alerts);
+                updatePortScans(data.potential_port_scans);
+                updateDNS(data.top_dns_queries);
+                
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+            }
+        }
+
+        function updateOverview(overview) {
+            document.getElementById('totalPackets').textContent = overview.total_packets.toLocaleString();
+            document.getElementById('totalTraffic').textContent = overview.total_mb.toFixed(2) + ' MB';
+            document.getElementById('packetsRate').textContent = overview.packets_per_second.toFixed(1) + ' pkt/s';
+            document.getElementById('trafficRate').textContent = overview.mbps.toFixed(3) + ' Mbps';
+            document.getElementById('uptime').textContent = Math.floor(overview.uptime_seconds) + 's';
+        }
+
+        function updateTrafficChart(timeline) {
+            if (timeline.length === 0) return;
+            
+            const labels = timeline.map(t => new Date(t.timestamp * 1000).toLocaleTimeString());
+            const data = timeline.map(t => t.packets);
+            
+            trafficChart.data.labels = labels;
+            trafficChart.data.datasets[0].data = data;
+            trafficChart.update('none');
+        }
+
+        function updateProtocolChart(protocols) {
+            const stats = protocols.stats;
+            const labels = Object.keys(stats);
+            const data = Object.values(stats);
+            
+            if (labels.length === 0) return;
+            
+            protocolChart.data.labels = labels;
+            protocolChart.data.datasets[0].data = data;
+            protocolChart.update('none');
+        }
+
+        function updateTopSources(sources) {
+            const container = document.getElementById('topSources');
+            document.getElementById('topSourcesCount').textContent = sources.length;
+            
+            if (sources.length === 0) {
+                container.innerHTML = '<li class="empty-state"><div class="empty-state-icon">📡</div><div>No hay datos</div></li>';
+                return;
+            }
+            
+            const maxValue = Math.max(...sources.map(s => s.value));
+            
+            container.innerHTML = sources.map(item => `
+                <li class="metric-item">
+                    <span class="metric-name">${item.name}</span>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: ${(item.value / maxValue) * 100}%"></div>
+                    </div>
+                    <span class="metric-value">${item.value.toLocaleString()}</span>
+                </li>
+            `).join('');
+        }
+
+        function updateTopPorts(ports) {
+            const container = document.getElementById('topPorts');
+            document.getElementById('topPortsCount').textContent = ports.length;
+            
+            if (ports.length === 0) {
+                container.innerHTML = '<li class="empty-state"><div class="empty-state-icon">🔌</div><div>No hay datos</div></li>';
+                return;
+            }
+            
+            const maxValue = Math.max(...ports.map(p => p.value));
+            const portNames = {
+                '80': 'HTTP', '443': 'HTTPS', '53': 'DNS', '22': 'SSH',
+                '21': 'FTP', '25': 'SMTP', '3389': 'RDP', '445': 'SMB'
+            };
+            
+            container.innerHTML = ports.map(item => `
+                <li class="metric-item">
+                    <span class="metric-name">${item.name} ${portNames[item.name] ? '(' + portNames[item.name] + ')' : ''}</span>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: ${(item.value / maxValue) * 100}%"></div>
+                    </div>
+                    <span class="metric-value">${item.value.toLocaleString()}</span>
+                </li>
+            `).join('');
+        }
+
+        function updateAlerts(alerts) {
+            const container = document.getElementById('alertsContainer');
+            document.getElementById('alertsCount').textContent = alerts.length;
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛡️</div><div>Sin alertas</div></div>';
+                return;
+            }
+            
+            container.innerHTML = alerts.slice().reverse().map(alert => `
+                <div class="alert">
+                    <div class="alert-type">${alert.type.replace('_', ' ')}</div>
+                    <div>${alert.description}</div>
+                    <div><strong>Origen:</strong> ${alert.source}</div>
+                    <div class="alert-time">${new Date(alert.timestamp).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function updatePortScans(scans) {
+            const container = document.getElementById('portScans');
+            document.getElementById('scanCount').textContent = scans.length;
+            
+            if (scans.length === 0) {
+                container.innerHTML = '<li class="empty-state"><div class="empty-state-icon">🔎</div><div>No se detectaron escaneos</div></li>';
+                return;
+            }
+            
+            container.innerHTML = scans.map(scan => `
+                <li class="metric-item">
+                    <span class="metric-name">${scan.ip}</span>
+                    <span class="metric-value">${scan.ports_scanned} puertos</span>
+                </li>
+            `).join('');
+        }
+
+        function updateDNS(queries) {
+            const container = document.getElementById('topDNS');
+            document.getElementById('dnsCount').textContent = queries.length;
+            
+            if (queries.length === 0) {
+                container.innerHTML = '<li class="empty-state"><div class="empty-state-icon">📝</div><div>No hay consultas</div></li>';
+                return;
+            }
+            
+            const maxValue = Math.max(...queries.map(q => q.value));
+            
+            container.innerHTML = queries.map(item => `
+                <li class="metric-item">
+                    <span class="metric-name">${item.name}</span>
+                    <div class="metric-bar">
+                        <div class="metric-bar-fill" style="width: ${(item.value / maxValue) * 100}%"></div>
+                    </div>
+                    <span class="metric-value">${item.value}</span>
+                </li>
+            `).join('');
+        }
+
+        // Check initial status
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                if (data.running) {
+                    document.getElementById('btnStart').disabled = true;
+                    document.getElementById('btnStop').disabled = false;
+                    document.getElementById('statusDot').classList.add('active');
+                    document.getElementById('statusText').textContent = 'Monitoreo Activo';
+                    updateInterval = setInterval(updateMetrics, 2000);
+                    updateMetrics();
+                }
+            } catch (error) {
+                console.error('Error checking status:', error);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,3 @@
-﻿scapy
-streamlit
-pandas
-scikit-learn
-numpy
-plotly
-Pillow
+scapy>=2.5.0
+flask>=3.0.0
+flask-cors>=4.0.0
