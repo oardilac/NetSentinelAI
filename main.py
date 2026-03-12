@@ -61,5 +61,5 @@ if __name__ == "__main__":
     # Change the Interface to Wi-Fi or Ethernet based on how you connect the internet
     # In Windows run this in a Powershell: Get-NetAdapter | Where-Object Status -eq "Up"
     # For Mac/Linux "eth0" or "en0" is usually correct
-    ids = PySentryIDS(interface="Wi-Fi")
+    ids = PySentryIDS(interface="en0")
     ids.start()
