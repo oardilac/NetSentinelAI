@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Dashboard Web Server - Servidor Flask para el dashboard de métricas
+Dashboard Web Server
+====================
+Flask server that serves the SentinelAI dashboard and exposes
+REST endpoints for real-time metrics, flow data, and feature vectors.
 """
 
-from flask import Flask, render_template, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from threading import Thread
 import network_monitor
@@ -13,76 +16,99 @@ import sys
 app = Flask(__name__)
 CORS(app)
 
-# Variable global para el sniffer
 sniffer_thread = None
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    """Página principal del dashboard"""
-    return send_from_directory('./', 'dashboard.html')
+    """Serve the main dashboard page."""
+    return send_from_directory("./", "dashboard.html")
 
-@app.route('/api/metrics')
+
+@app.route("/api/metrics")
 def get_metrics():
-    """API endpoint para obtener métricas en tiempo real"""
+    """Full metrics snapshot (overview + flows + alerts)."""
     sniffer = network_monitor.get_sniffer()
-    metrics = sniffer.metrics.get_metrics()
-    return jsonify(metrics)
+    return jsonify(sniffer.metrics.get_metrics())
 
-@app.route('/api/start')
+
+@app.route("/api/flows")
+def get_flows():
+    """Active flows with their computed feature vectors."""
+    sniffer = network_monitor.get_sniffer()
+    flows = sniffer.metrics.flow_table.get_active_flows()
+    return jsonify({
+        "active_count": sniffer.metrics.flow_table.get_active_count(),
+        "flows": sorted(flows, key=lambda f: f.get("total_bytes", 0), reverse=True)[:100],
+    })
+
+
+@app.route("/api/features")
+def get_features():
+    """Raw feature vectors for all active flows (ML pipeline ready)."""
+    sniffer = network_monitor.get_sniffer()
+    return jsonify(sniffer.metrics.get_flow_features())
+
+
+@app.route("/api/start")
 def start_monitoring():
-    """Inicia el monitoreo de red"""
+    """Start the network sniffer."""
     global sniffer_thread
-    
+
     if sniffer_thread is not None and sniffer_thread.is_alive():
-        return jsonify({'status': 'already_running', 'message': 'Monitoreo ya está activo'})
-    
+        return jsonify({"status": "already_running", "message": "Monitoring is already active"})
+
     sniffer = network_monitor.get_sniffer()
     sniffer_thread = Thread(target=sniffer.start_sniffing, daemon=True)
     sniffer_thread.start()
-    
-    return jsonify({'status': 'started', 'message': 'Monitoreo iniciado'})
 
-@app.route('/api/stop')
+    return jsonify({"status": "started", "message": "Monitoring started"})
+
+
+@app.route("/api/stop")
 def stop_monitoring():
-    """Detiene el monitoreo de red"""
+    """Stop the network sniffer."""
     sniffer = network_monitor.get_sniffer()
     sniffer.stop_sniffing()
-    return jsonify({'status': 'stopped', 'message': 'Monitoreo detenido'})
+    return jsonify({"status": "stopped", "message": "Monitoring stopped"})
 
-@app.route('/api/status')
+
+@app.route("/api/status")
 def get_status():
-    """Retorna el estado del monitoreo"""
+    """Current sniffer status."""
     sniffer = network_monitor.get_sniffer()
     return jsonify({
-        'running': sniffer.running,
-        'interface': sniffer.interface or 'all'
+        "running": sniffer.running,
+        "interface": sniffer.interface or "all",
     })
 
+
 def main():
-    """Inicia el servidor web"""
-    print("="*70)
-    print("NETWORK SECURITY MONITOR - Dashboard Web")
-    print("="*70)
+    print("=" * 70)
+    print("  SENTINEL AI — Network Security Monitor (Flow-Based)")
+    print("=" * 70)
     print()
-    print("IMPORTANTE: Ejecutar como Administrador en Windows")
-    print("            (Click derecho -> Ejecutar como administrador)")
+    print("  IMPORTANT: Run as Administrator on Windows")
+    print("             (Right-click -> Run as administrator)")
     print()
-    print("El dashboard estará disponible en: http://localhost:5050")
+    print("  Dashboard available at: http://localhost:5050")
+    print("  API endpoints:")
+    print("    GET /api/metrics   — full metrics snapshot")
+    print("    GET /api/flows     — active flows with features")
+    print("    GET /api/features  — raw ML feature vectors")
     print()
-    print("Presiona Ctrl+C para detener el servidor")
-    print("="*70)
+    print("  Press Ctrl+C to stop the server")
+    print("=" * 70)
     print()
-    
-    # Crear directorio static si no existe
-    if not os.path.exists('static'):
-        os.makedirs('static')
-    
-    # Iniciar servidor
+
+    os.makedirs("static", exist_ok=True)
+
     try:
-        app.run(host='0.0.0.0', port=5050, debug=False, threaded=True)
+        app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)
     except KeyboardInterrupt:
-        print("\n[!] Servidor detenido")
+        print("\n[!] Server stopped")
         sys.exit(0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

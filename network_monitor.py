@@ -1,329 +1,404 @@
 #!/usr/bin/env python3
 """
-Network Security Monitor - Sniffer con métricas de seguridad
-Optimizado para Windows y monitoreo de amenazas en red privada
+Network Security Monitor — Flow-Based Engine
+=============================================
+Captures live traffic via Scapy, groups packets into flows by 5-tuple
+(src_ip, dst_ip, src_port, dst_port, protocol), and extracts incremental
+features without any database or packet cache.
 
-Recolecta métricas útiles para detectar:
-- Port scanning
-- Tráfico inusual
-- Conexiones sospechosas
-- Anomalías de protocolo
-- Patrones de DDoS
+Detected threat patterns:
+  - Port scanning  (many SYN without ACK)
+  - Data exfiltration  (high total bytes in a single flow)
+  - DDoS indicators  (burst of flows from single source)
+  - Protocol anomalies  (unusual flag combinations)
 """
 
-from scapy.all import sniff, IP, TCP, UDP, DNS, DNSQR, ICMP, ARP, Raw
-from datetime import datetime, timedelta
+from scapy.all import sniff, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, DNSQR
+from datetime import datetime
 from collections import defaultdict, deque
 from threading import Thread, Lock
-import json
 import time
-import socket
+
+from flow_extractor import FlowTable
+
+
+# ──────────────────────────────────────────────
+# Alert Engine
+# ──────────────────────────────────────────────
+
+class AlertEngine:
+    """Simple rule-based alerting on flow features."""
+
+    def __init__(self, max_alerts: int = 200):
+        self._alerts: deque = deque(maxlen=max_alerts)
+        self._lock = Lock()
+        self._seen: set = set()  # deduplicate alerts per flow_key
+
+        # Thresholds
+        self.scan_syn_threshold = 15
+        self.exfil_byte_threshold = 50_000_000  # 50 MB
+        self.rst_threshold = 50
+
+    def evaluate_flow(self, flow_summary: dict) -> None:
+        """Check a single flow summary against alert rules."""
+        fk = flow_summary.get("flow_key", "")
+        src = flow_summary.get("src_ip", "?")
+
+        # Rule 1: Port scan — many SYN, few ACK
+        syn = flow_summary.get("syn_count", 0)
+        ack = flow_summary.get("ack_count", 0)
+        alert_key = f"scan:{fk}"
+        if syn > self.scan_syn_threshold and ack < syn * 0.3 and alert_key not in self._seen:
+            self._add("port_scan", src,
+                       f"High SYN/ACK ratio ({syn} SYN, {ack} ACK) — possible port scan")
+            self._seen.add(alert_key)
+
+        # Rule 2: Data exfiltration
+        total_bytes = flow_summary.get("total_bytes", 0)
+        alert_key = f"exfil:{fk}"
+        if total_bytes > self.exfil_byte_threshold and alert_key not in self._seen:
+            mb = round(total_bytes / (1024 * 1024), 1)
+            self._add("data_exfiltration", src,
+                       f"Flow transferred {mb} MB — possible data exfiltration")
+            self._seen.add(alert_key)
+
+        # Rule 3: RST flood
+        rst = flow_summary.get("rst_count", 0)
+        alert_key = f"rst:{fk}"
+        if rst > self.rst_threshold and alert_key not in self._seen:
+            self._add("rst_flood", src,
+                       f"{rst} RST packets in flow — connection abuse or scan")
+            self._seen.add(alert_key)
+
+        # Trim seen set so it doesn't grow forever
+        if len(self._seen) > 10_000:
+            self._seen.clear()
+
+    def _add(self, alert_type: str, source: str, description: str) -> None:
+        with self._lock:
+            self._alerts.append({
+                "timestamp": datetime.now().isoformat(),
+                "type": alert_type,
+                "source": source,
+                "description": description,
+            })
+
+    def get_alerts(self, limit: int = 30) -> list:
+        with self._lock:
+            return list(self._alerts)[-limit:]
+
+
+# ──────────────────────────────────────────────
+# Security Metrics Collector (flow-based)
+# ──────────────────────────────────────────────
 
 class SecurityMetricsCollector:
-    """Recolecta métricas de seguridad del tráfico de red"""
-    
-    def __init__(self, time_window=300):  # 5 minutos por defecto
-        self.time_window = time_window  # Ventana de tiempo en segundos
+    """Aggregates per-packet counters and delegates flow tracking to FlowTable."""
+
+    def __init__(self, flow_timeout: float = 120.0):
         self.lock = Lock()
-        
-        # Métricas generales
-        self.total_packets = 0
-        self.total_bytes = 0
         self.start_time = datetime.now()
-        
-        # Métricas por protocolo
-        self.protocol_stats = defaultdict(int)
-        self.protocol_bytes = defaultdict(int)
-        
-        # Tracking de IPs
-        self.src_ips = defaultdict(int)  # Contador de paquetes por IP origen
-        self.dst_ips = defaultdict(int)  # Contador de paquetes por IP destino
-        self.ip_pairs = defaultdict(int)  # Pares de comunicación
-        
-        # Detección de port scanning
-        self.port_scan_detector = defaultdict(set)  # IP -> set de puertos destino
-        self.port_scan_time = defaultdict(lambda: deque())  # IP -> timestamps
-        
-        # Tracking de puertos
-        self.dst_ports = defaultdict(int)  # Puertos destino más comunes
-        self.src_ports = defaultdict(int)  # Puertos origen más comunes
-        
+
+        # Flow engine
+        self.flow_table = FlowTable(max_flows=100_000, timeout=flow_timeout)
+        self.alert_engine = AlertEngine()
+
+        # Global counters
+        self.total_packets: int = 0
+        self.total_bytes: int = 0
+
+        # Protocol counters
+        self.protocol_stats: dict = defaultdict(int)
+        self.protocol_bytes: dict = defaultdict(int)
+
+        # IP tracking
+        self.src_ips: dict = defaultdict(int)
+        self.dst_ips: dict = defaultdict(int)
+        self.top_talkers_bytes: dict = defaultdict(int)
+
+        # Port tracking
+        self.dst_ports: dict = defaultdict(int)
+
         # DNS queries
-        self.dns_queries = defaultdict(int)  # Dominios consultados
-        
-        # Flags TCP sospechosas
-        self.tcp_flags = defaultdict(int)  # SYN, FIN, RST, etc.
-        
-        # Conexiones fallidas
-        self.failed_connections = defaultdict(int)  # RST packets por IP
-        
-        # Tráfico por tiempo (para gráficas)
-        self.traffic_timeline = deque(maxlen=1000)  # Últimos 1000 segundos
-        self.current_second = int(time.time())
-        self.second_packets = 0
-        self.second_bytes = 0
-        
-        # Top talkers (IPs más activas)
-        self.top_talkers_bytes = defaultdict(int)
-        
-        # ICMP tracking (posible reconnaissance)
-        self.icmp_types = defaultdict(int)
-        
-        # ARP tracking (posible ARP spoofing)
-        self.arp_requests = defaultdict(int)
-        
-        # Alertas/anomalías detectadas
-        self.alerts = deque(maxlen=100)  # Últimas 100 alertas
-        
-    def process_packet(self, packet):
-        """Procesa cada paquete y actualiza métricas"""
+        self.dns_queries: dict = defaultdict(int)
+
+        # TCP flag totals
+        self.tcp_flags: dict = defaultdict(int)
+
+        # Traffic timeline (packets per second)
+        self.traffic_timeline: deque = deque(maxlen=1000)
+        self._cur_second: int = int(time.time())
+        self._sec_pkts: int = 0
+        self._sec_bytes: int = 0
+
+        # Port scan detector (IP -> set of dst ports)
+        self.port_scan_detector: dict = defaultdict(set)
+
+        # Periodic expiry counter
+        self._last_expiry: float = time.time()
+
+    # ── packet handler ──
+
+    def process_packet(self, packet) -> None:
+        """Called by Scapy for every captured packet."""
         with self.lock:
-            current_time = datetime.now()
-            current_second = int(time.time())
-            
-            # Actualizar timeline si cambió el segundo
-            if current_second != self.current_second:
+            now = time.time()
+            cur_sec = int(now)
+
+            # Timeline tick
+            if cur_sec != self._cur_second:
                 self.traffic_timeline.append({
-                    'timestamp': self.current_second,
-                    'packets': self.second_packets,
-                    'bytes': self.second_bytes
+                    "timestamp": self._cur_second,
+                    "packets": self._sec_pkts,
+                    "bytes": self._sec_bytes,
                 })
-                self.current_second = current_second
-                self.second_packets = 0
-                self.second_bytes = 0
-            
-            # Métricas generales
+                self._cur_second = cur_sec
+                self._sec_pkts = 0
+                self._sec_bytes = 0
+
+            pkt_len = len(packet)
             self.total_packets += 1
-            packet_size = len(packet)
-            self.total_bytes += packet_size
-            self.second_packets += 1
-            self.second_bytes += packet_size
-            
-            # Procesar según tipo de paquete
+            self.total_bytes += pkt_len
+            self._sec_pkts += 1
+            self._sec_bytes += pkt_len
+
+            # ── IP layer ──
             if packet.haslayer(IP):
-                self._process_ip_packet(packet, current_time)
-            
+                self._process_ip(packet, pkt_len, now)
+            elif packet.haslayer(IPv6):
+                self._process_ipv6(packet, pkt_len, now)
+
+            # ARP (no flow, just counter)
             if packet.haslayer(ARP):
-                self._process_arp_packet(packet, current_time)
-    
-    def _process_ip_packet(self, packet, current_time):
-        """Procesa paquetes IP"""
-        ip_layer = packet[IP]
-        src_ip = ip_layer.src
-        dst_ip = ip_layer.dst
-        packet_size = len(packet)
-        
-        # Tracking de IPs
+                self.protocol_stats["ARP"] += 1
+                self.protocol_bytes["ARP"] += pkt_len
+
+            # Periodic flow expiry (every 10 s)
+            if now - self._last_expiry > 10.0:
+                self._expire_and_alert(now)
+                self._last_expiry = now
+
+    def _process_ip(self, packet, pkt_len: int, now: float) -> None:
+        ip = packet[IP]
+        src_ip, dst_ip = ip.src, ip.dst
         self.src_ips[src_ip] += 1
         self.dst_ips[dst_ip] += 1
-        self.ip_pairs[f"{src_ip}->{dst_ip}"] += 1
-        self.top_talkers_bytes[src_ip] += packet_size
-        
-        # Procesar TCP
+        self.top_talkers_bytes[src_ip] += pkt_len
+
+        tcp_flags = None
+
         if packet.haslayer(TCP):
-            self._process_tcp_packet(packet, src_ip, dst_ip, current_time)
-        
-        # Procesar UDP
+            layer = packet[TCP]
+            proto = "TCP"
+            src_port, dst_port = layer.sport, layer.dport
+            tcp_flags = int(layer.flags)
+            self._count_flags(tcp_flags, src_ip, dst_port)
+            self.protocol_stats["TCP"] += 1
+            self.protocol_bytes["TCP"] += pkt_len
+            self.dst_ports[dst_port] += 1
+
         elif packet.haslayer(UDP):
-            self._process_udp_packet(packet, src_ip, dst_ip)
-        
-        # Procesar ICMP
+            layer = packet[UDP]
+            proto = "UDP"
+            src_port, dst_port = layer.sport, layer.dport
+            self.protocol_stats["UDP"] += 1
+            self.protocol_bytes["UDP"] += pkt_len
+            self.dst_ports[dst_port] += 1
+
+            # DNS sub-protocol
+            if packet.haslayer(DNS) and packet.haslayer(DNSQR):
+                if packet[DNS].qr == 0:
+                    qname = packet[DNSQR].qname.decode("utf-8", errors="ignore").rstrip(".")
+                    self.dns_queries[qname] += 1
+                    self.protocol_stats["DNS"] += 1
+
         elif packet.haslayer(ICMP):
-            self._process_icmp_packet(packet, src_ip)
-    
-    def _process_tcp_packet(self, packet, src_ip, dst_ip, current_time):
-        """Procesa paquetes TCP"""
-        tcp_layer = packet[TCP]
-        src_port = tcp_layer.sport
-        dst_port = tcp_layer.dport
-        flags = tcp_layer.flags
-        
-        self.protocol_stats['TCP'] += 1
-        self.protocol_bytes['TCP'] += len(packet)
-        self.dst_ports[dst_port] += 1
-        self.src_ports[src_port] += 1
-        
-        # Analizar flags TCP
-        flag_str = str(flags)
-        self.tcp_flags[flag_str] += 1
-        
-        # Detectar posible port scanning
-        if flags & 0x02:  # SYN flag
+            proto = "ICMP"
+            src_port, dst_port = 0, 0
+            self.protocol_stats["ICMP"] += 1
+            self.protocol_bytes["ICMP"] += pkt_len
+        else:
+            proto = "OTHER"
+            src_port, dst_port = 0, 0
+            self.protocol_stats["OTHER"] += 1
+            self.protocol_bytes["OTHER"] += pkt_len
+
+        # Register in flow table
+        self.flow_table.update(
+            src_ip=src_ip,
+            dst_ip=dst_ip,
+            src_port=src_port,
+            dst_port=dst_port,
+            protocol=proto,
+            pkt_len=pkt_len,
+            timestamp=now,
+            tcp_flags=tcp_flags,
+        )
+
+    def _process_ipv6(self, packet, pkt_len: int, now: float) -> None:
+        ip6 = packet[IPv6]
+        src_ip, dst_ip = ip6.src, ip6.dst
+        self.src_ips[src_ip] += 1
+        self.dst_ips[dst_ip] += 1
+        self.top_talkers_bytes[src_ip] += pkt_len
+
+        tcp_flags = None
+
+        if packet.haslayer(TCP):
+            layer = packet[TCP]
+            proto = "TCP"
+            src_port, dst_port = layer.sport, layer.dport
+            tcp_flags = int(layer.flags)
+            self._count_flags(tcp_flags, src_ip, dst_port)
+            self.protocol_stats["TCP"] += 1
+            self.protocol_bytes["TCP"] += pkt_len
+            self.dst_ports[dst_port] += 1
+        elif packet.haslayer(UDP):
+            layer = packet[UDP]
+            proto = "UDP"
+            src_port, dst_port = layer.sport, layer.dport
+            self.protocol_stats["UDP"] += 1
+            self.protocol_bytes["UDP"] += pkt_len
+            self.dst_ports[dst_port] += 1
+        else:
+            proto = "OTHER"
+            src_port, dst_port = 0, 0
+            self.protocol_stats["OTHER"] += 1
+            self.protocol_bytes["OTHER"] += pkt_len
+
+        self.flow_table.update(
+            src_ip=src_ip,
+            dst_ip=dst_ip,
+            src_port=src_port,
+            dst_port=dst_port,
+            protocol=proto,
+            pkt_len=pkt_len,
+            timestamp=now,
+            tcp_flags=tcp_flags,
+        )
+
+    def _count_flags(self, flags: int, src_ip: str, dst_port: int) -> None:
+        if flags & 0x02:
+            self.tcp_flags["SYN"] += 1
             self.port_scan_detector[src_ip].add(dst_port)
-            self.port_scan_time[src_ip].append(current_time)
-            
-            # Alerta si una IP escanea muchos puertos en poco tiempo
-            if len(self.port_scan_detector[src_ip]) > 20:  # Más de 20 puertos diferentes
-                recent_scans = [t for t in self.port_scan_time[src_ip] 
-                               if (current_time - t).seconds < 60]
-                if len(recent_scans) > 15:  # 15+ en 1 minuto
-                    self._add_alert('port_scan', src_ip, 
-                                   f'Posible port scan: {len(self.port_scan_detector[src_ip])} puertos')
-        
-        # Detectar conexiones fallidas (RST)
-        if flags & 0x04:  # RST flag
-            self.failed_connections[f"{src_ip}->{dst_ip}:{dst_port}"] += 1
-        
-        # Detectar HTTP
-        if dst_port in [80, 8080] or src_port in [80, 8080]:
-            self.protocol_stats['HTTP'] += 1
-            self.protocol_bytes['HTTP'] += len(packet)
-        
-        # Detectar HTTPS
-        if dst_port == 443 or src_port == 443:
-            self.protocol_stats['HTTPS'] += 1
-            self.protocol_bytes['HTTPS'] += len(packet)
-    
-    def _process_udp_packet(self, packet, src_ip, dst_ip):
-        """Procesa paquetes UDP"""
-        udp_layer = packet[UDP]
-        dst_port = udp_layer.dport
-        src_port = udp_layer.sport
-        
-        self.protocol_stats['UDP'] += 1
-        self.protocol_bytes['UDP'] += len(packet)
-        self.dst_ports[dst_port] += 1
-        self.src_ports[src_port] += 1
-        
-        # Procesar DNS
-        if packet.haslayer(DNS) and packet.haslayer(DNSQR):
-            dns_layer = packet[DNS]
-            if dns_layer.qr == 0:  # Query
-                query_name = packet[DNSQR].qname.decode('utf-8', errors='ignore').rstrip('.')
-                self.dns_queries[query_name] += 1
-                self.protocol_stats['DNS'] += 1
-                self.protocol_bytes['DNS'] += len(packet)
-    
-    def _process_icmp_packet(self, packet, src_ip):
-        """Procesa paquetes ICMP"""
-        icmp_layer = packet[ICMP]
-        icmp_type = icmp_layer.type
-        
-        self.protocol_stats['ICMP'] += 1
-        self.protocol_bytes['ICMP'] += len(packet)
-        self.icmp_types[f"Type_{icmp_type}"] += 1
-        
-        # Detectar exceso de ICMP (posible reconocimiento)
-        if self.icmp_types[f"Type_{icmp_type}"] > 100:
-            if self.icmp_types[f"Type_{icmp_type}"] % 50 == 0:  # Alerta cada 50
-                self._add_alert('icmp_flood', src_ip, 
-                               f'Alto volumen de ICMP Type {icmp_type}')
-    
-    def _process_arp_packet(self, packet, current_time):
-        """Procesa paquetes ARP"""
-        arp_layer = packet[ARP]
-        src_ip = arp_layer.psrc
-        
-        self.protocol_stats['ARP'] += 1
-        self.protocol_bytes['ARP'] += len(packet)
-        
-        if arp_layer.op == 1:  # ARP request
-            self.arp_requests[src_ip] += 1
-            
-            # Detectar exceso de ARP requests (posible ARP scan)
-            if self.arp_requests[src_ip] > 50:
-                if self.arp_requests[src_ip] % 25 == 0:
-                    self._add_alert('arp_scan', src_ip, 
-                                   f'Exceso de ARP requests: {self.arp_requests[src_ip]}')
-    
-    def _add_alert(self, alert_type, source, description):
-        """Añade una alerta al sistema"""
-        alert = {
-            'timestamp': datetime.now().isoformat(),
-            'type': alert_type,
-            'source': source,
-            'description': description
-        }
-        self.alerts.append(alert)
-    
-    def get_metrics(self):
-        """Retorna todas las métricas en formato JSON-friendly"""
+        if flags & 0x10:
+            self.tcp_flags["ACK"] += 1
+        if flags & 0x01:
+            self.tcp_flags["FIN"] += 1
+        if flags & 0x04:
+            self.tcp_flags["RST"] += 1
+        if flags & 0x08:
+            self.tcp_flags["PSH"] += 1
+        if flags & 0x20:
+            self.tcp_flags["URG"] += 1
+
+    def _expire_and_alert(self, now: float) -> None:
+        """Expire old flows and run alert rules on them."""
+        expired = self.flow_table.expire_old_flows(now)
+        for flow_rec in expired:
+            self.alert_engine.evaluate_flow(flow_rec.to_summary())
+
+    # ── metrics API ──
+
+    def get_metrics(self) -> dict:
+        """Return all metrics as a JSON-serialisable dict."""
         with self.lock:
             uptime = (datetime.now() - self.start_time).total_seconds()
-            packets_per_sec = self.total_packets / max(uptime, 1)
-            bytes_per_sec = self.total_bytes / max(uptime, 1)
-            
+            pps = self.total_packets / max(uptime, 1)
+            bps = self.total_bytes / max(uptime, 1)
+
+            active_flows = self.flow_table.get_active_flows()
+
             return {
-                'overview': {
-                    'total_packets': self.total_packets,
-                    'total_bytes': self.total_bytes,
-                    'total_mb': round(self.total_bytes / (1024*1024), 2),
-                    'uptime_seconds': round(uptime, 1),
-                    'packets_per_second': round(packets_per_sec, 2),
-                    'bytes_per_second': round(bytes_per_sec, 2),
-                    'mbps': round((bytes_per_sec * 8) / (1024*1024), 3)
+                "overview": {
+                    "total_packets": self.total_packets,
+                    "total_bytes": self.total_bytes,
+                    "total_mb": round(self.total_bytes / (1024 * 1024), 2),
+                    "uptime_seconds": round(uptime, 1),
+                    "packets_per_second": round(pps, 2),
+                    "bytes_per_second": round(bps, 2),
+                    "mbps": round((bps * 8) / (1024 * 1024), 3),
+                    "active_flows": self.flow_table.get_active_count(),
                 },
-                'protocols': {
-                    'stats': dict(self.protocol_stats),
-                    'bytes': dict(self.protocol_bytes)
+                "protocols": {
+                    "stats": dict(self.protocol_stats),
+                    "bytes": dict(self.protocol_bytes),
                 },
-                'top_sources': self._get_top_n(self.src_ips, 10),
-                'top_destinations': self._get_top_n(self.dst_ips, 10),
-                'top_talkers': self._get_top_n(self.top_talkers_bytes, 10),
-                'top_dst_ports': self._get_top_n(self.dst_ports, 10),
-                'top_dns_queries': self._get_top_n(self.dns_queries, 10),
-                'tcp_flags': dict(self.tcp_flags),
-                'icmp_types': dict(self.icmp_types),
-                'potential_port_scans': self._get_port_scan_suspects(),
-                'failed_connections': self._get_top_n(self.failed_connections, 10),
-                'traffic_timeline': list(self.traffic_timeline)[-60:],  # Último minuto
-                'alerts': list(self.alerts)[-20:],  # Últimas 20 alertas
-                'timestamp': datetime.now().isoformat()
+                "tcp_flags": dict(self.tcp_flags),
+                "top_sources": self._top_n(self.src_ips, 10),
+                "top_destinations": self._top_n(self.dst_ips, 10),
+                "top_talkers": self._top_n(self.top_talkers_bytes, 10),
+                "top_dst_ports": self._top_n(self.dst_ports, 10),
+                "top_dns_queries": self._top_n(self.dns_queries, 10),
+                "potential_port_scans": self._scan_suspects(),
+                "traffic_timeline": list(self.traffic_timeline)[-60:],
+                "alerts": self.alert_engine.get_alerts(30),
+                "active_flows": sorted(
+                    active_flows,
+                    key=lambda f: f.get("total_bytes", 0),
+                    reverse=True,
+                )[:50],
+                "expired_flows": self.flow_table.get_expired_flows(30),
+                "timestamp": datetime.now().isoformat(),
             }
-    
-    def _get_top_n(self, data_dict, n=10):
-        """Retorna los top N elementos de un diccionario"""
-        sorted_items = sorted(data_dict.items(), key=lambda x: x[1], reverse=True)
-        return [{'name': k, 'value': v} for k, v in sorted_items[:n]]
-    
-    def _get_port_scan_suspects(self):
-        """Identifica IPs que pueden estar haciendo port scanning"""
+
+    def get_flow_features(self) -> list:
+        """Return raw feature vectors for every active flow (ML pipeline)."""
+        return self.flow_table.get_all_feature_vectors()
+
+    @staticmethod
+    def _top_n(d: dict, n: int = 10) -> list:
+        items = sorted(d.items(), key=lambda x: x[1], reverse=True)
+        return [{"name": k, "value": v} for k, v in items[:n]]
+
+    def _scan_suspects(self) -> list:
         suspects = []
         for ip, ports in self.port_scan_detector.items():
-            if len(ports) >= 10:  # 10 o más puertos diferentes
+            if len(ports) >= 10:
                 suspects.append({
-                    'ip': ip,
-                    'ports_scanned': len(ports),
-                    'ports': list(ports)[:20]  # Primeros 20 puertos
+                    "ip": ip,
+                    "ports_scanned": len(ports),
+                    "ports": sorted(list(ports))[:20],
                 })
-        return sorted(suspects, key=lambda x: x['ports_scanned'], reverse=True)[:10]
+        return sorted(suspects, key=lambda x: x["ports_scanned"], reverse=True)[:10]
 
+
+# ──────────────────────────────────────────────
+# Network Sniffer wrapper
+# ──────────────────────────────────────────────
 
 class NetworkSniffer:
-    """Sniffer de red con servidor de métricas"""
-    
+    """Wraps Scapy sniff with a SecurityMetricsCollector."""
+
     def __init__(self, interface=None):
         self.interface = interface
         self.metrics = SecurityMetricsCollector()
         self.running = False
-    
+
     def start_sniffing(self):
-        """Inicia la captura de paquetes"""
         self.running = True
-        print(f"[+] Iniciando captura en interfaz: {self.interface or 'Todas'}")
-        
+        print(f"[+] Starting capture on interface: {self.interface or 'All'}")
         try:
             sniff(
                 iface=self.interface,
                 prn=self.metrics.process_packet,
                 store=False,
-                stop_filter=lambda x: not self.running
+                stop_filter=lambda _: not self.running,
             )
         except Exception as e:
-            print(f"[ERROR] Error en captura: {e}")
+            print(f"[ERROR] Capture error: {e}")
             self.running = False
-    
+
     def stop_sniffing(self):
-        """Detiene la captura"""
         self.running = False
 
 
-# Instancia global del sniffer
-sniffer = None
+# Global singleton
+_sniffer = None
 
-def get_sniffer():
-    """Retorna la instancia global del sniffer"""
-    global sniffer
-    if sniffer is None:
-        sniffer = NetworkSniffer()
-    return sniffer
+
+def get_sniffer() -> NetworkSniffer:
+    global _sniffer
+    if _sniffer is None:
+        _sniffer = NetworkSniffer()
+    return _sniffer
