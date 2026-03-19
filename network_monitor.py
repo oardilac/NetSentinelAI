@@ -4,7 +4,8 @@ Network Security Monitor — Flow-Based Engine
 =============================================
 Captures live traffic via Scapy, groups packets into flows by 5-tuple
 (src_ip, dst_ip, src_port, dst_port, protocol), and extracts incremental
-features without any database or packet cache.
+features.  Expired and active flows are **persisted to a local SQLite
+database** so that data survives program interruptions and restarts.
 
 Detected threat patterns:
   - Port scanning  (many SYN without ACK)
@@ -20,6 +21,7 @@ from threading import Thread, Lock
 import time
 
 from flow_extractor import FlowTable
+from database import SentinelDB
 
 
 # ──────────────────────────────────────────────
@@ -93,11 +95,21 @@ class AlertEngine:
 # ──────────────────────────────────────────────
 
 class SecurityMetricsCollector:
-    """Aggregates per-packet counters and delegates flow tracking to FlowTable."""
+    """Aggregates per-packet counters and delegates flow tracking to FlowTable.
 
-    def __init__(self, flow_timeout: float = 120.0):
+    Accepts a SentinelDB instance to persist expired flows and alerts
+    automatically.  On shutdown, call ``flush_to_db()`` to save any
+    remaining active flows before the program exits.
+    """
+
+    def __init__(self, db: SentinelDB, flow_timeout: float = 120.0):
         self.lock = Lock()
         self.start_time = datetime.now()
+
+        # Database persistence
+        self.db = db
+        self.session_id: int = db.create_session()
+        self._flows_saved: int = 0  # running counter of flows persisted
 
         # Flow engine
         self.flow_table = FlowTable(max_flows=100_000, timeout=flow_timeout)
@@ -293,10 +305,15 @@ class SecurityMetricsCollector:
             self.tcp_flags["URG"] += 1
 
     def _expire_and_alert(self, now: float) -> None:
-        """Expire old flows and run alert rules on them."""
+        """Expire old flows, run alert rules, and persist to the database."""
         expired = self.flow_table.expire_old_flows(now)
-        for flow_rec in expired:
-            self.alert_engine.evaluate_flow(flow_rec.to_summary())
+        if expired:
+            summaries = [rec.to_summary() for rec in expired]
+            for s in summaries:
+                self.alert_engine.evaluate_flow(s)
+            # Persist expired flows to SQLite
+            saved = self.db.save_flows(summaries, session_id=self.session_id)
+            self._flows_saved += saved
 
     # ── metrics API ──
 
@@ -319,6 +336,8 @@ class SecurityMetricsCollector:
                     "bytes_per_second": round(bps, 2),
                     "mbps": round((bps * 8) / (1024 * 1024), 3),
                     "active_flows": self.flow_table.get_active_count(),
+                    "flows_saved_to_db": self._flows_saved,
+                    "session_id": self.session_id,
                 },
                 "protocols": {
                     "stats": dict(self.protocol_stats),
@@ -346,6 +365,30 @@ class SecurityMetricsCollector:
         """Return raw feature vectors for every active flow (ML pipeline)."""
         return self.flow_table.get_all_feature_vectors()
 
+    def flush_to_db(self) -> None:
+        """Save ALL remaining active flows and alerts to the database.
+
+        Call this before shutdown to ensure nothing is lost.
+        """
+        with self.lock:
+            # Save active flows
+            active = self.flow_table.get_active_flows()
+            saved = self.db.save_flows(active, session_id=self.session_id)
+            self._flows_saved += saved
+
+            # Save alerts
+            alerts = self.alert_engine.get_alerts(200)
+            self.db.save_alerts(alerts, session_id=self.session_id)
+
+            # Close the session with final counters
+            self.db.close_session(
+                session_id=self.session_id,
+                total_packets=self.total_packets,
+                total_bytes=self.total_bytes,
+                flow_count=self._flows_saved,
+            )
+            print(f"[DB] Flushed {saved} active flows + {len(alerts)} alerts to database")
+
     @staticmethod
     def _top_n(d: dict, n: int = 10) -> list:
         items = sorted(d.items(), key=lambda x: x[1], reverse=True)
@@ -368,11 +411,12 @@ class SecurityMetricsCollector:
 # ──────────────────────────────────────────────
 
 class NetworkSniffer:
-    """Wraps Scapy sniff with a SecurityMetricsCollector."""
+    """Wraps Scapy sniff with a SecurityMetricsCollector and SQLite persistence."""
 
-    def __init__(self, interface=None):
+    def __init__(self, interface=None, db: SentinelDB = None):
         self.interface = interface
-        self.metrics = SecurityMetricsCollector()
+        self.db = db or SentinelDB()
+        self.metrics = SecurityMetricsCollector(db=self.db)
         self.running = False
 
     def start_sniffing(self):
@@ -392,13 +436,32 @@ class NetworkSniffer:
     def stop_sniffing(self):
         self.running = False
 
+    def shutdown(self):
+        """Stop sniffing and flush all data to the database."""
+        self.running = False
+        print("[*] Flushing data to database before shutdown...")
+        try:
+            self.metrics.flush_to_db()
+        except Exception as e:
+            print(f"[ERROR] Flush failed: {e}")
+
 
 # Global singleton
 _sniffer = None
+_db = None
+
+
+def get_db() -> SentinelDB:
+    """Return the global database instance."""
+    global _db
+    if _db is None:
+        _db = SentinelDB()
+    return _db
 
 
 def get_sniffer() -> NetworkSniffer:
+    """Return the global sniffer instance."""
     global _sniffer
     if _sniffer is None:
-        _sniffer = NetworkSniffer()
+        _sniffer = NetworkSniffer(db=get_db())
     return _sniffer

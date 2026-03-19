@@ -352,6 +352,106 @@
             </ul>
         </div>
     </div>
+
+    <!-- ═══════ DATABASE / HISTORY ═══════ -->
+    <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+            <h3 class="card-title">&#128451; Database History</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+                <span class="card-badge" id="dbSessionBadge">Session —</span>
+                <button onclick="loadHistory()" style="padding:6px 14px;font-size:.72rem">Refresh History</button>
+                <button onclick="clearHistory()" style="padding:6px 14px;font-size:.72rem;background:linear-gradient(135deg,#ff006e,#fb5607)">Clear All</button>
+            </div>
+        </div>
+
+        <!-- DB Status Row -->
+        <div class="grid grid-5" style="margin-bottom:18px">
+            <div class="card stat-card" style="padding:14px">
+                <div class="stat-label">DB Sessions</div>
+                <div class="stat-value" id="dbSessions" style="font-size:1.6rem">—</div>
+            </div>
+            <div class="card stat-card" style="padding:14px">
+                <div class="stat-label">Stored Flows</div>
+                <div class="stat-value" id="dbFlows" style="font-size:1.6rem">—</div>
+            </div>
+            <div class="card stat-card" style="padding:14px">
+                <div class="stat-label">Stored Alerts</div>
+                <div class="stat-value" id="dbAlerts" style="font-size:1.6rem">—</div>
+            </div>
+            <div class="card stat-card" style="padding:14px">
+                <div class="stat-label">Total Packets (All)</div>
+                <div class="stat-value" id="dbPackets" style="font-size:1.6rem">—</div>
+            </div>
+            <div class="card stat-card" style="padding:14px">
+                <div class="stat-label">Total Traffic (All)</div>
+                <div class="stat-value" id="dbTraffic" style="font-size:1.6rem">—</div>
+            </div>
+        </div>
+
+        <!-- History tabs -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchHistTab('histSessions',this)">Sessions</button>
+            <button class="tab-btn" onclick="switchHistTab('histFlows',this)">Stored Flows</button>
+            <button class="tab-btn" onclick="switchHistTab('histAlerts',this)">Stored Alerts</button>
+        </div>
+
+        <div id="histSessions" class="tab-content active">
+            <div class="flow-table-wrap" style="max-height:360px;overflow-y:auto">
+                <table class="flow-table">
+                    <thead>
+                        <tr><th>ID</th><th>Started</th><th>Stopped</th><th>Packets</th><th>Bytes</th><th>Flows Saved</th></tr>
+                    </thead>
+                    <tbody id="histSessionsBody">
+                        <tr><td colspan="6" class="empty-state">No sessions yet — click Refresh History</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="histFlows" class="tab-content">
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                <select id="histFlowProto" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;padding:6px 10px;font-family:inherit;font-size:.78rem">
+                    <option value="">All Protocols</option>
+                    <option value="TCP">TCP</option>
+                    <option value="UDP">UDP</option>
+                    <option value="ICMP">ICMP</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+                <input id="histFlowSrcIp" placeholder="Filter by Source IP" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;padding:6px 10px;font-family:inherit;font-size:.78rem;width:180px">
+                <button onclick="loadHistFlows()" style="padding:6px 14px;font-size:.72rem">Filter</button>
+            </div>
+            <div class="flow-table-wrap" style="max-height:400px;overflow-y:auto">
+                <table class="flow-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Session</th><th>Source</th><th>Destination</th>
+                            <th>Proto</th><th>Pkts</th><th>Bytes</th><th>Avg B/Pkt</th>
+                            <th>Duration</th><th>IAT Mean</th><th>IAT Var</th>
+                            <th>SYN</th><th>ACK</th><th>FIN</th><th>RST</th>
+                            <th>Captured</th>
+                        </tr>
+                    </thead>
+                    <tbody id="histFlowsBody">
+                        <tr><td colspan="16" class="empty-state">Click Refresh History to load</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="histAlerts" class="tab-content">
+            <div class="flow-table-wrap" style="max-height:360px;overflow-y:auto">
+                <table class="flow-table">
+                    <thead>
+                        <tr><th>ID</th><th>Session</th><th>Type</th><th>Source</th><th>Description</th><th>Timestamp</th></tr>
+                    </thead>
+                    <tbody id="histAlertsBody">
+                        <tr><td colspan="6" class="empty-state">Click Refresh History to load</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -443,7 +543,13 @@
         document.getElementById('trafficRate').textContent = o.mbps.toFixed(3)+' Mbps';
         document.getElementById('activeFlows').textContent = (o.active_flows||0).toLocaleString();
         document.getElementById('uptime').textContent = Math.floor(o.uptime_seconds)+'s';
-        document.getElementById('uniqueIPs').textContent = '—'; // updated from top_sources length
+        document.getElementById('uniqueIPs').textContent = '—';
+        // DB badge
+        if(o.session_id) document.getElementById('dbSessionBadge').textContent = 'Session #'+o.session_id;
+        if(o.flows_saved_to_db !== undefined) {
+            const el = document.getElementById('dbFlowsSaved');
+            if(el) el.textContent = o.flows_saved_to_db;
+        }
     }
 
     function updateTrafficChart(tl) {
@@ -541,6 +647,119 @@
         c.innerHTML=queries.map(i=>`<li class="metric-item"><span class="metric-name">${i.name}</span><div class="metric-bar"><div class="metric-bar-fill" style="width:${(i.value/mx)*100}%"></div></div><span class="metric-value">${i.value}</span></li>`).join('');
     }
 
+    /* ── History tabs ── */
+    function switchHistTab(tabId, btn) {
+        document.querySelectorAll('#histSessions,#histFlows,#histAlerts').forEach(t=>t.classList.remove('active'));
+        btn.parentElement.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    /* ── History: load summary ── */
+    async function loadHistory() {
+        try {
+            // Summary
+            const sr = await fetch('/api/history/summary');
+            const s = await sr.json();
+            document.getElementById('dbSessions').textContent = s.total_sessions;
+            document.getElementById('dbFlows').textContent = s.total_flows_stored.toLocaleString();
+            document.getElementById('dbAlerts').textContent = s.total_alerts_stored.toLocaleString();
+            document.getElementById('dbPackets').textContent = s.total_packets.toLocaleString();
+            document.getElementById('dbTraffic').textContent = s.total_bytes_mb + ' MB';
+
+            // Sessions table
+            const sessr = await fetch('/api/history/sessions?limit=20');
+            const sessd = await sessr.json();
+            const sb = document.getElementById('histSessionsBody');
+            if(!sessd.length){ sb.innerHTML='<tr><td colspan="6" class="empty-state">No sessions recorded</td></tr>'; }
+            else {
+                sb.innerHTML = sessd.map(s=>`<tr>
+                    <td>${s.id}</td>
+                    <td>${s.started_at ? new Date(s.started_at).toLocaleString() : '—'}</td>
+                    <td>${s.stopped_at ? new Date(s.stopped_at).toLocaleString() : '<span style="color:var(--accent-cyan)">Active</span>'}</td>
+                    <td>${(s.total_packets||0).toLocaleString()}</td>
+                    <td>${fmtBytes(s.total_bytes||0)}</td>
+                    <td>${(s.flow_count||0).toLocaleString()}</td>
+                </tr>`).join('');
+            }
+
+            // Also load flows and alerts
+            await loadHistFlows();
+            await loadHistAlerts();
+        } catch(e) { console.error('History load error:', e); }
+    }
+
+    /* ── History: load stored flows ── */
+    async function loadHistFlows() {
+        try {
+            const proto = document.getElementById('histFlowProto').value;
+            const srcIp = document.getElementById('histFlowSrcIp').value.trim();
+            let url = '/api/history/flows?limit=200';
+            if(proto) url += '&protocol='+encodeURIComponent(proto);
+            if(srcIp) url += '&src_ip='+encodeURIComponent(srcIp);
+
+            const r = await fetch(url);
+            const d = await r.json();
+            const body = document.getElementById('histFlowsBody');
+            if(!d.flows.length){
+                body.innerHTML='<tr><td colspan="16" class="empty-state">No flows match filters</td></tr>';
+                return;
+            }
+            body.innerHTML = d.flows.map(f=>{
+                const proto = f.protocol||'?';
+                return `<tr>
+                    <td>${f.id}</td>
+                    <td>${f.session_id||'—'}</td>
+                    <td>${f.src_ip}:${f.src_port}</td>
+                    <td>${f.dst_ip}:${f.dst_port}</td>
+                    <td><span class="proto-badge proto-${proto}">${proto}</span></td>
+                    <td>${f.packet_count}</td>
+                    <td>${fmtBytes(f.total_bytes)}</td>
+                    <td>${(f.avg_bytes_per_pkt||0).toFixed(0)}</td>
+                    <td>${(f.flow_duration||0).toFixed(2)}</td>
+                    <td>${(f.iat_mean||0).toFixed(4)}</td>
+                    <td>${(f.iat_variance||0).toFixed(4)}</td>
+                    <td>${f.syn_count||0}</td>
+                    <td>${f.ack_count||0}</td>
+                    <td>${f.fin_count||0}</td>
+                    <td>${f.rst_count||0}</td>
+                    <td style="font-size:.68rem">${f.captured_at ? new Date(f.captured_at).toLocaleString() : '—'}</td>
+                </tr>`;
+            }).join('');
+        } catch(e) { console.error('History flows error:', e); }
+    }
+
+    /* ── History: load stored alerts ── */
+    async function loadHistAlerts() {
+        try {
+            const r = await fetch('/api/history/alerts?limit=100');
+            const d = await r.json();
+            const body = document.getElementById('histAlertsBody');
+            if(!d.alerts.length){
+                body.innerHTML='<tr><td colspan="6" class="empty-state">No alerts stored</td></tr>';
+                return;
+            }
+            body.innerHTML = d.alerts.map(a=>`<tr>
+                <td>${a.id}</td>
+                <td>${a.session_id||'—'}</td>
+                <td><span style="color:var(--accent-red);font-weight:700;text-transform:uppercase;font-size:.72rem">${(a.alert_type||'').replace(/_/g,' ')}</span></td>
+                <td>${a.source||'—'}</td>
+                <td style="max-width:400px;white-space:normal">${a.description||''}</td>
+                <td style="font-size:.68rem">${a.timestamp ? new Date(a.timestamp).toLocaleString() : '—'}</td>
+            </tr>`).join('');
+        } catch(e) { console.error('History alerts error:', e); }
+    }
+
+    /* ── History: clear all ── */
+    async function clearHistory() {
+        if(!confirm('Are you sure you want to delete ALL historical data? This cannot be undone.')) return;
+        try {
+            await fetch('/api/history/clear', {method:'POST'});
+            loadHistory();
+            alert('All historical data has been cleared.');
+        } catch(e) { console.error('Clear history error:', e); }
+    }
+
     /* ── Init ── */
     window.addEventListener('load', async()=>{
         try {
@@ -554,6 +773,8 @@
                 updateMetrics();
             }
         } catch(e){ console.error('Status check error:',e); }
+        // Auto-load history on page load
+        loadHistory();
     });
 </script>
 </body>

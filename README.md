@@ -1,21 +1,22 @@
 # SentinelAI — Flow-Based Network Security Monitor
 
-Real-time network traffic analyzer that groups packets into **flows** by 5-tuple and extracts incremental security features — no database, no packet cache.
+Real-time network traffic analyzer that groups packets into **flows** by 5-tuple, extracts incremental security features, and **persists all data to a local SQLite database** so nothing is lost on program interruption or restart.
 
 ---
 
 ## Architecture
 
 ```
-┌──────────────┐     ┌──────────────────┐     ┌────────────────────┐
-│  Scapy       │────▶│  FlowTable       │────▶│  Dashboard / API   │
-│  Sniffer     │     │  (5-tuple keyed) │     │  (Flask + Chart.js)│
-└──────────────┘     └──────────────────┘     └────────────────────┘
-      │                      │
-      │  packet-by-packet    │  IncrementalStat
-      │  callback            │  (Welford's algorithm)
-      ▼                      ▼
-  network_monitor.py    flow_extractor.py + inc_stat.py
+┌──────────────┐     ┌──────────────────┐     ┌─────────────┐     ┌────────────────────┐
+│  Scapy       │────▶│  FlowTable       │────▶│  SQLite DB  │────▶│  Dashboard / API   │
+│  Sniffer     │     │  (5-tuple keyed) │     │  (local)    │     │  (Flask + Chart.js)│
+└──────────────┘     └──────────────────┘     └─────────────┘     └────────────────────┘
+      │                      │                       │
+      │  packet-by-packet    │  IncrementalStat      │  sentinel_data.db
+      │  callback            │  (Welford's alg.)     │  sessions / flows / alerts
+      ▼                      ▼                       ▼
+  network_monitor.py    flow_extractor.py      database.py
+                        + inc_stat.py
 ```
 
 ### File Overview
@@ -24,9 +25,69 @@ Real-time network traffic analyzer that groups packets into **flows** by 5-tuple
 |---|---|
 | `inc_stat.py` | Welford-based incremental mean / variance / std calculator |
 | `flow_extractor.py` | `FlowRecord` dataclass + `FlowTable` (LRU, thread-safe, bounded) |
-| `network_monitor.py` | Scapy sniffer, packet parser, alert engine, metrics aggregator |
-| `dashboard_server.py` | Flask REST API + serves `dashboard.html` |
-| `dashboard.html` | Single-page dashboard with live flow table, charts, and alerts |
+| `database.py` | SQLite persistence — sessions, flows (all 14 features), alerts |
+| `network_monitor.py` | Scapy sniffer, packet parser, alert engine, DB integration |
+| `dashboard_server.py` | Flask REST API + graceful shutdown + history endpoints |
+| `dashboard.html` | Dashboard with live flow table, charts, alerts, **and DB history viewer** |
+
+---
+
+## Database Persistence
+
+SentinelAI uses a **local SQLite database** (`sentinel_data.db`) created automatically next to the script. Data is saved in three situations:
+
+1. **Automatically on flow expiry** — when a flow exceeds the idle timeout (default 120s), it is persisted to the `flows` table along with all 14 computed features.
+2. **On stop** — clicking "Stop" in the dashboard or calling `GET /api/stop` flushes all remaining active flows and alerts to the database.
+3. **On shutdown** — pressing `Ctrl+C` (SIGINT) or receiving SIGTERM triggers a graceful shutdown that saves everything before the process exits.
+
+### Database Schema
+
+```
+sessions
+├── id, started_at, stopped_at
+├── total_packets, total_bytes, flow_count
+│
+flows
+├── id, session_id, captured_at
+├── src_ip, dst_ip, src_port, dst_port, protocol  (5-tuple)
+├── flow_duration, iat_mean, iat_variance           (temporal)
+├── total_bytes, avg_bytes_per_pkt, packet_count     (volume)
+├── syn_count, ack_count, fin_count, rst_count       (TCP flags)
+├── proto_tcp, proto_udp, proto_icmp, proto_other    (dummy encoding)
+│
+alerts
+├── id, session_id, timestamp
+├── alert_type, source, description
+```
+
+All tables are indexed for fast queries by session, timestamp, source IP, and protocol.
+
+### Querying History
+
+The dashboard includes a **Database History** section at the bottom with:
+- Session listing (start/stop times, counters)
+- Stored flows table (filterable by protocol and source IP)
+- Stored alerts table
+
+You can also query the API directly:
+
+```bash
+# Aggregate statistics across all sessions
+curl http://localhost:5050/api/history/summary
+
+# List past sessions
+curl http://localhost:5050/api/history/sessions
+
+# Query stored flows (with filters)
+curl "http://localhost:5050/api/history/flows?protocol=TCP&limit=50"
+curl "http://localhost:5050/api/history/flows?src_ip=10.0.0.1"
+
+# Query stored alerts
+curl http://localhost:5050/api/history/alerts
+
+# Delete all history
+curl -X POST http://localhost:5050/api/history/clear
+```
 
 ---
 
@@ -38,11 +99,11 @@ Every packet is assigned to a flow identified by:
 (Source IP, Destination IP, Source Port, Destination Port, Protocol)
 ```
 
-Flows are stored in an **in-memory LRU table** (no database). When a flow exceeds the idle timeout (default 120 s) or the table reaches capacity (default 100 000 flows), the oldest entries are evicted.
+Flows live in an **in-memory LRU table** during capture. When a flow expires or the table reaches capacity, it is persisted to the database and removed from memory.
 
 ---
 
-## Extracted Features
+## Extracted Features (14 per flow)
 
 ### Temporal Characteristics
 
@@ -64,61 +125,46 @@ Flows are stored in an **in-memory LRU table** (no database). When a flow exceed
 
 | Feature | Description |
 |---|---|
-| `syn_count` | Number of TCP SYN flags (high SYN without ACK → port scan) |
-| `ack_count` | Number of TCP ACK flags |
-| `fin_count` | Number of TCP FIN flags |
-| `rst_count` | Number of TCP RST flags (connection resets) |
-| `proto_tcp` | Dummy-encoded: 1 if protocol is TCP |
-| `proto_udp` | Dummy-encoded: 1 if protocol is UDP |
-| `proto_icmp` | Dummy-encoded: 1 if protocol is ICMP |
+| `syn_count` | TCP SYN flags (high SYN without ACK → port scan) |
+| `ack_count` | TCP ACK flags |
+| `fin_count` | TCP FIN flags |
+| `rst_count` | TCP RST flags (connection resets) |
+| `proto_tcp` | Dummy-encoded: 1 if TCP |
+| `proto_udp` | Dummy-encoded: 1 if UDP |
+| `proto_icmp` | Dummy-encoded: 1 if ICMP |
 | `proto_other` | Dummy-encoded: 1 if none of the above |
 
-All statistics are computed **incrementally** using Welford's online algorithm (`inc_stat.py`), so no raw packet data is ever stored.
+All statistics computed **incrementally** via Welford's algorithm — no raw packet data stored.
 
 ---
 
 ## API Endpoints
 
+### Live Data
+
 | Endpoint | Description |
 |---|---|
 | `GET /` | Dashboard UI |
 | `GET /api/metrics` | Full snapshot: overview, flows, alerts, charts |
-| `GET /api/flows` | Active flows with computed feature vectors |
-| `GET /api/features` | Raw feature vectors for all active flows (ML-ready) |
-| `GET /api/start` | Start the packet sniffer |
-| `GET /api/stop` | Stop the packet sniffer |
+| `GET /api/flows` | Active flows with feature vectors |
+| `GET /api/features` | Raw ML-ready feature vectors (JSON array) |
+| `GET /api/start` | Start packet sniffer |
+| `GET /api/stop` | Stop sniffer + flush data to DB |
 | `GET /api/status` | Check if sniffer is running |
 
-### ML Pipeline Integration
+### History (from SQLite)
 
-Call `GET /api/features` to obtain a JSON array of feature dictionaries, ready to feed into a scaler (e.g. `MinMaxScaler`) and a classifier:
-
-```json
-[
-  {
-    "flow_duration": 12.345,
-    "iat_mean": 0.0412,
-    "iat_variance": 0.0003,
-    "total_bytes": 148230,
-    "avg_bytes_per_pkt": 523.15,
-    "packet_count": 283,
-    "syn_count": 1,
-    "ack_count": 141,
-    "fin_count": 1,
-    "rst_count": 0,
-    "proto_tcp": 1,
-    "proto_udp": 0,
-    "proto_icmp": 0,
-    "proto_other": 0
-  }
-]
-```
+| Endpoint | Description |
+|---|---|
+| `GET /api/history/summary` | Aggregated stats across all sessions |
+| `GET /api/history/sessions` | Past capture sessions |
+| `GET /api/history/flows` | Stored flows (filterable: `session_id`, `protocol`, `src_ip`, `limit`, `offset`) |
+| `GET /api/history/alerts` | Stored alerts (filterable: `session_id`, `limit`) |
+| `POST /api/history/clear` | Delete all historical data |
 
 ---
 
 ## Alert Rules
-
-The `AlertEngine` checks every expired (and periodically, every active) flow:
 
 | Rule | Trigger |
 |---|---|
@@ -126,7 +172,7 @@ The `AlertEngine` checks every expired (and periodically, every active) flow:
 | **Data Exfiltration** | `total_bytes > 50 MB` in a single flow |
 | **RST Flood** | `rst_count > 50` in a single flow |
 
-Alerts are de-duplicated per flow key and displayed in the dashboard.
+Alerts are de-duplicated per flow, persisted to DB, and visible in both the live dashboard and history viewer.
 
 ---
 
@@ -137,6 +183,7 @@ Alerts are de-duplicated per flow key and displayed in the dashboard.
 1. Install Python 3.10+ and [Npcap](https://npcap.com/) (check "WinPcap API-compatible Mode").
 2. Right-click `start.bat` → **Run as administrator**.
 3. Open `http://localhost:5050` and click **Start Monitoring**.
+4. Press `Ctrl+C` or click **Stop** — all data is auto-saved to `sentinel_data.db`.
 
 ### Linux / macOS
 
@@ -151,8 +198,10 @@ Open `http://localhost:5050`.
 
 ## Design Decisions
 
-- **No database** — all state lives in memory via `OrderedDict` with LRU eviction.
-- **No packet cache** — raw packets are never stored; only incremental statistics are kept.
-- **Welford's algorithm** — numerically stable online computation of mean and variance without storing any history.
-- **Thread-safe** — `FlowTable` and all collectors use `threading.Lock`.
-- **Bounded memory** — configurable `max_flows` and `timeout` prevent unbounded growth.
+- **SQLite with WAL mode** — safe concurrent reads from Flask while the sniffer writes. No external database server required.
+- **Graceful shutdown** — `atexit`, `SIGINT`, and `SIGTERM` handlers all trigger `flush_to_db()`.
+- **No packet cache** — raw packets are never stored; only incremental statistics and computed features.
+- **Welford's algorithm** — numerically stable online mean/variance without storing history.
+- **Thread-safe** — `FlowTable`, `SentinelDB`, and all collectors use locks.
+- **Bounded memory** — configurable `max_flows` and `timeout` prevent unbounded growth; evicted flows go to DB.
+- **Session tracking** — each start/stop cycle creates a session in the DB, making it easy to compare captures over time.
