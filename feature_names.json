@@ -1,0 +1,16 @@
+[
+  "flow_duration",
+  "iat_mean",
+  "iat_variance",
+  "total_bytes",
+  "avg_bytes_per_pkt",
+  "packet_count",
+  "syn_count",
+  "ack_count",
+  "fin_count",
+  "rst_count",
+  "proto_tcp",
+  "proto_udp",
+  "proto_icmp",
+  "proto_other"
+]
