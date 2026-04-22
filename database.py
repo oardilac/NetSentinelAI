@@ -116,6 +116,9 @@ class SentinelDB:
                 proto_udp       INTEGER DEFAULT 0,
                 proto_icmp      INTEGER DEFAULT 0,
                 proto_other     INTEGER DEFAULT 0,
+                -- ML prediction results
+                ml_class        TEXT,
+                ml_confidence   REAL,
                 FOREIGN KEY (session_id) REFERENCES sessions(id)
             );
 
@@ -138,6 +141,19 @@ class SentinelDB:
             CREATE INDEX IF NOT EXISTS idx_alerts_type     ON alerts(alert_type);
         """)
         conn.commit()
+
+        # Migration: Add ML columns if they don't exist (for databases created before ML integration)
+        try:
+            conn.execute("ALTER TABLE flows ADD COLUMN ml_class TEXT")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        try:
+            conn.execute("ALTER TABLE flows ADD COLUMN ml_confidence REAL")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
     # ── sessions ──
 
@@ -211,6 +227,8 @@ class SentinelDB:
                 f.get("proto_udp", 0),
                 f.get("proto_icmp", 0),
                 f.get("proto_other", 0),
+                f.get("ml_class"),
+                f.get("ml_confidence"),
             ))
         conn.executemany(
             """INSERT INTO flows (
@@ -219,8 +237,9 @@ class SentinelDB:
                 flow_duration, iat_mean, iat_variance,
                 total_bytes, avg_bytes_per_pkt, packet_count,
                 syn_count, ack_count, fin_count, rst_count,
-                proto_tcp, proto_udp, proto_icmp, proto_other
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                proto_tcp, proto_udp, proto_icmp, proto_other,
+                ml_class, ml_confidence
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             rows,
         )
         conn.commit()

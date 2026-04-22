@@ -190,9 +190,9 @@ cython_debug/
 
 # Ruff stuff:
 .ruff_cache/
-
 # PyPI configuration file
 .pypirc
+/data
 
 # Cursor
 #  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
@@ -218,3 +218,10 @@ venv/
 myvenv/
 logs/
 .engine_status
+
+
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+/skills
+Grupo7_NetSentinel_E2.pdf

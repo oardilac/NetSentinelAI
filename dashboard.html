@@ -166,6 +166,17 @@
         .proto-ICMP { background:rgba(251,86,7,.2); color:var(--accent-orange); }
         .proto-OTHER { background:rgba(58,134,255,.15); color:var(--accent-blue); }
 
+        /* ML Class badges */
+        .ml-badge {
+            display:inline-block; padding:3px 10px; border-radius:4px;
+            font-weight:600; font-size:.68rem; letter-spacing:.5px;
+        }
+        .ml-Normal { background:rgba(0,255,200,.15); color:var(--accent-cyan); }
+        .ml-Botnet { background:rgba(157,78,221,.2); color:var(--accent-purple); }
+        .ml-Brute_Force { background:rgba(251,86,7,.2); color:var(--accent-orange); }
+        .ml-DoS_DDoS { background:rgba(255,0,110,.15); color:var(--accent-red); }
+        .ml-Port_Scan { background:rgba(58,134,255,.15); color:var(--accent-blue); }
+
         .flag-pill {
             display:inline-block; padding:1px 6px; border-radius:3px;
             font-size:.66rem; font-weight:600; margin-right:3px;
@@ -242,8 +253,38 @@
             <div class="chart-container"><canvas id="trafficChart"></canvas></div>
         </div>
         <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">&#9888;&#65039; Security Alerts</h3>
+                <span class="card-badge" id="alertsCount">0</span>
+            </div>
+            <div id="alertsContainer">
+                <div class="empty-state"><div class="empty-state-icon">&#128737;&#65039;</div><div>No alerts detected</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ML Threat Distribution -->
+    <div class="grid">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">🤖 Threat Classification (ML)</h3></div>
+            <div class="chart-container"><canvas id="threatChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Protocol & Port Scans -->
+    <div class="grid grid-2">
+        <div class="card">
             <div class="card-header"><h3 class="card-title">&#128272; Protocol Distribution</h3></div>
             <div class="chart-container"><canvas id="protocolChart"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">&#128269; Potential Port Scans</h3>
+                <span class="card-badge" id="scanCount">0</span>
+            </div>
+            <ul class="metric-list" id="portScans">
+                <li class="empty-state"><div class="empty-state-icon">&#128270;</div><div>No scans detected</div></li>
+            </ul>
         </div>
     </div>
 
@@ -277,10 +318,11 @@
                             <th>ACK</th>
                             <th>FIN</th>
                             <th>RST</th>
+                            <th>ML Class</th>
                         </tr>
                     </thead>
                     <tbody id="flowBody">
-                        <tr><td colspan="13" class="empty-state">No flows captured yet</td></tr>
+                        <tr><td colspan="14" class="empty-state">No flows captured yet</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -314,28 +356,6 @@
             </div>
             <ul class="metric-list" id="topPorts">
                 <li class="empty-state"><div class="empty-state-icon">&#128268;</div><div>No data available</div></li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- Security -->
-    <div class="grid grid-2">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">&#9888;&#65039; Security Alerts</h3>
-                <span class="card-badge" id="alertsCount">0</span>
-            </div>
-            <div id="alertsContainer">
-                <div class="empty-state"><div class="empty-state-icon">&#128737;&#65039;</div><div>No alerts detected</div></div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">&#128269; Potential Port Scans</h3>
-                <span class="card-badge" id="scanCount">0</span>
-            </div>
-            <ul class="metric-list" id="portScans">
-                <li class="empty-state"><div class="empty-state-icon">&#128270;</div><div>No scans detected</div></li>
             </ul>
         </div>
     </div>
@@ -428,11 +448,11 @@
                             <th>Proto</th><th>Pkts</th><th>Bytes</th><th>Avg B/Pkt</th>
                             <th>Duration</th><th>IAT Mean</th><th>IAT Var</th>
                             <th>SYN</th><th>ACK</th><th>FIN</th><th>RST</th>
-                            <th>Captured</th>
+                            <th>ML Class</th><th>Confidence</th><th>Captured</th>
                         </tr>
                     </thead>
                     <tbody id="histFlowsBody">
-                        <tr><td colspan="16" class="empty-state">Click Refresh History to load</td></tr>
+                        <tr><td colspan="18" class="empty-state">Click Refresh History to load</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -456,7 +476,7 @@
 
 <script>
     /* ── Charts ── */
-    let trafficChart, protocolChart, updateInterval;
+    let trafficChart, protocolChart, threatChart, updateInterval;
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.borderColor = '#2d3e6f';
 
@@ -476,6 +496,17 @@
         data: { labels: [], datasets: [{
             data: [],
             backgroundColor: ['#00ffc8','#9d4edd','#ff006e','#fb5607','#3a86ff','#06ffa5'],
+            borderWidth: 0
+        }]},
+        options: { responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{ position:'bottom', labels:{padding:14, font:{size:11}} } } }
+    });
+
+    threatChart = new Chart(document.getElementById('threatChart').getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['Normal','Botnet','Brute Force','DoS/DDoS','Port Scan'], datasets: [{
+            data: [0,0,0,0,0],
+            backgroundColor: ['#00ffc8','#9d4edd','#fb5607','#ff006e','#3a86ff'],
             borderWidth: 0
         }]},
         options: { responsive:true, maintainAspectRatio:false,
@@ -525,14 +556,73 @@
             updateOverview(d.overview);
             updateTrafficChart(d.traffic_timeline);
             updateProtocolChart(d.protocols);
-            updateFlowTable(d.active_flows || []);
+            updateThreatChart(d.ml_stats || {});
+            let flows = d.active_flows || [];
+            updateFlowTable(flows);
             updateFlagCards(d.tcp_flags || {});
             updateTopSources(d.top_sources);
             updateTopPorts(d.top_dst_ports);
             updateAlerts(d.alerts);
             updatePortScans(d.potential_port_scans);
             updateDNS(d.top_dns_queries);
+            // Predict flows that need it
+            await predictPendingFlows(flows);
         } catch(e) { console.error('Fetch error:', e); }
+    }
+
+    async function predictPendingFlows(flows) {
+        const pending = flows.filter(f => !f.ml_class || f.ml_class === 'Pending');
+        if (pending.length === 0) return;
+
+        for (const f of pending) {
+            try {
+                const features = {
+                    flow_duration: f.flow_duration,
+                    iat_mean: f.iat_mean,
+                    iat_variance: f.iat_variance,
+                    total_bytes: f.total_bytes,
+                    avg_bytes_per_pkt: f.avg_bytes_per_pkt,
+                    packet_count: f.packet_count,
+                    syn_count: f.syn_count,
+                    ack_count: f.ack_count,
+                    fin_count: f.fin_count,
+                    rst_count: f.rst_count,
+                    proto_tcp: f.protocol === 'TCP' ? 1 : 0,
+                    proto_udp: f.protocol === 'UDP' ? 1 : 0,
+                    proto_icmp: f.protocol === 'ICMP' ? 1 : 0,
+                    proto_other: (f.protocol !== 'TCP' && f.protocol !== 'UDP' && f.protocol !== 'ICMP') ? 1 : 0,
+                };
+
+                const pred = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(features)
+                });
+
+                if (!pred.ok) continue;
+                const result = await pred.json();
+
+                // Update flow with prediction
+                f.ml_class = result.class;
+                f.ml_confidence = result.confidence;
+
+            } catch(e) {
+                console.error(`Predict error for ${f.src_ip}:${f.src_port}:`, e);
+            }
+        }
+
+        // Re-render table with updated predictions
+        updateFlowTable(flows);
+
+        // Update threat chart with frontend-calculated stats
+        const classes = ['Normal', 'Botnet', 'Brute Force', 'DoS/DDoS', 'Port Scan'];
+        const stats = {};
+        classes.forEach(cls => stats[cls] = 0);
+        flows.forEach(f => {
+            const cls = f.ml_class || 'Normal';
+            if (cls in stats) stats[cls]++;
+        });
+        updateThreatChart(stats);
     }
 
     /* ── Updaters ── */
@@ -566,6 +656,13 @@
         protocolChart.update('none');
     }
 
+    function updateThreatChart(ml) {
+        const classes=['Normal','Botnet','Brute Force','DoS/DDoS','Port Scan'];
+        const data=classes.map(c=>ml[c]||0);
+        threatChart.data.datasets[0].data=data;
+        threatChart.update('none');
+    }
+
     function fmtBytes(b) {
         if(b>=1048576) return (b/1048576).toFixed(1)+' MB';
         if(b>=1024) return (b/1024).toFixed(1)+' KB';
@@ -576,12 +673,15 @@
         const body = document.getElementById('flowBody');
         document.getElementById('flowCount').textContent = flows.length;
         if(!flows.length) {
-            body.innerHTML = '<tr><td colspan="13" class="empty-state">No flows captured yet</td></tr>';
+            body.innerHTML = '<tr><td colspan="14" class="empty-state">No flows captured yet</td></tr>';
             return;
         }
         body.innerHTML = flows.map(f => {
             const proto = f.protocol||'?';
             const synBad = f.syn_count>10 && f.ack_count<f.syn_count*.3;
+            const mlClass = f.ml_class || 'Pending';
+            const mlSafe = mlClass.replace(/ /g,'_').replace(/\//g,'_');
+            const mlBadgeClass = mlClass === 'Pending' ? 'ml-badge' : `ml-badge ml-${mlSafe}`;
             return `<tr>
                 <td>${f.src_ip}:${f.src_port}</td>
                 <td>${f.dst_ip}:${f.dst_port}</td>
@@ -596,6 +696,7 @@
                 <td><span class="flag-pill ok">${f.ack_count}</span></td>
                 <td>${f.fin_count}</td>
                 <td>${f.rst_count}</td>
+                <td><span class="${mlBadgeClass}">${mlClass}</span></td>
             </tr>`;
         }).join('');
     }
@@ -629,7 +730,12 @@
         const c=document.getElementById('alertsContainer');
         document.getElementById('alertsCount').textContent=alerts.length;
         if(!alerts.length){c.innerHTML='<div class="empty-state"><div class="empty-state-icon">&#128737;&#65039;</div><div>No alerts detected</div></div>';return;}
-        c.innerHTML=alerts.slice().reverse().map(a=>`<div class="alert"><div class="alert-type">${a.type.replace(/_/g,' ')}</div><div>${a.description}</div><div><strong>Source:</strong> ${a.source}</div><div class="alert-time">${new Date(a.timestamp).toLocaleString()}</div></div>`).join('');
+        c.innerHTML=alerts.slice().reverse().map(a=>{
+            const isML = a.type && a.type.startsWith('ml_');
+            const alertStyle = isML ? 'border-left:4px solid #9d4edd;background:rgba(157,78,221,.08)' : '';
+            const icon = isML ? '🤖' : '⚠️';
+            return `<div class="alert" style="${alertStyle}"><div class="alert-type">${icon} ${a.type.replace(/_/g,' ')}</div><div>${a.description}</div><div><strong>Source:</strong> ${a.source}</div><div class="alert-time">${new Date(a.timestamp).toLocaleString()}</div></div>`;
+        }).join('');
     }
 
     function updatePortScans(scans) {
@@ -702,11 +808,15 @@
             const d = await r.json();
             const body = document.getElementById('histFlowsBody');
             if(!d.flows.length){
-                body.innerHTML='<tr><td colspan="16" class="empty-state">No flows match filters</td></tr>';
+                body.innerHTML='<tr><td colspan="18" class="empty-state">No flows match filters</td></tr>';
                 return;
             }
             body.innerHTML = d.flows.map(f=>{
                 const proto = f.protocol||'?';
+                const mlClass = f.ml_class || '—';
+                const mlSafe = mlClass.replace(/ /g,'_').replace(/\//g,'_');
+                const mlBadgeClass = mlClass === '—' ? 'ml-badge' : `ml-badge ml-${mlSafe}`;
+                const conf = f.ml_confidence ? (f.ml_confidence*100).toFixed(0)+'%' : '—';
                 return `<tr>
                     <td>${f.id}</td>
                     <td>${f.session_id||'—'}</td>
@@ -723,6 +833,8 @@
                     <td>${f.ack_count||0}</td>
                     <td>${f.fin_count||0}</td>
                     <td>${f.rst_count||0}</td>
+                    <td><span class="${mlBadgeClass}">${mlClass}</span></td>
+                    <td>${conf}</td>
                     <td style="font-size:.68rem">${f.captured_at ? new Date(f.captured_at).toLocaleString() : '—'}</td>
                 </tr>`;
             }).join('');

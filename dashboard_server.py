@@ -18,6 +18,7 @@ from threading import Thread
 import atexit
 import signal
 import network_monitor
+import ml_engine
 import os
 import sys
 
@@ -53,6 +54,28 @@ signal.signal(signal.SIGTERM, lambda *a: (_graceful_shutdown(), sys.exit(0)))
 
 
 # ──────────────────────────────────────────────
+# Helper functions
+# ──────────────────────────────────────────────
+
+def _compute_ml_stats(sniffer):
+    """Compute ML class distribution from active and recent flows."""
+    from collections import defaultdict
+    stats = defaultdict(int)
+
+    # Count active flows by ML class
+    active = sniffer.metrics.flow_table.get_active_flows()
+    for flow in active:
+        # Active flows may not have ML predictions yet
+        ml_class = flow.get("ml_class")
+        if ml_class:
+            stats[ml_class] += 1
+
+    # Convert defaultdict to regular dict with all 5 classes initialized to 0
+    classes = ["Normal", "Botnet", "Brute Force", "DoS/DDoS", "Port Scan"]
+    return {cls: stats.get(cls, 0) for cls in classes}
+
+
+# ──────────────────────────────────────────────
 # Serve dashboard
 # ──────────────────────────────────────────────
 
@@ -67,9 +90,15 @@ def index():
 
 @app.route("/api/metrics")
 def get_metrics():
-    """Full metrics snapshot (overview + flows + alerts)."""
+    """Full metrics snapshot (overview + flows + alerts + ML stats)."""
     sniffer = network_monitor.get_sniffer()
-    return jsonify(sniffer.metrics.get_metrics())
+    metrics = sniffer.metrics.get_metrics()
+
+    # Compute ML stats from active + recent expired flows
+    ml_stats = _compute_ml_stats(sniffer)
+    metrics["ml_stats"] = ml_stats
+
+    return jsonify(metrics)
 
 
 @app.route("/api/flows")
@@ -88,6 +117,44 @@ def get_features():
     """Raw feature vectors for all active flows (ML pipeline ready)."""
     sniffer = network_monitor.get_sniffer()
     return jsonify(sniffer.metrics.get_flow_features())
+
+
+@app.route("/api/predict", methods=["POST"])
+def predict():
+    """On-demand ML prediction for a single flow.
+
+    POST body: {
+        "flow_duration": float,
+        "iat_mean": float,
+        "iat_variance": float,
+        "total_bytes": int,
+        "avg_bytes_per_pkt": float,
+        "packet_count": int,
+        "syn_count": int,
+        "ack_count": int,
+        "fin_count": int,
+        "rst_count": int,
+        "proto_tcp": 0 or 1,
+        "proto_udp": 0 or 1,
+        "proto_icmp": 0 or 1,
+        "proto_other": 0 or 1,
+    }
+
+    Returns: {
+        "class": str,
+        "confidence": float,
+        "probabilities": {class: prob, ...},
+        "error": str (if any)
+    }
+    """
+    try:
+        features = request.get_json()
+        if not features:
+            return jsonify({"error": "Empty request body"}), 400
+        result = ml_engine.predict_flow(features)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 # ──────────────────────────────────────────────
@@ -207,12 +274,13 @@ def main():
     print("  Dashboard:  http://localhost:5050")
     print()
     print("  API endpoints:")
-    print("    GET  /api/metrics          — live metrics snapshot")
+    print("    GET  /api/metrics          — live metrics snapshot (incl. ML stats)")
     print("    GET  /api/flows            — active flows with features")
     print("    GET  /api/features         — raw ML feature vectors")
+    print("    POST /api/predict          — on-demand ML prediction for a flow")
     print("    GET  /api/history/summary  — aggregated DB statistics")
     print("    GET  /api/history/sessions — past capture sessions")
-    print("    GET  /api/history/flows    — stored flows (filterable)")
+    print("    GET  /api/history/flows    — stored flows (filterable, incl. ML)")
     print("    GET  /api/history/alerts   — stored alerts")
     print("    POST /api/history/clear    — delete all history")
     print()

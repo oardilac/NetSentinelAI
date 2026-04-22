@@ -19,9 +19,13 @@ from datetime import datetime
 from collections import defaultdict, deque
 from threading import Thread, Lock
 import time
+import logging
 
 from flow_extractor import FlowTable
 from database import SentinelDB
+import ml_engine
+
+logger = logging.getLogger(__name__)
 
 
 # ──────────────────────────────────────────────
@@ -41,22 +45,60 @@ class AlertEngine:
         self.exfil_byte_threshold = 50_000_000  # 50 MB
         self.rst_threshold = 50
 
-    def evaluate_flow(self, flow_summary: dict) -> None:
-        """Check a single flow summary against alert rules."""
+    def evaluate_flow(self, flow_summary: dict, ml_result: dict = None) -> None:
+        """Check a single flow summary against alert rules.
+
+        Combines heuristic rules with ML predictions for better detection accuracy.
+        """
         fk = flow_summary.get("flow_key", "")
         src = flow_summary.get("src_ip", "?")
+        ml_class = ml_result.get("class") if ml_result else None
+        ml_confidence = ml_result.get("confidence", 0) if ml_result else 0
 
-        # Rule 1: Port scan — many SYN, few ACK
+        # Rule 1: Port scan — combine heuristics + ML
         syn = flow_summary.get("syn_count", 0)
         ack = flow_summary.get("ack_count", 0)
+        is_port_scan_heuristic = syn > self.scan_syn_threshold and ack < syn * 0.3
+        is_port_scan_ml = ml_class == "Port Scan" and ml_confidence > 0.7
+
         alert_key = f"scan:{fk}"
-        if syn > self.scan_syn_threshold and ack < syn * 0.3 and alert_key not in self._seen:
-            self._add("port_scan", src,
-                       f"High SYN/ACK ratio ({syn} SYN, {ack} ACK) — possible port scan")
+        if (is_port_scan_heuristic or is_port_scan_ml) and alert_key not in self._seen:
+            reason = []
+            if is_port_scan_heuristic:
+                reason.append(f"High SYN/ACK ratio ({syn} SYN, {ack} ACK)")
+            if is_port_scan_ml:
+                reason.append(f"ML detected Port Scan ({ml_confidence:.0%} confidence)")
+            description = " + ".join(reason) if reason else "Possible port scan"
+            self._add("port_scan", src, description)
             self._seen.add(alert_key)
 
-        # Rule 2: Data exfiltration
+        # Rule 2: Brute force attack — combine heuristics + ML
+        rst = flow_summary.get("rst_count", 0)
+        is_brute_force_heuristic = rst > self.rst_threshold
+        is_brute_force_ml = ml_class == "Brute Force" and ml_confidence > 0.7
+
+        alert_key = f"brute:{fk}"
+        if (is_brute_force_heuristic or is_brute_force_ml) and alert_key not in self._seen:
+            reason = []
+            if is_brute_force_heuristic:
+                reason.append(f"{rst} RST packets (connection abuse)")
+            if is_brute_force_ml:
+                reason.append(f"ML detected Brute Force ({ml_confidence:.0%} confidence)")
+            description = " + ".join(reason) if reason else "Possible brute force attack"
+            self._add("brute_force", src, description)
+            self._seen.add(alert_key)
+
+        # Rule 3: DoS/DDoS attack — combine heuristics + ML
         total_bytes = flow_summary.get("total_bytes", 0)
+        is_dos_ml = ml_class == "DoS/DDoS" and ml_confidence > 0.7
+
+        alert_key = f"dos:{fk}"
+        if is_dos_ml and alert_key not in self._seen:
+            self._add("dos_ddos", src,
+                       f"ML detected DoS/DDoS ({ml_confidence:.0%} confidence)")
+            self._seen.add(alert_key)
+
+        # Rule 4: Data exfiltration (heuristic-based)
         alert_key = f"exfil:{fk}"
         if total_bytes > self.exfil_byte_threshold and alert_key not in self._seen:
             mb = round(total_bytes / (1024 * 1024), 1)
@@ -64,17 +106,25 @@ class AlertEngine:
                        f"Flow transferred {mb} MB — possible data exfiltration")
             self._seen.add(alert_key)
 
-        # Rule 3: RST flood
-        rst = flow_summary.get("rst_count", 0)
-        alert_key = f"rst:{fk}"
-        if rst > self.rst_threshold and alert_key not in self._seen:
-            self._add("rst_flood", src,
-                       f"{rst} RST packets in flow — connection abuse or scan")
-            self._seen.add(alert_key)
-
         # Trim seen set so it doesn't grow forever
         if len(self._seen) > 10_000:
             self._seen.clear()
+
+    def add_ml_alert(self, flow_summary: dict, ml_result: dict) -> None:
+        """Fire an alert for ML-detected threat."""
+        flow_key = flow_summary.get("flow_key", "")
+        src_ip = flow_summary.get("src_ip", "?")
+        ml_class = ml_result.get("class", "Unknown")
+        confidence = ml_result.get("confidence", 0)
+
+        alert_key = f"ml:{flow_key}"
+        if alert_key not in self._seen:
+            # Sanitize class name for alert type
+            safe_class = ml_class.lower().replace(" ", "_").replace("/", "_")
+            alert_type = f"ml_{safe_class}"
+            description = f"ML detected {ml_class} (confidence: {confidence:.1%})"
+            self._add(alert_type, src_ip, description)
+            self._seen.add(alert_key)
 
     def _add(self, alert_type: str, source: str, description: str) -> None:
         with self._lock:
@@ -305,12 +355,34 @@ class SecurityMetricsCollector:
             self.tcp_flags["URG"] += 1
 
     def _expire_and_alert(self, now: float) -> None:
-        """Expire old flows, run alert rules, and persist to the database."""
+        """Expire old flows, run alert rules (rule-based + ML), and persist to the database."""
         expired = self.flow_table.expire_old_flows(now)
         if expired:
             summaries = [rec.to_summary() for rec in expired]
             for s in summaries:
-                self.alert_engine.evaluate_flow(s)
+                # ML-based prediction (run first so alert rules can use ML results)
+                ml_result = None
+                try:
+                    features = s.get("features", {})
+                    if features:
+                        ml_result = ml_engine.predict_flow(features)
+                        s["ml_class"] = ml_result.get("class")
+                        s["ml_confidence"] = ml_result.get("confidence", 0.0)
+                    else:
+                        s["ml_class"] = None
+                        s["ml_confidence"] = None
+                except Exception as e:
+                    logger.error(f"ML prediction failed: {e}")
+                    s["ml_class"] = None
+                    s["ml_confidence"] = None
+
+                # Rule-based + ML-aware alerts
+                self.alert_engine.evaluate_flow(s, ml_result=ml_result)
+
+                # Fire ML alert if non-Normal class detected
+                if ml_result and ml_result.get("class") != "Normal":
+                    self.alert_engine.add_ml_alert(s, ml_result)
+
             # Persist expired flows to SQLite
             saved = self.db.save_flows(summaries, session_id=self.session_id)
             self._flows_saved += saved
@@ -371,8 +443,25 @@ class SecurityMetricsCollector:
         Call this before shutdown to ensure nothing is lost.
         """
         with self.lock:
-            # Save active flows
+            # Save active flows (with ML predictions)
             active = self.flow_table.get_active_flows()
+
+            # Add ML predictions to active flows
+            for flow in active:
+                try:
+                    features = flow.get("features", {})
+                    if features:
+                        ml_result = ml_engine.predict_flow(features)
+                        flow["ml_class"] = ml_result.get("class")
+                        flow["ml_confidence"] = ml_result.get("confidence", 0.0)
+                    else:
+                        flow["ml_class"] = None
+                        flow["ml_confidence"] = None
+                except Exception as e:
+                    logger.error(f"ML prediction failed in flush: {e}")
+                    flow["ml_class"] = None
+                    flow["ml_confidence"] = None
+
             saved = self.db.save_flows(active, session_id=self.session_id)
             self._flows_saved += saved
 
