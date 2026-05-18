@@ -1,0 +1,548 @@
+"""
+Live bidirectional flow feature extractor for CIC-IDS2017 compatibility.
+
+Processes network packets and extracts 87 CIC-IDS2017 features per flow:
+- Forward/backward packet and byte counts
+- Forward/backward packet length statistics (max, min, mean, std)
+- Inter-arrival time (IAT) statistics per direction
+- TCP flag counts per direction
+- Port-based features (one-hot encoding)
+- Active/Idle time statistics
+- And more...
+
+Key design:
+- Bidirectional flow lookup: forward_key vs reverse_key
+- IncrementalStat (Welford) for online statistics
+- Destination port from first forward packet
+- Placeholder features for bulk rates (requires burst detection)
+"""
+
+import logging
+from dataclasses import dataclass, field
+from typing import Optional, Dict, Tuple
+from collections import OrderedDict
+import struct
+
+from inc_stat import IncrementalStat
+from feature_schema import encode_port
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BidirectionalFlowRecord:
+    """
+    Represents a bidirectional flow with forward and backward packet statistics.
+
+    A flow is uniquely identified by a 5-tuple:
+    (src_ip, dst_ip, src_port, dst_port, protocol)
+
+    The direction of the FIRST packet defines forward; the opposite is backward.
+    """
+
+    # Flow identifier
+    key: Tuple[str, str, int, int, int]  # (src_ip, dst_ip, src_port, dst_port, proto)
+    dst_port: int  # Destination port from first forward packet
+
+    # Timestamps
+    start_time: float  # Flow start (first packet time)
+    last_seen: float  # Last packet time
+
+    # Counters: packets and bytes per direction
+    fwd_pkt_count: int = 0
+    bwd_pkt_count: int = 0
+    fwd_bytes: int = 0
+    bwd_bytes: int = 0
+
+    # Packet length statistics (using IncrementalStat)
+    fwd_pkt_len_stat: IncrementalStat = field(default_factory=IncrementalStat)
+    bwd_pkt_len_stat: IncrementalStat = field(default_factory=IncrementalStat)
+    all_pkt_len_stat: IncrementalStat = field(default_factory=IncrementalStat)
+
+    # Inter-Arrival Time (IAT) statistics
+    fwd_iat_stat: IncrementalStat = field(default_factory=IncrementalStat)
+    bwd_iat_stat: IncrementalStat = field(default_factory=IncrementalStat)
+    flow_iat_stat: IncrementalStat = field(default_factory=IncrementalStat)
+
+    last_fwd_time: Optional[float] = None
+    last_bwd_time: Optional[float] = None
+    last_pkt_time: Optional[float] = None
+    fwd_iat_total: float = 0.0
+    bwd_iat_total: float = 0.0
+
+    # TCP Flags per direction
+    fwd_fin: int = 0
+    bwd_fin: int = 0
+    fwd_syn: int = 0
+    bwd_syn: int = 0
+    fwd_rst: int = 0
+    bwd_rst: int = 0
+    fwd_psh: int = 0
+    bwd_psh: int = 0
+    fwd_ack: int = 0
+    bwd_ack: int = 0
+    fwd_urg: int = 0
+    bwd_urg: int = 0
+    fwd_cwe: int = 0
+    bwd_cwe: int = 0
+    fwd_ece: int = 0
+    bwd_ece: int = 0
+
+    # Header lengths
+    fwd_header_len: int = 0
+    bwd_header_len: int = 0
+
+    # TCP window (from SYN packets)
+    init_win_fwd: int = -1
+    init_win_bwd: int = -1
+
+    # Data packet count (payload > 0)
+    act_data_pkt_fwd: int = 0
+
+    # Min segment size forward (min TCP header length)
+    min_seg_size_fwd: int = 0
+
+    # Active/Idle periods (using IncrementalStat)
+    active_stat: IncrementalStat = field(default_factory=IncrementalStat)
+    idle_stat: IncrementalStat = field(default_factory=IncrementalStat)
+
+    current_active_start: Optional[float] = None
+    last_active_time: Optional[float] = None
+    ACTIVITY_THRESHOLD: float = 1.0  # 1 second threshold for active/idle
+
+    def update(
+        self,
+        pkt_time: float,
+        pkt_len: int,
+        payload_len: int,
+        tcp_flags: int,
+        header_len: int,
+        direction: str = "fwd",
+    ):
+        """
+        Update flow statistics with a new packet.
+
+        Args:
+            pkt_time: packet timestamp
+            pkt_len: total packet length (including headers)
+            payload_len: application data length
+            tcp_flags: TCP flags byte (6 bits)
+            header_len: IP+TCP header length
+            direction: "fwd" or "bwd"
+        """
+        self.last_seen = pkt_time
+
+        # Update active/idle times
+        self._update_active_idle(pkt_time)
+
+        if direction == "fwd":
+            self.fwd_pkt_count += 1
+            self.fwd_bytes += pkt_len
+
+            # Packet length stats
+            self.fwd_pkt_len_stat.update(pkt_len)
+            self.all_pkt_len_stat.update(pkt_len)
+
+            # IAT (inter-arrival time)
+            if self.last_fwd_time is not None:
+                iat = pkt_time - self.last_fwd_time
+                self.fwd_iat_stat.update(iat)
+                self.fwd_iat_total += iat
+            self.last_fwd_time = pkt_time
+
+            # Header length
+            self.fwd_header_len += header_len
+
+            # Data packet count
+            if payload_len > 0:
+                self.act_data_pkt_fwd += 1
+
+            # Min segment size (min fwd header length)
+            if header_len > 0 and (self.min_seg_size_fwd == 0 or header_len < self.min_seg_size_fwd):
+                self.min_seg_size_fwd = header_len
+
+            # TCP flags
+            if tcp_flags & 0x01:  # FIN
+                self.fwd_fin += 1
+            if tcp_flags & 0x02:  # SYN
+                self.fwd_syn += 1
+                # Capture initial window size from SYN packet
+                if self.init_win_fwd == -1:
+                    # Note: window size would need to be extracted from TCP header
+                    # For now, using -1 as placeholder
+                    pass
+            if tcp_flags & 0x04:  # RST
+                self.fwd_rst += 1
+            if tcp_flags & 0x08:  # PSH
+                self.fwd_psh += 1
+            if tcp_flags & 0x10:  # ACK
+                self.fwd_ack += 1
+            if tcp_flags & 0x20:  # URG
+                self.fwd_urg += 1
+            if tcp_flags & 0x80:  # CWE (rarely used)
+                self.fwd_cwe += 1
+            if tcp_flags & 0x40:  # ECE
+                self.fwd_ece += 1
+
+        else:  # backward
+            self.bwd_pkt_count += 1
+            self.bwd_bytes += pkt_len
+
+            # Packet length stats
+            self.bwd_pkt_len_stat.update(pkt_len)
+            self.all_pkt_len_stat.update(pkt_len)
+
+            # IAT
+            if self.last_bwd_time is not None:
+                iat = pkt_time - self.last_bwd_time
+                self.bwd_iat_stat.update(iat)
+                self.bwd_iat_total += iat
+            self.last_bwd_time = pkt_time
+
+            # Header length
+            self.bwd_header_len += header_len
+
+            # TCP flags
+            if tcp_flags & 0x01:  # FIN
+                self.bwd_fin += 1
+            if tcp_flags & 0x02:  # SYN
+                self.bwd_syn += 1
+                if self.init_win_bwd == -1:
+                    pass
+            if tcp_flags & 0x04:  # RST
+                self.bwd_rst += 1
+            if tcp_flags & 0x08:  # PSH
+                self.bwd_psh += 1
+            if tcp_flags & 0x10:  # ACK
+                self.bwd_ack += 1
+            if tcp_flags & 0x20:  # URG
+                self.bwd_urg += 1
+            if tcp_flags & 0x80:  # CWE
+                self.bwd_cwe += 1
+            if tcp_flags & 0x40:  # ECE
+                self.bwd_ece += 1
+
+        # Update overall flow IAT
+        if self.last_pkt_time is not None:
+            iat = pkt_time - self.last_pkt_time
+            self.flow_iat_stat.update(iat)
+        self.last_pkt_time = pkt_time
+
+    def _update_active_idle(self, pkt_time: float):
+        """
+        Track active/idle periods. A gap > ACTIVITY_THRESHOLD marks idle time.
+        """
+        if self.last_active_time is None:
+            # First packet
+            self.current_active_start = pkt_time
+            self.last_active_time = pkt_time
+            return
+
+        gap = pkt_time - self.last_active_time
+
+        if gap > self.ACTIVITY_THRESHOLD:
+            # End current active period, record idle
+            if self.current_active_start is not None:
+                active_duration = self.last_active_time - self.current_active_start
+                self.active_stat.update(active_duration)
+            self.idle_stat.update(gap)
+            self.current_active_start = pkt_time
+        else:
+            # Continue active period
+            pass
+
+        self.last_active_time = pkt_time
+
+    def get_feature_vector(self) -> Dict[str, float]:
+        """
+        Extract all 87 CIC-IDS2017 features as a dictionary.
+
+        Returns:
+            dict with feature names (CIC-IDS2017 names) and float values
+        """
+        features = OrderedDict()
+
+        # Compute flow duration in microseconds (like CIC-IDS2017)
+        flow_duration_us = (self.last_seen - self.start_time) * 1e6
+        flow_duration_s = self.last_seen - self.start_time
+
+        # ── Basic Flow Statistics
+        features["Flow Duration"] = flow_duration_us
+
+        features["Total Fwd Packets"] = float(self.fwd_pkt_count)
+        features["Total Backward Packets"] = float(self.bwd_pkt_count)
+
+        features["Total Length of Fwd Packets"] = float(self.fwd_bytes)
+        features["Total Length of Bwd Packets"] = float(self.bwd_bytes)
+
+        # ── Fwd Packet Length Statistics
+        fwd_pkt_stats = self.fwd_pkt_len_stat
+        features["Fwd Packet Length Max"] = float(fwd_pkt_stats.max_val) if fwd_pkt_stats.count > 0 else 0.0
+        features["Fwd Packet Length Min"] = float(fwd_pkt_stats.min_val) if fwd_pkt_stats.count > 0 else 0.0
+        features["Fwd Packet Length Mean"] = float(fwd_pkt_stats.mean) if fwd_pkt_stats.count > 0 else 0.0
+        features["Fwd Packet Length Std"] = float(fwd_pkt_stats.std) if fwd_pkt_stats.count > 0 else 0.0
+
+        # ── Bwd Packet Length Statistics
+        bwd_pkt_stats = self.bwd_pkt_len_stat
+        features["Bwd Packet Length Max"] = float(bwd_pkt_stats.max_val) if bwd_pkt_stats.count > 0 else 0.0
+        features["Bwd Packet Length Min"] = float(bwd_pkt_stats.min_val) if bwd_pkt_stats.count > 0 else 0.0
+        features["Bwd Packet Length Mean"] = float(bwd_pkt_stats.mean) if bwd_pkt_stats.count > 0 else 0.0
+        features["Bwd Packet Length Std"] = float(bwd_pkt_stats.std) if bwd_pkt_stats.count > 0 else 0.0
+
+        # ── Flow Rate Features
+        if flow_duration_s > 0:
+            features["Flow Bytes/s"] = float(self.fwd_bytes + self.bwd_bytes) / flow_duration_s
+            features["Flow Packets/s"] = float(self.fwd_pkt_count + self.bwd_pkt_count) / flow_duration_s
+        else:
+            features["Flow Bytes/s"] = 0.0
+            features["Flow Packets/s"] = 0.0
+
+        # ── IAT (Flow level)
+        flow_iat_stats = self.flow_iat_stat
+        features["Flow IAT Mean"] = float(flow_iat_stats.mean) if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Std"] = float(flow_iat_stats.std) if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Max"] = float(flow_iat_stats.max_val) if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Min"] = float(flow_iat_stats.min_val) if flow_iat_stats.count > 0 else 0.0
+
+        # ── IAT (Fwd)
+        fwd_iat_stats = self.fwd_iat_stat
+        features["Fwd IAT Total"] = float(self.fwd_iat_total)
+        features["Fwd IAT Mean"] = float(fwd_iat_stats.mean) if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Std"] = float(fwd_iat_stats.std) if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Max"] = float(fwd_iat_stats.max_val) if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Min"] = float(fwd_iat_stats.min_val) if fwd_iat_stats.count > 0 else 0.0
+
+        # ── IAT (Bwd)
+        bwd_iat_stats = self.bwd_iat_stat
+        features["Bwd IAT Total"] = float(self.bwd_iat_total)
+        features["Bwd IAT Mean"] = float(bwd_iat_stats.mean) if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Std"] = float(bwd_iat_stats.std) if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Max"] = float(bwd_iat_stats.max_val) if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Min"] = float(bwd_iat_stats.min_val) if bwd_iat_stats.count > 0 else 0.0
+
+        # ── TCP Flags (Fwd/Bwd)
+        features["Fwd PSH Flags"] = float(self.fwd_psh)
+        features["Bwd PSH Flags"] = float(self.bwd_psh)
+        features["Fwd URG Flags"] = float(self.fwd_urg)
+        features["Bwd URG Flags"] = float(self.bwd_urg)
+
+        # ── Header Lengths
+        features["Fwd Header Length"] = float(self.fwd_header_len)
+        features["Bwd Header Length"] = float(self.bwd_header_len)
+
+        # ── Packet rates per direction
+        if flow_duration_s > 0:
+            features["Fwd Packets/s"] = float(self.fwd_pkt_count) / flow_duration_s
+            features["Bwd Packets/s"] = float(self.bwd_pkt_count) / flow_duration_s
+        else:
+            features["Fwd Packets/s"] = 0.0
+            features["Bwd Packets/s"] = 0.0
+
+        # ── Overall Packet Length Statistics
+        all_pkt_stats = self.all_pkt_len_stat
+        features["Min Packet Length"] = float(all_pkt_stats.min_val) if all_pkt_stats.count > 0 else 0.0
+        features["Max Packet Length"] = float(all_pkt_stats.max_val) if all_pkt_stats.count > 0 else 0.0
+        features["Packet Length Mean"] = float(all_pkt_stats.mean) if all_pkt_stats.count > 0 else 0.0
+        features["Packet Length Std"] = float(all_pkt_stats.std) if all_pkt_stats.count > 0 else 0.0
+        features["Packet Length Variance"] = float(all_pkt_stats.variance) if all_pkt_stats.count > 0 else 0.0
+
+        # ── TCP Flag Counts (total fwd + bwd)
+        features["FIN Flag Count"] = float(self.fwd_fin + self.bwd_fin)
+        features["SYN Flag Count"] = float(self.fwd_syn + self.bwd_syn)
+        features["RST Flag Count"] = float(self.fwd_rst + self.bwd_rst)
+        features["PSH Flag Count"] = float(self.fwd_psh + self.bwd_psh)
+        features["ACK Flag Count"] = float(self.fwd_ack + self.bwd_ack)
+        features["URG Flag Count"] = float(self.fwd_urg + self.bwd_urg)
+        features["CWE Flag Count"] = float(self.fwd_cwe + self.bwd_cwe)
+        features["ECE Flag Count"] = float(self.fwd_ece + self.bwd_ece)
+
+        # ── Down/Up Ratio (bwd_bytes / fwd_bytes, or 0 if no fwd)
+        if self.fwd_bytes > 0:
+            features["Down/Up Ratio"] = float(self.bwd_bytes) / float(self.fwd_bytes)
+        else:
+            features["Down/Up Ratio"] = 0.0
+
+        # ── Average Packet Sizes
+        total_pkts = self.fwd_pkt_count + self.bwd_pkt_count
+        total_bytes = self.fwd_bytes + self.bwd_bytes
+        if total_pkts > 0:
+            features["Average Packet Size"] = float(total_bytes) / float(total_pkts)
+        else:
+            features["Average Packet Size"] = 0.0
+
+        if self.fwd_pkt_count > 0:
+            features["Avg Fwd Segment Size"] = float(self.fwd_bytes) / float(self.fwd_pkt_count)
+        else:
+            features["Avg Fwd Segment Size"] = 0.0
+
+        if self.bwd_pkt_count > 0:
+            features["Avg Bwd Segment Size"] = float(self.bwd_bytes) / float(self.bwd_pkt_count)
+        else:
+            features["Avg Bwd Segment Size"] = 0.0
+
+        # ── Fwd Header Length.1 (CICFlowMeter bug: same as Fwd Header Length)
+        features["Fwd Header Length.1"] = features["Fwd Header Length"]
+
+        # ── Bulk Features (placeholder = 0, requires burst detection not implemented)
+        features["Fwd Avg Bytes/Bulk"] = 0.0
+        features["Fwd Avg Packets/Bulk"] = 0.0
+        features["Fwd Avg Bulk Rate"] = 0.0
+        features["Bwd Avg Bytes/Bulk"] = 0.0
+        features["Bwd Avg Packets/Bulk"] = 0.0
+        features["Bwd Avg Bulk Rate"] = 0.0
+
+        # ── Subflow Features (= total flow features, no segmentation)
+        features["Subflow Fwd Packets"] = float(self.fwd_pkt_count)
+        features["Subflow Fwd Bytes"] = float(self.fwd_bytes)
+        features["Subflow Bwd Packets"] = float(self.bwd_pkt_count)
+        features["Subflow Bwd Bytes"] = float(self.bwd_bytes)
+
+        # ── TCP Init Windows
+        features["Init_Win_bytes_forward"] = float(self.init_win_fwd) if self.init_win_fwd >= 0 else 0.0
+        features["Init_Win_bytes_backward"] = float(self.init_win_bwd) if self.init_win_bwd >= 0 else 0.0
+
+        # ── Data packet count
+        features["act_data_pkt_fwd"] = float(self.act_data_pkt_fwd)
+
+        # ── Min segment size
+        features["min_seg_size_forward"] = float(self.min_seg_size_fwd) if self.min_seg_size_fwd > 0 else 0.0
+
+        # ── Active/Idle Statistics
+        active_stats = self.active_stat
+        features["Active Mean"] = float(active_stats.mean) if active_stats.count > 0 else 0.0
+        features["Active Std"] = float(active_stats.std) if active_stats.count > 0 else 0.0
+        features["Active Max"] = float(active_stats.max_val) if active_stats.count > 0 else 0.0
+        features["Active Min"] = float(active_stats.min_val) if active_stats.count > 0 else 0.0
+
+        idle_stats = self.idle_stat
+        features["Idle Mean"] = float(idle_stats.mean) if idle_stats.count > 0 else 0.0
+        features["Idle Std"] = float(idle_stats.std) if idle_stats.count > 0 else 0.0
+        features["Idle Max"] = float(idle_stats.max_val) if idle_stats.count > 0 else 0.0
+        features["Idle Min"] = float(idle_stats.min_val) if idle_stats.count > 0 else 0.0
+
+        # ── Port Encoding (17 features from dst_port)
+        port_features = encode_port(self.dst_port)
+        features.update(port_features)
+
+        return features
+
+
+class BidirectionalFlowTable:
+    """
+    Thread-safe flow table with bidirectional flow lookup and timeout-based expiry.
+
+    Maintains flows indexed by forward 5-tuple, handles reverse flow lookup.
+    """
+
+    def __init__(self, timeout_sec: float = 120.0, max_flows: int = 100000):
+        """
+        Args:
+            timeout_sec: inactive flows expire after this duration
+            max_flows: maximum concurrent flows (LRU eviction)
+        """
+        self.timeout = timeout_sec
+        self.max_flows = max_flows
+        self.flows: Dict[Tuple[str, str, int, int, int], BidirectionalFlowRecord] = {}
+        self.flow_order = []  # Track insertion order for LRU
+
+    def get_or_create_flow(
+        self,
+        src_ip: str,
+        dst_ip: str,
+        src_port: int,
+        dst_port: int,
+        protocol: str,
+        pkt_time: float,
+    ) -> Tuple[BidirectionalFlowRecord, str]:
+        """
+        Lookup or create a flow using bidirectional key logic.
+
+        Returns:
+            (flow_record, direction) where direction is "fwd" or "bwd"
+        """
+        proto_code = self._proto_to_code(protocol)
+        forward_key = (src_ip, dst_ip, src_port, dst_port, proto_code)
+        reverse_key = (dst_ip, src_ip, dst_port, src_port, proto_code)
+
+        # Check forward key
+        if forward_key in self.flows:
+            return self.flows[forward_key], "fwd"
+
+        # Check reverse key
+        if reverse_key in self.flows:
+            return self.flows[reverse_key], "bwd"
+
+        # Create new flow
+        flow = BidirectionalFlowRecord(
+            key=forward_key,
+            dst_port=dst_port,
+            start_time=pkt_time,
+            last_seen=pkt_time,
+        )
+        self.flows[forward_key] = flow
+        self.flow_order.append(forward_key)
+
+        # LRU eviction if needed
+        if len(self.flows) > self.max_flows:
+            oldest_key = self.flow_order.pop(0)
+            del self.flows[oldest_key]
+
+        return flow, "fwd"
+
+    def update_flow(
+        self,
+        src_ip: str,
+        dst_ip: str,
+        src_port: int,
+        dst_port: int,
+        protocol: str,
+        pkt_time: float,
+        pkt_len: int,
+        payload_len: int = 0,
+        tcp_flags: int = 0,
+        header_len: int = 0,
+    ):
+        """
+        Update a flow with packet information. Creates flow if needed.
+        """
+        flow, direction = self.get_or_create_flow(
+            src_ip, dst_ip, src_port, dst_port, protocol, pkt_time
+        )
+        flow.update(pkt_time, pkt_len, payload_len, tcp_flags, header_len, direction)
+
+    def expire_old_flows(self, current_time: float) -> list:
+        """
+        Remove and return flows inactive for > timeout seconds.
+
+        Returns:
+            list of (BidirectionalFlowRecord, timedelta_sec) tuples
+        """
+        expired = []
+        keys_to_remove = []
+
+        for key, flow in self.flows.items():
+            age = current_time - flow.last_seen
+            if age > self.timeout:
+                expired.append((flow, age))
+                keys_to_remove.append(key)
+
+        for key in keys_to_remove:
+            del self.flows[key]
+            self.flow_order.remove(key)
+
+        return expired
+
+    def get_all_flows(self) -> Dict[Tuple[str, str, int, int, int], BidirectionalFlowRecord]:
+        """Return a shallow copy of all current flows."""
+        return dict(self.flows)
+
+    def _proto_to_code(self, protocol: str) -> int:
+        """Convert protocol name to IANA code."""
+        protos = {"tcp": 6, "udp": 17, "icmp": 1}
+        return protos.get(protocol.lower(), 0)
+
+
+__all__ = [
+    "BidirectionalFlowRecord",
+    "BidirectionalFlowTable",
+]

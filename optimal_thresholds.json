@@ -1,7 +1,0 @@
-{
-  "Botnet": 0.9,
-  "Brute Force": 0.9,
-  "description": "Custom decision thresholds for minority classes to maximize precision",
-  "default_threshold": 0.5,
-  "note": "Apply Botnet threshold when P(Botnet) >= 0.90, Brute Force when P(Brute Force) >= 0.90"
-}
