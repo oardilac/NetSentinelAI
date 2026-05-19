@@ -1,0 +1,6002 @@
+[
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 11998.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 250.0416736,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 11998.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 97654787.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.133121994,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16300000.0,
+      "Bwd IAT Mean": 3698.8,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 86219176.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.162376871,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 14400000.0,
+      "Bwd IAT Mean": 14400000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 80883543.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.173088362,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 11600000.0,
+      "Bwd IAT Mean": 6125.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 42.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 47619.04762,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 460946.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 19.52506367,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 341.0,
+      "Bwd IAT Mean": 92187.6,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 44.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 45454.54545,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 3695912.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 1.352846063,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 923978.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 76.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 26315.78947,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 108.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 18518.51852,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 845949.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 9.456834868,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 348.0,
+      "Bwd IAT Mean": 211475.25,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 49.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 40816.32653,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 226.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 13274.33628,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 226.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1288003.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 6.987561364,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1536.5,
+      "Bwd IAT Mean": 257575.8,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 3850579.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.519402407,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3850579.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 4.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 500000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 4.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1758224.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 5.1188017,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1867.5,
+      "Bwd IAT Mean": 351628.2,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 92913.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 86.10205246,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 7532.0,
+      "Bwd IAT Mean": 23222.25,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98322943.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.142387927,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16400000.0,
+      "Bwd IAT Mean": 6121.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 49.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 40816.32653,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98795310.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.131585194,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16400000.0,
+      "Bwd IAT Mean": 30008.2,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 2035972.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2.455829451,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 508993.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1004145.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 3.0,
+      "Flow Packets/s": 5.975232661,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 501887.0,
+      "Bwd IAT Mean": 501665.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 84648448.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.141762788,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 21100000.0,
+      "Bwd IAT Mean": 14100000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 60.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 33333.33333,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 244165.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 32.76472877,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 7347.0,
+      "Bwd IAT Mean": 61004.5,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 97480804.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.123101159,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19500000.0,
+      "Bwd IAT Mean": 28499.8,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98754059.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 8.0,
+      "Flow Packets/s": 0.141766325,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 19700000.0,
+      "Bwd IAT Mean": 14100000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 67774303.0,
+      "Total Fwd Packets": 14.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 0.236077677,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 5213407.923,
+      "Bwd IAT Mean": 31400000.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 44.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 45454.54545,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 3000000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 99793739.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.120248025,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 24900000.0,
+      "Bwd IAT Mean": 16600000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 4.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 500000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 4.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 8122750.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.492444061,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2707583.333,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 79.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 25316.4557,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2000000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 47.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 42553.19149,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1782428.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 4.488259834,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 10329.5,
+      "Bwd IAT Mean": 445596.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 22.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 90909.09091,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 69.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 28985.50725,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 100220650.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.109757819,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 20000000.0,
+      "Bwd IAT Mean": 34076.5,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 85192194.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.140857976,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 21300000.0,
+      "Bwd IAT Mean": 14200000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 48.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 41666.66667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 205590.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 38.91239846,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 11015.5,
+      "Bwd IAT Mean": 51388.25,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 43.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 46511.62791,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 91.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 21978.02198,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 81198061.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.160102345,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 11600000.0,
+      "Bwd IAT Mean": 36411.25,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 88.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 22727.27273,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 88581717.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 0.135468135,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 12500000.0,
+      "Bwd IAT Mean": 337281.3333,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 4265852.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.937679038,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1421950.667,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 14462.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 276.5869174,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 241.0,
+      "Bwd IAT Mean": 14423.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 150545.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 59.7827892,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 5496.5,
+      "Bwd IAT Mean": 30106.8,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 99616737.0,
+      "Total Fwd Packets": 11.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.170654054,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 9950120.7,
+      "Bwd IAT Mean": 194681.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 10097732.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.396128556,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3365910.667,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 6042852.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.661939098,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2014284.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 45.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 44444.44444,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 101755747.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 0.078619638,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 20400000.0,
+      "Bwd IAT Mean": 102000000.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 25096972.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.079690889,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 25100000.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 71811212.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 0.167104825,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 10100000.0,
+      "Bwd IAT Mean": 302086.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 190162.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 52.58674183,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 6024.5,
+      "Bwd IAT Mean": 31681.16667,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98430765.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.132072528,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 19700000.0,
+      "Bwd IAT Mean": 16400000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 8622051.0,
+      "Total Fwd Packets": 9.0,
+      "Total Backward Packets": 15.0,
+      "Flow Packets/s": 2.783560431,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 678048.875,
+      "Bwd IAT Mean": 615852.2857,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 62.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 32258.06452,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98708292.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.131701195,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19700000.0,
+      "Bwd IAT Mean": 1351.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 34068495.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.381584217,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 4847862.714,
+      "Bwd IAT Mean": 36850.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 64.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 31250.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 2999948.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 1.666695556,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 749987.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 750992.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 10.65257686,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1603.0,
+      "Bwd IAT Mean": 186927.75,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1260598.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 9.519291638,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 305243.0,
+      "Bwd IAT Mean": 43935.33333,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 97494782.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.12308351,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19500000.0,
+      "Bwd IAT Mean": 8684.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 83350141.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.167966123,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 13900000.0,
+      "Bwd IAT Mean": 24566.66667,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 208205.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 43.2266276,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 7997.0,
+      "Bwd IAT Mean": 41639.0,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 2549.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 3530.796391,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 980.0,
+      "Bwd IAT Mean": 479.0,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 63126582.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.11088831,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 10500000.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 59.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 33898.30508,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1616892.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 3.092352489,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 404223.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 85779016.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.139894354,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 21400000.0,
+      "Bwd IAT Mean": 14300000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1156164.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 6.919433575,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3934.5,
+      "Bwd IAT Mean": 289035.75,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 48.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 41666.66667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 74.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 27027.02703,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 1.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.6667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 49.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 40816.32653,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 94268619.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.137903792,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 13500000.0,
+      "Bwd IAT Mean": 23290.25,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98957045.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 8.0,
+      "Flow Packets/s": 0.141475526,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 19800000.0,
+      "Bwd IAT Mean": 14100000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 921753.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 7.594225351,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 420.0,
+      "Bwd IAT Mean": 307235.6667,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 45.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 44444.44444,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 68588677.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.204115324,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 9779865.857,
+      "Bwd IAT Mean": 28316.8,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 3003695.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.998769848,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1501847.5,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 147736.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 8.0,
+      "Flow Packets/s": 74.45713976,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 6526.5,
+      "Bwd IAT Mean": 21091.85714,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 70.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 28571.42857,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 162800.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 55.28255528,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 449.5,
+      "Bwd IAT Mean": 32553.2,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 2.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 1000000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 551861.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 14.49640399,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 458.5,
+      "Bwd IAT Mean": 137951.5,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1017.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 3933.136676,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 339.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 116617252.0,
+      "Total Fwd Packets": 9.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.128625909,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 14600000.0,
+      "Bwd IAT Mean": 6306.8,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 5.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 400000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 5.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 75.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 26666.66667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 48.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 41666.66667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 73.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 27397.26027,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 4.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 750000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 4659632.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.858436889,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1553210.667,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 5.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 400000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 5.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 85973923.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.162840074,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 14300000.0,
+      "Bwd IAT Mean": 25296.33333,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2000000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 75.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 26666.66667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 68905755.0,
+      "Total Fwd Packets": 9.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.203176063,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 8596131.75,
+      "Bwd IAT Mean": 37909.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 276.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 10869.56522,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 276.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 39.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 51282.05128,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 82751623.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 0.145012262,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 11800000.0,
+      "Bwd IAT Mean": 41022.66667,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 15.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 133333.3333,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 85225083.0,
+      "Total Fwd Packets": 9.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.176004522,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 10600000.0,
+      "Bwd IAT Mean": 74693.2,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 12558.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 318.5220577,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 1243.0,
+      "Bwd IAT Mean": 12507.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 44.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 45454.54545,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 63111347.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.110915078,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 10500000.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1206554.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 7.459260008,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 431.5,
+      "Bwd IAT Mean": 241301.6,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98656879.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.121633688,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19700000.0,
+      "Bwd IAT Mean": 6117.6,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.6667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 51.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 39215.68627,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 968566.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 8.259633314,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 503.0,
+      "Bwd IAT Mean": 242126.25,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 60.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 33333.33333,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 2005.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2493.765586,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 501.25,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 99943638.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.130073312,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 20000000.0,
+      "Bwd IAT Mean": 16700000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.6667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 99601677.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.140559882,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 16600000.0,
+      "Bwd IAT Mean": 16600000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 350663.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 28.51740845,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 72001.0,
+      "Bwd IAT Mean": 70120.6,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 69.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 28985.50725,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 4124968.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 1.212130615,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1031242.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 34.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 58823.52941,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 92243539.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.151772147,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 13200000.0,
+      "Bwd IAT Mean": 9619.4,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 49.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 40816.32653,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 49.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 89404913.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.145405879,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 12700000.0,
+      "Bwd IAT Mean": 220587.25,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 9597626.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.520962163,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2399406.5,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 49.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 40816.32653,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 76.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 26315.78947,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 7813887.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.639886397,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1953471.75,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 99867853.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.110145554,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19900000.0,
+      "Bwd IAT Mean": 36139.75,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 523172.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 17.2027555,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1001.5,
+      "Bwd IAT Mean": 104623.4,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 8859556.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 1.467342156,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1438433.0,
+      "Bwd IAT Mean": 48193.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 17.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 117647.0588,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 51.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 39215.68627,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 10.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 200000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 6002784.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.666357477,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2000928.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 84586119.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.15368952,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 16900000.0,
+      "Bwd IAT Mean": 14100000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 72.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 27777.77778,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 100184599.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.119778889,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16700000.0,
+      "Bwd IAT Mean": 36584.25,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 66.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 30303.0303,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 13769.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 290.5076621,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 591.0,
+      "Bwd IAT Mean": 13752.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 54.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 37037.03704,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 85146731.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.164422049,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 12200000.0,
+      "Bwd IAT Mean": 270.2,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 3342097.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 1.196853353,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1114032.333,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 99071682.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.141311823,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 14100000.0,
+      "Bwd IAT Mean": 15293.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 100385672.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.129500553,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16700000.0,
+      "Bwd IAT Mean": 10084.8,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 980.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2040.816327,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 980.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98423864.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.142241926,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16400000.0,
+      "Bwd IAT Mean": 7271.5,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 85684097.0,
+      "Total Fwd Packets": 10.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.186732434,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 9506954.889,
+      "Bwd IAT Mean": 69690.8,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 101156955.0,
+      "Total Fwd Packets": 9.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.148284416,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 12600000.0,
+      "Bwd IAT Mean": 921.8,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 101930677.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 0.12753766,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 14300000.0,
+      "Bwd IAT Mean": 472133.75,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 99393730.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.130792958,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 19900000.0,
+      "Bwd IAT Mean": 16600000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 136591.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 65.89013917,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 6488.5,
+      "Bwd IAT Mean": 27306.0,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98878839.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.121360648,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19800000.0,
+      "Bwd IAT Mean": 19117.8,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 83074411.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.156486213,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16600000.0,
+      "Bwd IAT Mean": 27450.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 68.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 29411.76471,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 8027815.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.498267586,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2675938.333,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 34.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 58823.52941,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98306873.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.122066745,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19700000.0,
+      "Bwd IAT Mean": 1315.8,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 9818753.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.509229634,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2454688.25,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 997.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 3009.027081,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 997.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 117450688.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.11068475,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19600000.0,
+      "Bwd IAT Mean": 29384.8,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 1.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2000000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 4675883.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.855453398,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1558627.667,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 998.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 5010.02004,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 249.5,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 149737.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 60.10538477,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 6002.0,
+      "Bwd IAT Mean": 29928.2,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 4069011.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 1.228799824,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1017252.75,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 64.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 31250.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 32.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 62500.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 56250.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 124.4444444,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 434.0,
+      "Bwd IAT Mean": 18734.33333,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 49.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 40816.32653,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 99581949.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 8.0,
+      "Flow Packets/s": 0.130545748,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 24900000.0,
+      "Bwd IAT Mean": 14200000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 5826894.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.858090091,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1456723.5,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 2313879.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2.160873581,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 578469.75,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 7133813.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.70088745,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1783453.25,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 45.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 44444.44444,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 83346308.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.167973847,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 11900000.0,
+      "Bwd IAT Mean": 16327.4,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 2036.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2946.954813,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 407.2,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 26.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 76923.07692,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 59047.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 84.67830711,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 14761.75,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 121415.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 65.88971709,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 425.5,
+      "Bwd IAT Mean": 30342.25,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 98119952.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 7.0,
+      "Flow Packets/s": 0.122299285,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 24500000.0,
+      "Bwd IAT Mean": 16400000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 100169683.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.129779786,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16700000.0,
+      "Bwd IAT Mean": 30677.4,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 77.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 25974.02597,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 554454.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 16.23218518,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 14014.0,
+      "Bwd IAT Mean": 110870.4,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 43.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 46511.62791,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 85112956.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.140989111,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 17000000.0,
+      "Bwd IAT Mean": 29490.4,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 9410696.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 0.425048264,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3136898.667,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 29.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 68965.51724,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 84692067.0,
+      "Total Fwd Packets": 9.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.17711222,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 10600000.0,
+      "Bwd IAT Mean": 29867.2,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 44.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 45454.54545,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 81188196.0,
+      "Total Fwd Packets": 8.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 0.147804738,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 11600000.0,
+      "Bwd IAT Mean": 85133.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 97615833.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.133175117,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 16200000.0,
+      "Bwd IAT Mean": 29502.6,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "Training Attack",
+    "features": {
+      "Flow Duration": 102676794.0,
+      "Total Fwd Packets": 9.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.146089485,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 12800000.0,
+      "Bwd IAT Mean": 235.8,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "ATTACK"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 63376.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 63.1153749053,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 299.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 13377.92642,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 23825.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 167.8908709,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 48.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 41736746.0,
+      "Total Fwd Packets": 537.0,
+      "Total Backward Packets": 644.0,
+      "Flow Packets/s": 28.29640816,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3242.914179,
+      "Bwd IAT Mean": 64879.54121,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 60543.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 33.03437226,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 4262475.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 1.642238371,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1065618.75,
+      "Bwd IAT Mean": 94673.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 60.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 33333.33333,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 47783.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 146.4956156,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 11967.5,
+      "Bwd IAT Mean": 8152.666667,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 62111.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 64.4008307707,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 171.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 23391.81287,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 4.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 46307.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 43.19001447,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 151.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 19867.54967,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 75.5,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 39021.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 51.25445273,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 61966.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 32.27576413,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 186.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 21505.376344086,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 291.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 13745.70447,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1.0,
+      "Bwd IAT Mean": 1.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 115408607.0,
+      "Total Fwd Packets": 21.0,
+      "Total Backward Packets": 18.0,
+      "Flow Packets/s": 0.337929735,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 5770430.35,
+      "Bwd IAT Mean": 6512600.588,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 60951.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 98.43973028,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 11538.66667,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 1094.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 3656.30713,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 78.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 31195.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 128.2256771919,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 48797.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 81.97225239,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 14.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 78.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 25641.02564,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 119026433.0,
+      "Total Fwd Packets": 24.0,
+      "Total Backward Packets": 27.0,
+      "Flow Packets/s": 0.428476253,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 5175062.304,
+      "Bwd IAT Mean": 4576840.038,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 10036308.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 1.195658802,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1672718.0,
+      "Bwd IAT Mean": 22182.5,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 115205082.0,
+      "Total Fwd Packets": 16.0,
+      "Total Backward Packets": 15.0,
+      "Flow Packets/s": 0.269085352,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 7680338.8,
+      "Bwd IAT Mean": 7896105.571,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 54233.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 129.0727048,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 15179.5,
+      "Bwd IAT Mean": 10371.66667,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 31091.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 128.6545945772,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 55.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 72727.27273,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 49.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 166.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 12048.19277,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 59634.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 67.0758292249,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 48.0,
+      "Bwd IAT Mean": 64.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 57.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 35087.7193,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 61293.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 65.2603070497,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 48.0,
+      "Bwd IAT Mean": 47.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 31243.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 128.028678424,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 30501.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 65.5716206,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 115823307.0,
+      "Total Fwd Packets": 23.0,
+      "Total Backward Packets": 18.0,
+      "Flow Packets/s": 0.353987475,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 5264695.773,
+      "Bwd IAT Mean": 6632624.765,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 31278.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 127.8854147,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 27741.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 144.1909088,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 8573724.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 6.0,
+      "Flow Packets/s": 0.816448022,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 1712760.2,
+      "Down/Up Ratio": 6.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 47671.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 83.90845587,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 417421.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 16.76964024,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 104050.5,
+      "Bwd IAT Mean": 70027.66667,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 112919767.0,
+      "Total Fwd Packets": 22.0,
+      "Total Backward Packets": 13.0,
+      "Flow Packets/s": 0.309954589,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 5377126.952,
+      "Bwd IAT Mean": 9409976.833,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 97517193.0,
+      "Total Fwd Packets": 6.0,
+      "Total Backward Packets": 10.0,
+      "Flow Packets/s": 0.164073632,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 19500000.0,
+      "Bwd IAT Mean": 10600000.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 4.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 500000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 4.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 249.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 16064.25703,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 205.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 19512.1951219512,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 4.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 290699.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 13.75993725,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 49.0,
+      "Bwd IAT Mean": 1.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 48751.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 82.04959898,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2.0,
+      "Bwd IAT Mean": 48.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 29.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 68965.51724,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 61339.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 65.2113663412,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 53.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 37735.84906,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 23497.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 170.234498021,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 48.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 54731.0,
+      "Total Fwd Packets": 18.0,
+      "Total Backward Packets": 13.0,
+      "Flow Packets/s": 566.4066069,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3219.470588,
+      "Bwd IAT Mean": 1222.5,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 5845822.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 1.881685758,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 974303.6667,
+      "Bwd IAT Mean": 38264.33333,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 95918.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 41.70228737,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 4.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 87.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 22988.50575,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 228.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 17543.85965,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 48.0,
+      "Bwd IAT Mean": 48.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 1.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 2000000.0,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 78.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 25641.02564,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 142310.0,
+      "Total Fwd Packets": 46.0,
+      "Total Backward Packets": 54.0,
+      "Flow Packets/s": 702.6913077,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3161.577778,
+      "Bwd IAT Mean": 2252.075472,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 118811858.0,
+      "Total Fwd Packets": 17.0,
+      "Total Backward Packets": 14.0,
+      "Flow Packets/s": 0.2609167176,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 7425741.125,
+      "Bwd IAT Mean": 9136777.53846154,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.6667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.6667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 222.0,
+      "Total Fwd Packets": 3.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 18018.018018018,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 111.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 21164867.0,
+      "Total Fwd Packets": 29.0,
+      "Total Backward Packets": 32.0,
+      "Flow Packets/s": 2.882134813,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 755888.1071,
+      "Bwd IAT Mean": 658395.4194,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 572671.0,
+      "Total Fwd Packets": 32.0,
+      "Total Backward Packets": 39.0,
+      "Flow Packets/s": 123.9804355,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 18473.25806,
+      "Bwd IAT Mean": 14395.21053,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.6667,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 9115.0,
+      "Total Fwd Packets": 5.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 1097.092704,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 2278.75,
+      "Bwd IAT Mean": 2249.25,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 119969.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 33.34194667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 47.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 24077.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 83.06682726,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 61.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 32786.88525,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 61.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 245.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 12244.8979591837,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 245.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 95865686.0,
+      "Total Fwd Packets": 118.0,
+      "Total Backward Packets": 252.0,
+      "Flow Packets/s": 3.859566602,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 818714.2051,
+      "Bwd IAT Mean": 381790.5219,
+      "Down/Up Ratio": 2.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 197751.0,
+      "Total Fwd Packets": 7.0,
+      "Total Backward Packets": 5.0,
+      "Flow Packets/s": 60.68237329,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 32958.5,
+      "Bwd IAT Mean": 22770.75,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 115479332.0,
+      "Total Fwd Packets": 16.0,
+      "Total Backward Packets": 14.0,
+      "Flow Packets/s": 0.259786747,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 7698622.133,
+      "Bwd IAT Mean": 8483851.308,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 84146332.0,
+      "Total Fwd Packets": 18.0,
+      "Total Backward Packets": 16.0,
+      "Flow Packets/s": 0.404058016,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 4370499.353,
+      "Bwd IAT Mean": 5607282.4,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 41.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 48780.4878,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 1.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 41.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 50.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 80000.0,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 48.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 221.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 18099.54751,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1.0,
+      "Bwd IAT Mean": 48.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 143.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 27972.02797,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 267.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 14981.27341,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 1.0,
+      "Bwd IAT Mean": 1.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 31221.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 128.1188943,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 98.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 20408.16327,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.6667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 1.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 297.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 13468.01347,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 49.0,
+      "Bwd IAT Mean": 48.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 127475.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 47.06805256,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 31118.0,
+      "Bwd IAT Mean": 49.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 168.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 23809.52381,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 150.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 26666.6666666667,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 3.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 404814.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 4.940540594,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 9083974.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 0.880671829,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3007614.667,
+      "Bwd IAT Mean": 3017540.333,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 65396.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 2.0,
+      "Flow Packets/s": 61.16582054,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 4.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 95079.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 21.0351392,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.666666667,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 67.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 29850.7462686567,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.6667,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 3.0,
+      "Total Fwd Packets": 2.0,
+      "Total Backward Packets": 0.0,
+      "Flow Packets/s": 666666.666666667,
+      "SYN Flag Count": 1.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 3.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 90476823.0,
+      "Total Fwd Packets": 16.0,
+      "Total Backward Packets": 14.0,
+      "Flow Packets/s": 0.3315766293,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 1.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 6028249.93333333,
+      "Bwd IAT Mean": 6955399.38461538,
+      "Down/Up Ratio": 0.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 53.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 37735.84906,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 1861262.0,
+      "Total Fwd Packets": 4.0,
+      "Total Backward Packets": 4.0,
+      "Flow Packets/s": 4.298158991,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 0.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 620367.3333,
+      "Bwd IAT Mean": 603649.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 37.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 54054.05405,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  },
+  {
+    "attack_type": "BENIGN",
+    "features": {
+      "Flow Duration": 172.0,
+      "Total Fwd Packets": 1.0,
+      "Total Backward Packets": 1.0,
+      "Flow Packets/s": 11627.90698,
+      "SYN Flag Count": 0.0,
+      "ACK Flag Count": 1.0,
+      "PSH Flag Count": 0.0,
+      "RST Flag Count": 0.0,
+      "Port_22": 0.0,
+      "Port_80": 0.0,
+      "FIN Flag Count": 0.0,
+      "Fwd IAT Mean": 0.0,
+      "Bwd IAT Mean": 0.0,
+      "Down/Up Ratio": 1.0
+    },
+    "ground_truth": "BENIGN"
+  }
+]
