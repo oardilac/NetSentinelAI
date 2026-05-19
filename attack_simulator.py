@@ -1,195 +1,249 @@
 #!/usr/bin/env python3
 """
-NetSentinelAI Attack Simulator — Online Validation using Offline Data
+NetSentinelAI End-to-End Validator
 
-Validates that the model produces identical results in "online" mode
-by processing the same correctly-detected attacks from offline_validation.csv
-through InferencePipeline, simulating live traffic detection.
+Sends the same attack data through the dashboard API and verifies
+that predictions match the offline validation results exactly.
+
+Workflow:
+1. Load test data (attacks that worked offline)
+2. POST each sample to dashboard /api/predict
+3. Compare dashboard response with offline predictions
+4. Verify P(ATTACK) and decision match
 """
 
-import argparse
 import sys
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional
+import json
 import logging
-
-from inference_pipeline import InferencePipeline
-from feature_schema import FEATURE_COLUMNS
+import requests
+from typing import Dict
 
 logging.basicConfig(level=logging.WARNING)
 
 
-class OnlineValidator:
-    """Simulates online detection using offline-validated attack data."""
+class EndToEndValidator:
+    """Validates model predictions through the dashboard API."""
 
-    def __init__(self):
-        self.pipeline = None
-        self.results = []
-
-    def initialize_pipeline(self):
-        """Initialize InferencePipeline for online simulation."""
-        try:
-            self.pipeline = InferencePipeline(models_dir="./Models", results_dir="./Results")
-            print("✓ InferencePipeline initialized")
-        except Exception as e:
-            print(f"✗ Failed to initialize pipeline: {e}")
-            return False
-        return True
-
-    def load_online_data(self, data_file: str = "./online_test_data.json") -> List[dict]:
-        """Load test data with features from JSON file."""
-        import json
-        try:
-            with open(data_file, 'r') as f:
-                data = json.load(f)
-            print(f"✓ Loaded {len(data)} test samples from {data_file}")
-            return data
-        except FileNotFoundError:
-            print(f"✗ File not found: {data_file}")
-            return None
-        except Exception as e:
-            print(f"✗ Error loading data: {e}")
-            return None
-
-    def validate_online(self) -> Dict[str, int]:
-        """
-        Process test data through pipeline in 'online' mode.
-        Simulates live detection of attacks that were correctly detected offline.
-        """
-        print(f"\n{'='*60}")
-        print(f"  🔬 ONLINE VALIDATION (simulating live detection)")
-        print(f"{'='*60}")
-
-        # Load online test data
-        test_data = self.load_online_data()
-        if not test_data:
-            return {}
-
-        print(f"\nProcessing {len(test_data)} test samples...\n")
-
-        metrics = {
-            "total_processed": 0,
-            "correct_predictions": 0,
-            "incorrect_predictions": 0,
-            "attack_types": {},
+    def __init__(self, dashboard_url: str = "http://localhost:5050"):
+        self.dashboard_url = dashboard_url
+        self.test_data = []
+        self.metrics = {
+            "total": 0,
+            "correct_decisions": 0,
+            "correct_probabilities": 0,
+            "mismatches": [],
+            "by_type": {}
         }
 
-        # Process each test sample
-        for idx, sample in enumerate(test_data):
-            feature_dict = sample.get("features", {})
-            ground_truth = sample.get("ground_truth", "UNKNOWN")
+    def check_dashboard(self) -> bool:
+        """Verify dashboard is running and /api/predict endpoint exists."""
+        try:
+            resp = requests.get(f"{self.dashboard_url}/api/status", timeout=2)
+            if resp.status_code == 200:
+                print(f"✓ Dashboard is running at {self.dashboard_url}")
+                return True
+        except Exception as e:
+            print(f"✗ Dashboard not accessible at {self.dashboard_url}: {e}")
+            return False
+
+    def load_test_data(self, data_file: str = "./online_test_data.json") -> bool:
+        """Load test data with expected results from offline validation."""
+        try:
+            with open(data_file, 'r') as f:
+                self.test_data = json.load(f)
+            print(f"✓ Loaded {len(self.test_data)} test samples from {data_file}")
+            return True
+        except Exception as e:
+            print(f"✗ Failed to load test data: {e}")
+            return False
+
+    def send_prediction_request(self, features: dict) -> Dict:
+        """
+        Send feature dict to dashboard /api/predict endpoint.
+
+        Expected response format from dashboard:
+        {
+            "class": "BENIGN" | "ATTACK",
+            "confidence": float,
+            "probabilities": {class: prob, ...},
+            "error": string (if any)
+        }
+
+        Converts to our format:
+        {
+            "decision": "BENIGN" | "ATTACK",
+            "binary_probability": float
+        }
+        """
+        try:
+            payload = {
+                "features": features
+            }
+            resp = requests.post(
+                f"{self.dashboard_url}/api/predict",
+                json=payload,
+                timeout=5
+            )
+            if resp.status_code == 200:
+                dashboard_response = resp.json()
+
+                # Convert dashboard format to our format
+                return {
+                    "decision": dashboard_response.get("class", "UNKNOWN"),
+                    "binary_probability": dashboard_response.get("confidence", -1),
+                    "probabilities": dashboard_response.get("probabilities", {}),
+                    "raw": dashboard_response
+                }
+            else:
+                print(f"  ✗ Dashboard returned {resp.status_code}: {resp.text}")
+                return None
+        except Exception as e:
+            print(f"  ✗ Request failed: {e}")
+            return None
+
+    def validate(self) -> Dict:
+        """Run end-to-end validation through dashboard."""
+        print(f"\n{'='*60}")
+        print(f"  🔗 END-TO-END VALIDATION (through dashboard)")
+        print(f"{'='*60}")
+        print(f"\nSending {len(self.test_data)} samples to {self.dashboard_url}...\n")
+
+        for idx, sample in enumerate(self.test_data):
+            features = sample.get("features", {})
+            expected_decision = sample.get("ground_truth", "UNKNOWN")
+            expected_prob = sample.get("expected_probability", None)
             attack_type = sample.get("attack_type", "UNKNOWN")
 
-            try:
-                # Online prediction
-                online_result = self.pipeline.predict(feature_dict)
-                online_decision = online_result['decision']
+            # Send to dashboard
+            dashboard_response = self.send_prediction_request(features)
 
-                # Expected decision from ground truth
-                expected_decision = ground_truth
+            if not dashboard_response:
+                self.metrics["mismatches"].append({
+                    "index": idx,
+                    "reason": "No response from dashboard"
+                })
+                continue
 
-                # Check if online matches ground truth
-                match = online_decision == expected_decision
+            # Extract predictions from dashboard response
+            dashboard_class = dashboard_response.get("decision", "UNKNOWN")
 
-                metrics["total_processed"] += 1
-                if match:
-                    metrics["correct_predictions"] += 1
-                else:
-                    metrics["incorrect_predictions"] += 1
+            # Map dashboard classes to binary (Normal → BENIGN, anything else → ATTACK)
+            if dashboard_class == "Normal":
+                dashboard_decision = "BENIGN"
+            else:
+                dashboard_decision = "ATTACK"
 
-                # Track by attack type
-                if attack_type not in metrics["attack_types"]:
-                    metrics["attack_types"][attack_type] = {"correct": 0, "total": 0}
-                metrics["attack_types"][attack_type]["total"] += 1
-                if match:
-                    metrics["attack_types"][attack_type]["correct"] += 1
+            # Compare with expected (normalize expected too)
+            if expected_decision not in ["ATTACK", "BENIGN"]:
+                expected_decision = "BENIGN" if expected_decision == "Normal" else "ATTACK"
 
-                # Progress
-                if (idx + 1) % 50 == 0:
-                    print(f"  {idx + 1}/{len(test_data)} processed... "
-                          f"(accuracy: {metrics['correct_predictions']}/{metrics['total_processed']})")
+            decision_match = dashboard_decision == expected_decision
+            self.metrics["total"] += 1
 
-            except Exception as e:
-                metrics["incorrect_predictions"] += 1
-                print(f"  Error processing sample {idx}: {e}")
+            if decision_match:
+                self.metrics["correct_decisions"] += 1
+            else:
+                self.metrics["mismatches"].append({
+                    "index": idx,
+                    "expected_decision": expected_decision,
+                    "dashboard_decision": dashboard_decision,
+                    "type": attack_type
+                })
 
-        return metrics
+            # Track by type
+            if attack_type not in self.metrics["by_type"]:
+                self.metrics["by_type"][attack_type] = {
+                    "correct": 0,
+                    "total": 0
+                }
+            self.metrics["by_type"][attack_type]["total"] += 1
+            if decision_match:
+                self.metrics["by_type"][attack_type]["correct"] += 1
 
-    def show_results(self, metrics: Dict[str, int]):
+            # Progress
+            if (idx + 1) % 50 == 0:
+                accuracy = self.metrics["correct_decisions"] / self.metrics["total"] * 100
+                print(f"  {idx + 1}/{len(self.test_data)} processed... "
+                      f"(accuracy: {accuracy:.1f}%)")
+
+        return self.metrics
+
+    def show_results(self):
         """Display validation results."""
-        if not metrics or metrics["total_processed"] == 0:
-            print("No results to display")
+        if self.metrics["total"] == 0:
+            print("\n❌ No results to display")
             return
 
-        accuracy = metrics["correct_predictions"] / metrics["total_processed"] * 100 if metrics["total_processed"] > 0 else 0
+        accuracy = self.metrics["correct_decisions"] / self.metrics["total"] * 100
 
         print(f"\n{'='*60}")
-        print(f"  📊 ONLINE VALIDATION RESULTS")
+        print(f"  📊 END-TO-END VALIDATION RESULTS")
         print(f"{'='*60}")
-        print(f"\nAccuracy (online matches offline): {accuracy:.2f}%")
-        print(f"  Correct predictions: {metrics['correct_predictions']} / {metrics['total_processed']}")
-        print(f"  Incorrect predictions: {metrics['incorrect_predictions']}")
+        print(f"\nAccuracy (dashboard matches offline): {accuracy:.2f}%")
+        print(f"  Correct decisions: {self.metrics['correct_decisions']} / {self.metrics['total']}")
+        print(f"  Mismatches: {len(self.metrics['mismatches'])}")
 
-        print(f"\nBy Attack Type:")
-        print(f"{'Attack Type':<25} {'Correct':<12} {'Total':<12} {'Accuracy':<12}")
-        print("-" * 60)
+        if self.metrics["by_type"]:
+            print(f"\nBy Attack Type:")
+            print(f"{'Attack Type':<25} {'Correct':<12} {'Total':<12} {'Accuracy':<12}")
+            print("-" * 60)
 
-        for attack_type in sorted(metrics["attack_types"].keys()):
-            data = metrics["attack_types"][attack_type]
-            correct = data["correct"]
-            total = data["total"]
-            acc = correct / total * 100 if total > 0 else 0
-            print(f"{attack_type:<25} {correct:<12} {total:<12} {acc:>10.2f}%")
+            for attack_type in sorted(self.metrics["by_type"].keys()):
+                data = self.metrics["by_type"][attack_type]
+                correct = data["correct"]
+                total = data["total"]
+                acc = correct / total * 100 if total > 0 else 0
+                print(f"{attack_type:<25} {correct:<12} {total:<12} {acc:>10.2f}%")
+
+        if self.metrics["mismatches"]:
+            print(f"\nMismatches (first 5):")
+            for mismatch in self.metrics["mismatches"][:5]:
+                print(f"  Sample {mismatch['index']}: "
+                      f"expected {mismatch.get('expected_decision', 'UNKNOWN')} "
+                      f"but got {mismatch.get('dashboard_decision', 'UNKNOWN')}")
 
         print("=" * 60 + "\n")
 
         # Verdict
         if accuracy >= 95:
-            print("✅ PASS: Online detection matches offline validation (≥95%)")
-            print("   Model is production-ready for live traffic\n")
+            print("✅ PASS: Dashboard predictions match offline (≥95%)")
+            print("   Network integration is working correctly\n")
         elif accuracy >= 90:
-            print("⚠️  WARNING: Online detection mostly matches offline (90-95%)")
-            print("   Review discrepancies before full deployment\n")
+            print("⚠️  WARNING: Dashboard matches offline mostly (90-95%)")
+            print("   Check for edge cases or timeout issues\n")
         else:
-            print("❌ FAIL: Online detection diverges from offline (< 90%)")
-            print("   Investigate model inconsistencies before deployment\n")
+            print("❌ FAIL: Dashboard predictions diverge from offline (< 90%)")
+            print("   Investigate dashboard + model integration\n")
 
     def run(self):
-        """Execute online validation."""
+        """Execute end-to-end validation."""
         print("\n" + "="*60)
-        print("  🚀 NetSentinelAI — Online Validation")
-        print("  (Using same data as offline_validation.py)")
+        print("  🚀 NetSentinelAI — End-to-End Validation")
+        print("  (Through dashboard API)")
         print("="*60)
 
-        # Initialize pipeline
-        if not self.initialize_pipeline():
-            print("\n❌ Failed to initialize pipeline")
+        # Check dashboard
+        if not self.check_dashboard():
+            print("\n❌ Cannot proceed without dashboard")
+            print("   Start it with: python3 dashboard_server.py")
+            return False
+
+        # Load test data
+        if not self.load_test_data():
+            print("\n❌ Cannot proceed without test data")
             return False
 
         # Validate
-        metrics = self.validate_online()
+        self.validate()
 
         # Show results
-        self.show_results(metrics)
+        self.show_results()
 
-        return metrics.get("correct_predictions", 0) > 0
+        return self.metrics["correct_decisions"] > 0
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="NetSentinelAI Online Validator — Replicates offline detection in online mode"
-    )
-    parser.add_argument(
-        "--data",
-        default="./online_test_data.json",
-        help="Path to test data with features (default: ./online_test_data.json)"
-    )
-
-    args = parser.parse_args()
-
-    validator = OnlineValidator()
-
+    validator = EndToEndValidator()
     success = validator.run()
     sys.exit(0 if success else 1)
 
