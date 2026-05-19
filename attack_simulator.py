@@ -57,7 +57,7 @@ class EndToEndValidator:
             print(f"✗ Failed to load test data: {e}")
             return False
 
-    def send_prediction_request(self, features: dict) -> Dict:
+    def send_prediction_request(self, features: dict, sample_idx: int = 0, verbose: bool = False) -> Dict:
         """
         Send feature dict to dashboard /api/predict endpoint.
 
@@ -79,13 +79,28 @@ class EndToEndValidator:
             payload = {
                 "features": features
             }
+
+            # Show request details for first and last samples
+            if verbose or sample_idx == 0 or sample_idx % 100 == 0:
+                print(f"\n[Sample {sample_idx}] POST Request:")
+                print(f"  URL: {self.dashboard_url}/api/predict")
+                print(f"  Features sent: {len(features)} features")
+                if sample_idx == 0:  # Show details only for first
+                    feature_names = list(features.keys())[:5]
+                    print(f"  Sample features: {feature_names} ...")
+
             resp = requests.post(
                 f"{self.dashboard_url}/api/predict",
                 json=payload,
                 timeout=5
             )
+
             if resp.status_code == 200:
                 dashboard_response = resp.json()
+
+                # Show response for first and last samples
+                if verbose or sample_idx == 0 or sample_idx % 100 == 0:
+                    print(f"  Response: {dashboard_response}")
 
                 # Convert dashboard format to our format
                 return {
@@ -115,7 +130,7 @@ class EndToEndValidator:
             attack_type = sample.get("attack_type", "UNKNOWN")
 
             # Send to dashboard
-            dashboard_response = self.send_prediction_request(features)
+            dashboard_response = self.send_prediction_request(features, sample_idx=idx)
 
             if not dashboard_response:
                 self.metrics["mismatches"].append({
