@@ -21,6 +21,9 @@ import network_monitor
 import ml_engine
 import os
 import sys
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(name)s: %(message)s')
 
 app = Flask(__name__)
 CORS(app)
@@ -58,14 +61,17 @@ signal.signal(signal.SIGTERM, lambda *a: (_graceful_shutdown(), sys.exit(0)))
 # ──────────────────────────────────────────────
 
 def _compute_ml_stats(sniffer):
-    """Compute ML class distribution from active and recent flows."""
+    """Compute ML class distribution from expired (classified) flows + active flows."""
     from collections import defaultdict
     stats = defaultdict(int)
 
-    # Count active flows by ML class
+    # Session-wide counts from expired/classified flows (survives flush)
+    for cls, cnt in sniffer.metrics.ml_class_counts.items():
+        stats[cls] += cnt
+
+    # Active flows that have already been predicted in real-time
     active = sniffer.metrics.flow_table.get_active_flows()
     for flow in active:
-        # Active flows may not have ML predictions yet
         ml_class = flow.get("ml_class")
         if ml_class:
             stats[ml_class] += 1
@@ -124,6 +130,19 @@ def get_features():
     """Raw feature vectors for all active flows (ML pipeline ready)."""
     sniffer = network_monitor.get_sniffer()
     return jsonify(sniffer.metrics.get_flow_features())
+
+
+@app.route("/api/flush-flows", methods=["POST"])
+def flush_flows():
+    """Force immediate expiry and ML classification of all active flows.
+
+    Used by attack simulation scripts to get instant classification results
+    without waiting for the 120s flow timeout.
+    """
+    import time
+    sniffer = network_monitor.get_sniffer()
+    sniffer.metrics._expire_and_alert(time.time() + 99999)
+    return jsonify({"status": "ok", "message": "All flows flushed and classified"})
 
 
 @app.route("/api/predict", methods=["POST"])

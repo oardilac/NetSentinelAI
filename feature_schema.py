@@ -3,109 +3,50 @@ Feature schema for CIC-IDS2017 dataset.
 Defines expected columns, port encoding, and feature alignment.
 """
 
+import json
 import logging
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# The exact 94 columns expected by models trained on CIC-IDS2017
-# Order matches DataClean/binary/binary_X_train.csv
+# 14 core features: byte-count-independent, trained on live extraction semantics
+# These are identical between CicFlowMeter and BidirectionalFlowRecord
 FEATURE_COLUMNS = [
     "Flow Duration",
     "Total Fwd Packets",
     "Total Backward Packets",
-    "Total Length of Fwd Packets",
-    "Total Length of Bwd Packets",
-    "Fwd Packet Length Max",
-    "Fwd Packet Length Min",
-    "Fwd Packet Length Mean",
-    "Fwd Packet Length Std",
-    "Bwd Packet Length Max",
-    "Bwd Packet Length Min",
-    "Bwd Packet Length Mean",
-    "Bwd Packet Length Std",
-    "Flow Bytes/s",
     "Flow Packets/s",
-    "Flow IAT Mean",
-    "Flow IAT Std",
-    "Flow IAT Max",
-    "Flow IAT Min",
-    "Fwd IAT Total",
-    "Fwd IAT Mean",
-    "Fwd IAT Std",
-    "Fwd IAT Max",
-    "Fwd IAT Min",
-    "Bwd IAT Total",
-    "Bwd IAT Mean",
-    "Bwd IAT Std",
-    "Bwd IAT Max",
-    "Bwd IAT Min",
-    "Fwd PSH Flags",
-    "Bwd PSH Flags",
-    "Fwd URG Flags",
-    "Bwd URG Flags",
-    "Fwd Header Length",
-    "Bwd Header Length",
-    "Fwd Packets/s",
-    "Bwd Packets/s",
-    "Min Packet Length",
-    "Max Packet Length",
-    "Packet Length Mean",
-    "Packet Length Std",
-    "Packet Length Variance",
-    "FIN Flag Count",
     "SYN Flag Count",
-    "RST Flag Count",
-    "PSH Flag Count",
     "ACK Flag Count",
-    "URG Flag Count",
-    "CWE Flag Count",
-    "ECE Flag Count",
-    "Down/Up Ratio",
-    "Average Packet Size",
-    "Avg Fwd Segment Size",
-    "Avg Bwd Segment Size",
-    "Fwd Header Length.1",
-    "Fwd Avg Bytes/Bulk",
-    "Fwd Avg Packets/Bulk",
-    "Fwd Avg Bulk Rate",
-    "Bwd Avg Bytes/Bulk",
-    "Bwd Avg Packets/Bulk",
-    "Bwd Avg Bulk Rate",
-    "Subflow Fwd Packets",
-    "Subflow Fwd Bytes",
-    "Subflow Bwd Packets",
-    "Subflow Bwd Bytes",
-    "Init_Win_bytes_forward",
-    "Init_Win_bytes_backward",
-    "act_data_pkt_fwd",
-    "min_seg_size_forward",
-    "Active Mean",
-    "Active Std",
-    "Active Max",
-    "Active Min",
-    "Idle Mean",
-    "Idle Std",
-    "Idle Max",
-    "Idle Min",
-    "Port_21",
+    "PSH Flag Count",
+    "RST Flag Count",
     "Port_22",
-    "Port_23",
-    "Port_25",
-    "Port_53",
     "Port_80",
-    "Port_110",
-    "Port_143",
-    "Port_443",
-    "Port_445",
-    "Port_3306",
-    "Port_3389",
-    "Port_8080",
-    "Port_8443",
-    "Port_WellKnown",
-    "Port_Registered",
-    "Port_Dynamic",
+    "FIN Flag Count",
+    "Fwd IAT Mean",
+    "Bwd IAT Mean",
+    "Down/Up Ratio",
+]
+
+# Minimal core feature set: 14 byte-count-independent features
+# These work identically in CicFlowMeter and live extractor
+# Strategy: verify 14-feature model works, then expand to 59
+CORE_FEATURES = [
+    "Flow Duration",
+    "Total Fwd Packets",
+    "Total Backward Packets",
+    "Flow Packets/s",
+    "SYN Flag Count",
+    "ACK Flag Count",
+    "PSH Flag Count",
+    "RST Flag Count",
+    "Port_22",
+    "Port_80",
+    "FIN Flag Count",
+    "Fwd IAT Mean",
+    "Bwd IAT Mean",
+    "Down/Up Ratio",
 ]
 
 COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3306, 3389, 8080, 8443]
@@ -174,3 +115,15 @@ def align_features(feature_dict: dict, feature_columns: list) -> pd.DataFrame:
     df = df.replace([np.inf, -np.inf], np.nan).fillna(0)
 
     return df
+
+
+def save_feature_columns(feature_columns: list, file_path: str) -> None:
+    """
+    Save feature columns list to JSON file.
+
+    Args:
+        feature_columns: list of feature names
+        file_path: path to save JSON file
+    """
+    with open(file_path, 'w') as f:
+        json.dump(feature_columns, f, indent=2)

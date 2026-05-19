@@ -34,6 +34,14 @@ COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3306, 3389, 8080, 84
 # Clases a eliminar por estar subrepresentadas en CIC-IDS2017
 CLASSES_TO_DROP = ["Infiltration", "Heartbleed"]
 
+# Features no confiables en producción (distribución no coincide con CIC-IDS2017)
+FEATURES_TO_EXCLUDE = [
+    "Fwd Avg Bytes/Bulk", "Fwd Avg Packets/Bulk", "Fwd Avg Bulk Rate",
+    "Bwd Avg Bytes/Bulk", "Bwd Avg Packets/Bulk", "Bwd Avg Bulk Rate",
+    "Active Mean", "Active Std", "Active Max", "Active Min",
+    "Idle Mean", "Idle Std", "Idle Max", "Idle Min",
+]
+
 # Umbral mínimo de muestras para mantener una clase (seguridad adicional)
 MIN_SAMPLES = 100
 
@@ -63,8 +71,10 @@ def load_and_clean(path_to_csvs: str) -> pd.DataFrame:
     df = pd.concat(chunks, ignore_index=True)
 
     # ── Columnas a eliminar (no aportan información al modelo)
-    cols_to_drop = ["Flow ID", "Source IP", "Source Port",
-                    "Destination IP", "Timestamp"]
+    cols_to_drop = [
+        "Flow ID", "Source IP", "Source Port", "Destination IP", "Timestamp",
+        *FEATURES_TO_EXCLUDE,
+    ]
     df.drop(columns=[c for c in cols_to_drop if c in df.columns], inplace=True)
 
     # ── Valores infinitos y nulos

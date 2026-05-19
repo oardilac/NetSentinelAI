@@ -189,7 +189,7 @@ class InferencePipeline:
             )
 
         # ── Stage 1: Binary classification
-        ATTACK_THRESHOLD = 0.1  # Very low — live traffic differs from CIC-IDS2017 training dist
+        ATTACK_THRESHOLD = 0.05  # payload_len fix aligns live features to CIC-IDS2017 dist
         binary_x = align_features(flow_features, self.binary["feature_columns"])
 
         logger.debug(f"Binary input shape: {binary_x.shape}, columns: {len(binary_x.columns)}")
@@ -211,7 +211,7 @@ class InferencePipeline:
             return {
                 "decision": "BENIGN",
                 "binary_prediction": 0,
-                "binary_probability": float(binary_proba[0]),
+                "binary_probability": float(binary_proba[1]),  # Always return P(ATTACK)
             }
 
         # ── Stage 2: Multi-class classification (only if binary predicts ATTACK)

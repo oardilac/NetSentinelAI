@@ -139,11 +139,11 @@ class BidirectionalFlowRecord:
 
         if direction == "fwd":
             self.fwd_pkt_count += 1
-            self.fwd_bytes += pkt_len
+            self.fwd_bytes += payload_len
 
             # Packet length stats
-            self.fwd_pkt_len_stat.update(pkt_len)
-            self.all_pkt_len_stat.update(pkt_len)
+            self.fwd_pkt_len_stat.update(payload_len)
+            self.all_pkt_len_stat.update(payload_len)
 
             # IAT (inter-arrival time)
             if self.last_fwd_time is not None:
@@ -186,11 +186,11 @@ class BidirectionalFlowRecord:
 
         else:  # backward
             self.bwd_pkt_count += 1
-            self.bwd_bytes += pkt_len
+            self.bwd_bytes += payload_len
 
             # Packet length stats
-            self.bwd_pkt_len_stat.update(pkt_len)
-            self.all_pkt_len_stat.update(pkt_len)
+            self.bwd_pkt_len_stat.update(payload_len)
+            self.all_pkt_len_stat.update(payload_len)
 
             # IAT
             if self.last_bwd_time is not None:
@@ -398,10 +398,12 @@ class BidirectionalFlowRecord:
         features.update(port_features)
 
         import logging as _logging
+        from feature_schema import FEATURE_COLUMNS
         _logger = _logging.getLogger(__name__)
-        _logger.debug(f"[GET_FEATURE_VECTOR] Generated {len(features)} features, sample keys: {list(features.keys())[:10]}")
+        _logger.debug(f"[GET_FEATURE_VECTOR] Generated {len(features)} features, selecting {len(FEATURE_COLUMNS)} core features")
 
-        return features
+        # ── Return only the core features (14) that align with trained model
+        return {k: features.get(k, 0.0) for k in FEATURE_COLUMNS}
 
     def to_summary(self) -> dict:
         """Return a dashboard-friendly summary dict.

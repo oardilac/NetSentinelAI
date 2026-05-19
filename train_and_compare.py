@@ -35,7 +35,7 @@ from xgboost import XGBClassifier
 from imblearn.under_sampling   import RandomUnderSampler
 from imblearn.over_sampling    import SMOTE
 from imblearn.pipeline         import Pipeline as ImbPipeline
-from feature_schema import save_feature_columns
+from feature_schema import save_feature_columns, CORE_FEATURES
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -331,10 +331,16 @@ def run_pipeline(task_type: str) -> pd.DataFrame:
 
     # ── Carga de datos
     base = os.path.join(DATA_DIR, task_type)
-    X_train = pd.read_csv(f"{base}/{task_type}_X_train.csv")
+    X_train_full = pd.read_csv(f"{base}/{task_type}_X_train.csv")
     y_train = pd.read_csv(f"{base}/{task_type}_y_train.csv").values.ravel()
-    X_test  = pd.read_csv(f"{base}/{task_type}_X_test.csv")
+    X_test_full  = pd.read_csv(f"{base}/{task_type}_X_test.csv")
     y_test  = pd.read_csv(f"{base}/{task_type}_y_test.csv").values.ravel()
+
+    # ── Seleccionar solo CORE_FEATURES (14 features byte-count-independent)
+    X_train = X_train_full[[c for c in CORE_FEATURES if c in X_train_full.columns]]
+    X_test  = X_test_full[[c for c in CORE_FEATURES if c in X_test_full.columns]]
+    print(f"  Características originales: {X_train_full.shape[1]}")
+    print(f"  Core features seleccionadas: {X_train.shape[1]} ({', '.join(CORE_FEATURES[:3])}...)")
 
     # ── Encoding de etiquetas para multiclase (XGBoost requiere enteros)
     le = None
