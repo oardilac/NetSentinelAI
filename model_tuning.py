@@ -1,9 +1,15 @@
 """
-model_tuning.py  –  CIC-IDS2017  |  La Arena de Modelos (GridSearch & CV)
+model_tuning.py  –  CIC-IDS2017  |  La Arena de Modelos (GridSearch & CV)  [Módulo 3]
 ======================================================================
 Somete a todos los candidatos a un GridSearchCV garantizando que SMOTE
 solo actúe en los pliegues de entrenamiento. Guarda los mejores estimadores
 y genera mapas de calor de la búsqueda de parámetros.
+
+Pipeline de entrenamiento:
+    Módulo 1: data_preparation.py  →  DataClean/
+    Módulo 2: feature_selection.py →  DataReduced/
+    Módulo 3: model_tuning.py      →  Results/models/tuned/
+    Módulo 4: final_evaluation.py  →  Models/ (promoción + metadata)
 """
 
 import os
@@ -62,11 +68,15 @@ def run_tuning_arena(task_type="binary"):
     if task_type == "multi":
         le = LabelEncoder()
         y_train = le.fit_transform(y_train_raw)
-        strat_over, strat_under = "not majority", "majority"
+        # Balance all classes towards majority to address multi-class imbalance
+        SMOTE_STRATEGY = "not majority"
+        UNDER_STRATEGY = "majority"
         xgb_metric = "mlogloss"
     else:
         y_train = y_train_raw.astype(int)
-        strat_over, strat_under = 0.40, 0.80
+        # Oversample minority (attack) to 40% of majority (benign), then undersample majority to 80%
+        SMOTE_STRATEGY = 0.40
+        UNDER_STRATEGY = 0.80
         xgb_metric = "logloss"
 
     # Definir modelos base y sus grillas (usando prefijo 'clf__' por el Pipeline)
@@ -88,41 +98,45 @@ def run_tuning_arena(task_type="binary"):
         }
     }
 
-    scaler = RobustScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
     cv = StratifiedKFold(n_splits=CV_SPLITS, shuffle=True, random_state=RANDOM_STATE)
 
     best_scores = []
     os.makedirs(MODELS_DIR, exist_ok=True)
-    joblib.dump(scaler, os.path.join(MODELS_DIR, f"scaler_{task_type}.pkl"))
-    if le: joblib.dump(le, os.path.join(MODELS_DIR, f"label_encoder_{task_type}.pkl"))
+    if le:
+        joblib.dump(le, os.path.join(MODELS_DIR, f"label_encoder_{task_type}.pkl"))
 
     for name, config in candidates.items():
         print(f"\n--> Optimizando {name}...")
-        
-        # El Pipeline asegura que SMOTE solo ocurra en Train dentro del CV
+
+        # Scaler inside pipeline prevents data leakage: each CV fold fits the scaler
+        # only on the training partition, never on the validation partition.
         pipe = ImbPipeline([
-            ('smote', SMOTE(sampling_strategy=strat_over, random_state=RANDOM_STATE, k_neighbors=4)),
-            ('under', RandomUnderSampler(sampling_strategy=strat_under, random_state=RANDOM_STATE)),
+            ('scaler', RobustScaler()),
+            ('smote', SMOTE(sampling_strategy=SMOTE_STRATEGY, random_state=RANDOM_STATE, k_neighbors=4)),
+            ('under', RandomUnderSampler(sampling_strategy=UNDER_STRATEGY, random_state=RANDOM_STATE)),
             ('clf', config["model"])
         ])
 
         grid = GridSearchCV(pipe, config["grid"], cv=cv, scoring='f1_macro', n_jobs=-1, verbose=1)
-        grid.fit(X_train_scaled, y_train)
+        grid.fit(X_train, y_train)
 
         print(f"    Mejor F1-Macro: {grid.best_score_:.4f}")
         print(f"    Mejores params: {grid.best_params_}")
-        
+
         plot_grid_heatmap(grid.cv_results_, name, task_type, config["plot_params"][0], config["plot_params"][1])
-        
-        # Extraer el clasificador final del pipeline ganador y guardarlo
+
+        # Extract scaler and classifier from the best pipeline (refitted on full training set)
+        best_scaler = grid.best_estimator_.named_steps['scaler']
         best_clf = grid.best_estimator_.named_steps['clf']
+        joblib.dump(best_scaler, os.path.join(MODELS_DIR, f"scaler_{name}_{task_type}.pkl"))
         joblib.dump(best_clf, os.path.join(MODELS_DIR, f"{name}_best_{task_type}.pkl"))
-        
+
         best_scores.append({"Model": name, "Best_CV_F1": grid.best_score_})
 
     df_res = pd.DataFrame(best_scores).sort_values(by="Best_CV_F1", ascending=False)
     print(f"\nResumen del Torneo ({task_type}):\n", df_res.to_string(index=False))
+    os.makedirs(REPORTS_DIR := "./Results/reports", exist_ok=True)
+    df_res.to_csv(os.path.join(REPORTS_DIR, f"tuning_results_{task_type}.csv"), index=False)
 
 if __name__ == "__main__":
     run_tuning_arena("binary")

@@ -10,9 +10,10 @@ import glob
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 import seaborn as sns
 from sklearn.model_selection import train_test_split
+
+from feature_schema import COMMON_PORTS
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CONFIGURACIÓN GLOBAL
@@ -24,7 +25,6 @@ RANDOM_STATE   = 42
 TEST_SIZE      = 0.15
 USE_LOG_SCALE  = True
 
-COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3306, 3389, 8080, 8443]
 CLASSES_TO_DROP = ["Infiltration", "Heartbleed"]
 MIN_SAMPLES = 100
 
@@ -97,7 +97,7 @@ def plot_class_distribution(df: pd.DataFrame, use_log: bool = USE_LOG_SCALE):
     
     # Gráfico Binario
     colors_bin = sns.color_palette("Blues_d", n_colors=len(bin_counts))
-    bars1 = axes[0].barh(bin_counts.index, bin_counts.values, color=colors_bin, edgecolor="white")
+    axes[0].barh(bin_counts.index, bin_counts.values, color=colors_bin, edgecolor="white")
     axes[0].set_title("Tráfico Perimetral (Binario)", fontweight="bold")
     if use_log: axes[0].set_xscale("log")
 
@@ -106,7 +106,7 @@ def plot_class_distribution(df: pd.DataFrame, use_log: bool = USE_LOG_SCALE):
     
     # Gráfico Multi
     colors_mul = sns.color_palette("Oranges_d", n_colors=len(mul_counts))
-    bars2 = axes[1].barh(mul_counts.index, mul_counts.values, color=colors_mul, edgecolor="white")
+    axes[1].barh(mul_counts.index, mul_counts.values, color=colors_mul, edgecolor="white")
     axes[1].set_title("Focos de Amenaza (Multiclase)", fontweight="bold")
     if use_log: axes[1].set_xscale("log")
 
@@ -129,6 +129,8 @@ def split_and_export(df: pd.DataFrame):
             tr_task["Label"] = tr_task["Label"].apply(lambda x: 0 if x == "BENIGN" else 1)
             te_task["Label"] = te_task["Label"].apply(lambda x: 0 if x == "BENIGN" else 1)
         else:
+            # Multi-class task only contains attack traffic; BENIGN is intentionally excluded
+            # because the binary stage filters it out before reaching the multi classifier
             tr_task = df_train[df_train["Label"] != "BENIGN"].copy()
             te_task = df_test[df_test["Label"] != "BENIGN"].copy()
             tr_task["Original_Label"] = tr_task["Label"]

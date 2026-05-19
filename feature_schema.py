@@ -3,52 +3,28 @@ Feature schema for CIC-IDS2017 dataset.
 Defines expected columns, port encoding, and feature alignment.
 """
 
-import json
 import logging
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# 14 core features: byte-count-independent, trained on live extraction semantics
-# These are identical between CicFlowMeter and BidirectionalFlowRecord
+# SHAP-selected features (binary task): top 10 features determined by TreeExplainer
+# These features explain model predictions most effectively
 FEATURE_COLUMNS = [
-    "Flow Duration",
+    "Min Packet Length",
     "Total Fwd Packets",
-    "Total Backward Packets",
-    "Flow Packets/s",
-    "SYN Flag Count",
-    "ACK Flag Count",
-    "PSH Flag Count",
-    "RST Flag Count",
-    "Port_22",
-    "Port_80",
-    "FIN Flag Count",
     "Fwd IAT Mean",
-    "Bwd IAT Mean",
+    "Fwd Header Length",
+    "Init_Win_bytes_forward",
+    "Average Packet Size",
+    "min_seg_size_forward",
+    "Fwd Packet Length Mean",
+    "Port_53",
     "Down/Up Ratio",
 ]
 
-# Minimal core feature set: 14 byte-count-independent features
-# These work identically in CicFlowMeter and live extractor
-# Strategy: verify 14-feature model works, then expand to 59
-CORE_FEATURES = [
-    "Flow Duration",
-    "Total Fwd Packets",
-    "Total Backward Packets",
-    "Flow Packets/s",
-    "SYN Flag Count",
-    "ACK Flag Count",
-    "PSH Flag Count",
-    "RST Flag Count",
-    "Port_22",
-    "Port_80",
-    "FIN Flag Count",
-    "Fwd IAT Mean",
-    "Bwd IAT Mean",
-    "Down/Up Ratio",
-]
-
+# Single source of truth for port one-hot encoding — used by data_preparation.py and live_feature_extractor.py
 COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3306, 3389, 8080, 8443]
 
 
@@ -117,13 +93,3 @@ def align_features(feature_dict: dict, feature_columns: list) -> pd.DataFrame:
     return df
 
 
-def save_feature_columns(feature_columns: list, file_path: str) -> None:
-    """
-    Save feature columns list to JSON file.
-
-    Args:
-        feature_columns: list of feature names
-        file_path: path to save JSON file
-    """
-    with open(file_path, 'w') as f:
-        json.dump(feature_columns, f, indent=2)

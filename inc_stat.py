@@ -50,7 +50,7 @@ class IncrementalStat:
     def variance(self) -> float:
         if self.count < 2:
             return 0.0
-        return self._m2 / self.count  # population variance
+        return self._m2 / (self.count - 1)  # sample variance (N-1), consistent with CICFlowMeter
 
     @property
     def std(self) -> float:

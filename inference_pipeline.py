@@ -180,16 +180,18 @@ class InferencePipeline:
         Raises:
             ValueError: If input dict lacks CIC-IDS2017 column names
         """
-        # Guard: reject legacy 14-feature dicts with no CIC-IDS2017 column names
-        has_cic = any(" " in k or k.startswith("Port_") or k.startswith("Flow") for k in flow_features)
-        if not has_cic and flow_features:
+        # Guard: reject dicts with no recognizable CIC-IDS2017 column names
+        known = set(self.binary["feature_columns"]) | set(self.multi["feature_columns"])
+        if flow_features and not any(k in known for k in flow_features):
             raise ValueError(
                 "Input dict has no CIC-IDS2017 column names. "
                 "Pass features using CIC-IDS2017 names (e.g., 'Flow Duration', 'Port_80')."
             )
 
         # ── Stage 1: Binary classification
-        ATTACK_THRESHOLD = 0.05  # payload_len fix aligns live features to CIC-IDS2017 dist
+        # Threshold intentionally low (0.05) to maximize recall — we prefer false positives
+        # over missed attacks. The multi-class stage then refines the attack type.
+        ATTACK_THRESHOLD = 0.05
         binary_x = align_features(flow_features, self.binary["feature_columns"])
 
         logger.debug(f"Binary input shape: {binary_x.shape}, columns: {len(binary_x.columns)}")
@@ -202,6 +204,10 @@ class InferencePipeline:
 
         binary_proba = self.binary["model"].predict_proba(binary_x_scaled)[0]
         # binary_proba[0] = P(BENIGN), binary_proba[1] = P(ATTACK)
+        if hasattr(self.binary["model"], "classes_"):
+            assert self.binary["model"].classes_[1] == 1, (
+                "Binary model class ordering unexpected: classes_[1] must be 1 (ATTACK)"
+            )
 
         logger.debug(f"Binary proba: BENIGN={binary_proba[0]:.4f}, ATTACK={binary_proba[1]:.4f}")
 
@@ -246,7 +252,7 @@ class InferencePipeline:
         Predict on multiple flows.
 
         Args:
-            flow_features_list: list of dicts, each with 87 features
+            flow_features_list: list of dicts, each with CIC-IDS2017 feature names
 
         Returns:
             list of prediction dicts

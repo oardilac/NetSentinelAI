@@ -1,20 +1,19 @@
 """
 Live bidirectional flow feature extractor for CIC-IDS2017 compatibility.
 
-Processes network packets and extracts 94 CIC-IDS2017 features per flow:
+Processes network packets and extracts CIC-IDS2017 features per flow:
 - Forward/backward packet and byte counts
 - Forward/backward packet length statistics (max, min, mean, std)
 - Inter-arrival time (IAT) statistics per direction
 - TCP flag counts per direction
 - Port-based features (one-hot encoding)
-- Active/Idle time statistics
-- And more...
+- Active/Idle time statistics (computed but not emitted — not in SHAP top-10 feature set)
 
 Key design:
 - Bidirectional flow lookup: forward_key vs reverse_key
 - IncrementalStat (Welford) for online statistics
 - Destination port from first forward packet
-- Placeholder features for bulk rates (requires burst detection)
+- get_feature_vector() returns only the SHAP-selected features loaded from feature_columns.json
 """
 
 import logging
@@ -22,10 +21,9 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, Tuple
 from collections import OrderedDict
 from threading import Lock
-import struct
 
 from inc_stat import IncrementalStat
-from feature_schema import encode_port
+from feature_schema import encode_port, FEATURE_COLUMNS
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +124,8 @@ class BidirectionalFlowRecord:
 
         Args:
             pkt_time: packet timestamp
-            pkt_len: total packet length (including headers)
+            pkt_len: total packet length (accepted for API compatibility, not used — byte
+                     statistics track payload_len only, consistent with CICFlowMeter)
             payload_len: application data length
             tcp_flags: TCP flags byte (6 bits)
             header_len: IP+TCP header length
@@ -247,15 +246,17 @@ class BidirectionalFlowRecord:
                 self.active_stat.update(active_duration)
             self.idle_stat.update(gap)
             self.current_active_start = pkt_time
-        else:
-            # Continue active period
-            pass
 
         self.last_active_time = pkt_time
 
     def get_feature_vector(self) -> Dict[str, float]:
         """
-        Extract all 87 CIC-IDS2017 features as a dictionary.
+        Extract CIC-IDS2017 features and return the SHAP-selected subset.
+
+        Computes all measurable features then filters to the subset defined by
+        FEATURE_COLUMNS (loaded from feature_columns.json at import time).
+        Active/idle features are tracked internally but not emitted because they
+        are not part of the current SHAP top-10 feature set.
 
         Returns:
             dict with feature names (CIC-IDS2017 names) and float values
@@ -397,12 +398,8 @@ class BidirectionalFlowRecord:
         port_features = encode_port(self.dst_port)
         features.update(port_features)
 
-        import logging as _logging
-        from feature_schema import FEATURE_COLUMNS
-        _logger = _logging.getLogger(__name__)
-        _logger.debug(f"[GET_FEATURE_VECTOR] Generated {len(features)} features, selecting {len(FEATURE_COLUMNS)} core features")
+        logger.debug(f"[GET_FEATURE_VECTOR] Generated {len(features)} features, selecting {len(FEATURE_COLUMNS)} core features")
 
-        # ── Return only the core features (14) that align with trained model
         return {k: features.get(k, 0.0) for k in FEATURE_COLUMNS}
 
     def to_summary(self) -> dict:
@@ -434,7 +431,7 @@ class BidirectionalFlowRecord:
             "avg_bytes_per_pkt": total_bytes / total_pkts if total_pkts > 0 else 0.0,
             "fin_count": self.fwd_fin + self.bwd_fin,
             "iat_mean": fv.get("Flow IAT Mean", 0.0) / 1_000_000,
-            "iat_variance": 0.0,
+            "iat_variance": self.flow_iat_stat.variance,
             "proto_tcp": 1 if protocol == "TCP" else 0,
             "proto_udp": 1 if protocol == "UDP" else 0,
             "proto_icmp": 1 if protocol == "ICMP" else 0,
@@ -583,7 +580,7 @@ class BidirectionalFlowTable:
             return [flow.to_summary() for flow in self._expired[-limit:]]
 
     def get_all_feature_vectors(self) -> list:
-        """Return raw 94-feature dicts for all active flows (ML pipeline)."""
+        """Return SHAP-selected feature dicts for all active flows (ML pipeline)."""
         with self._lock:
             return [flow.get_feature_vector() for flow in self.flows.values()]
 

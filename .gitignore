@@ -231,3 +231,5 @@ Grupo7_NetSentinel_E2.pdf
 /Results
 /tests
 *.db*
+/.atl
+/DataReduced

@@ -1,16 +1,22 @@
-import pandas as pd
-import numpy as np
+import logging
 import os
-import shap
-import lightgbm as lgb
-import plotly.graph_objects as go
 import warnings
 
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import shap
+
 warnings.filterwarnings("ignore")
+
+logger = logging.getLogger(__name__)
 
 CLEAN_DATA_DIR = "./DataClean"
 REDUCED_DATA_DIR = "./DataReduced"
 RESULTS_DIR = "./Results/plots/shap"
+SHAP_SAMPLE_CAP = 15000  # max rows for SHAP computation (performance vs accuracy trade-off)
+RANDOM_STATE = 42
 
 def generate_plotly_html(task_type, shap_values_matrix, feature_names, class_names, top_n):
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -59,14 +65,18 @@ def apply_shap_reduction(task_type="binary", top_n=15):
 
     orig_tr = X_train_raw["Original_Label"].values if "Original_Label" in X_train_raw.columns else None
     orig_te = X_test_raw["Original_Label"].values if "Original_Label" in X_test_raw.columns else None
+    if orig_tr is None:
+        logger.warning("'Original_Label' column not found in X_train — audit column will be missing")
+    if orig_te is None:
+        logger.warning("'Original_Label' column not found in X_test — audit column will be missing")
 
     X_train = X_train_raw.drop(columns=["Original_Label"], errors="ignore")
     X_test  = X_test_raw.drop(columns=["Original_Label"], errors="ignore")
 
-    model = lgb.LGBMClassifier(random_state=42, n_jobs=-1, verbose=-1)
+    model = lgb.LGBMClassifier(random_state=RANDOM_STATE, n_jobs=-1, verbose=-1)
     model.fit(X_train, y_train)
 
-    X_sample = shap.sample(X_train, 15000) if len(X_train) > 15000 else X_train
+    X_sample = shap.sample(X_train, SHAP_SAMPLE_CAP) if len(X_train) > SHAP_SAMPLE_CAP else X_train
     explainer = shap.TreeExplainer(model)
     shap_output = explainer(X_sample)
 
