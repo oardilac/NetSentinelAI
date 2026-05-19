@@ -1,151 +1,115 @@
-"""ML inference engine for NetSentinelAI.
+"""ML inference engine for NetSentinelAI — compatibility shim over InferencePipeline.
 
-Loads XGBoost model and applies custom thresholds for real-time threat detection.
-Handles unit conversion (seconds → microseconds) to align with training data.
+Provides lazy-loaded InferencePipeline singleton and compatibility functions
+for existing code that expects old ml_engine interface.
 """
 
-import json
 import logging
-import math
-import numpy as np
-import pandas as pd
-import joblib
-import xgboost as xgb
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
-# Load artifacts at module import time (once per process)
-try:
-    scaler = joblib.load('netsentinel_scaler.pkl')
-    le = joblib.load('label_encoder.pkl')
-    model = xgb.XGBClassifier()
-    model.load_model('netsentinel_model.pkl')
+_pipeline = None
 
-    with open('feature_names.json') as f:
-        FEATURE_NAMES = json.load(f)
-
-    with open('optimal_thresholds.json') as f:
-        THRESHOLDS = json.load(f)
-
-    logger.info(f"ML artifacts loaded. Classes: {list(le.classes_)}, Features: {len(FEATURE_NAMES)}")
-except Exception as e:
-    logger.error(f"Failed to load ML artifacts: {e}")
-    raise
+def _get_pipeline():
+    """Lazy-load InferencePipeline singleton."""
+    global _pipeline
+    if _pipeline is None:
+        from inference_pipeline import InferencePipeline
+        _pipeline = InferencePipeline()
+    return _pipeline
 
 
-def convert_units(feature_dict: dict) -> dict:
-    """Convert feature units from seconds to microseconds.
-
-    The scaler was trained on CIC-IDS2017 where temporal features are in microseconds.
-    The live system (FlowRecord) computes temporal features in seconds.
-    This conversion ensures the features are on the same scale as training data.
-    """
-    converted = feature_dict.copy()
-
-    # Temporal features: multiply by 1e6 to convert seconds → microseconds
-    converted['flow_duration'] = feature_dict.get('flow_duration', 0) * 1_000_000
-    converted['iat_mean'] = feature_dict.get('iat_mean', 0) * 1_000_000
-
-    # iat_variance: training used Flow IAT Std (std, not variance)
-    # Live system returns population variance (in seconds²)
-    # Convert variance → std, then seconds² → microseconds
-    iat_var_s2 = feature_dict.get('iat_variance', 0)
-    if iat_var_s2 > 0:
-        iat_std_s = math.sqrt(iat_var_s2)
-        converted['iat_variance'] = iat_std_s * 1_000_000
-    else:
-        converted['iat_variance'] = 0
-
-    return converted
+def get_attack_classes() -> list:
+    """Return full class list: ['Normal'] + attack labels from label encoder."""
+    pipe = _get_pipeline()
+    return ["Normal"] + list(pipe.multi["classes"])
 
 
 def predict_flow(feature_dict: dict) -> dict:
-    """Predict attack class for a flow.
+    """Compatibility wrapper around InferencePipeline.predict().
+
+    Maps new pipeline result shape to old shape expected by network_monitor.py.
+
+    Old shape: {'class': str, 'confidence': float, 'probabilities': dict}
+    New shape: {'decision': str, 'binary_probability': float, ...}
 
     Args:
-        feature_dict: Dict with 14 features (from FlowRecord.get_feature_vector())
+        feature_dict: 94-feature dict with CIC-IDS2017 feature names
 
     Returns:
-        {
-            'class': str,                # predicted class name
-            'confidence': float,         # confidence of the prediction
-            'probabilities': dict,       # {class_name: probability} for all 5 classes
-            'raw_proba': list,          # raw probability vector from model
-        }
+        {'class': 'BENIGN'/'ATTACK'/'...' , 'confidence': float, 'probabilities': {}}
     """
     try:
-        # 1. Convert units (seconds → microseconds)
-        converted = convert_units(feature_dict)
+        pipe = _get_pipeline()
+        result = pipe.predict(feature_dict)
 
-        # 2. Build feature vector in the exact order expected by the scaler
-        # Use DataFrame with feature names to avoid sklearn warning
-        X = pd.DataFrame([[converted[f] for f in FEATURE_NAMES]], columns=FEATURE_NAMES)
-
-        # 3. Scale features
-        X_scaled = scaler.transform(X)
-
-        # 4. Get probability predictions (shape: (1, 5) → take [0])
-        proba = model.predict_proba(X_scaled)[0]
-
-        # 5. Apply custom thresholds
-        pred_idx = apply_thresholds(proba)
-        pred_class = le.classes_[pred_idx]
-        confidence = float(proba[pred_idx])
+        if result["decision"] == "BENIGN":
+            cls = "Normal"
+            confidence = float(result["binary_probability"])
+            probabilities = {"Normal": confidence}
+        else:
+            cls = result.get("attack_type", "ATTACK")
+            confidence = float(result.get("multi_probability", result.get("binary_probability", 0.0)))
+            probabilities = result.get("multi_probabilities", {cls: confidence})
 
         return {
-            'class': pred_class,
-            'confidence': confidence,
-            'probabilities': {le.classes_[i]: float(proba[i]) for i in range(5)},
-            'raw_proba': proba.tolist(),
+            "class": cls,
+            "confidence": confidence,
+            "probabilities": probabilities,
         }
-
     except Exception as e:
         logger.error(f"ML prediction failed: {e}", exc_info=True)
         return {
-            'class': 'Normal',
-            'confidence': 0.0,
-            'probabilities': {},
-            'error': str(e),
+            "class": "Normal",
+            "confidence": 0.0,
+            "probabilities": {},
+            "error": str(e),
         }
 
 
-def apply_thresholds(proba: np.ndarray) -> int:
-    """Apply custom decision thresholds to probability vector.
+def normalize_feature_payload(payload: dict) -> dict:
+    """Normalize API payload to flat CIC-IDS2017 feature dict.
 
-    Custom thresholds are higher for minority classes (Botnet, Brute Force)
-    to maximize precision at the cost of small recall loss.
+    Accepts:
+    - Nested:  {"src_ip": "...", "features": {"Flow Duration": 1, ...}}
+    - Direct:  {"Flow Duration": 1, "Port_80": 1, ...}
+
+    Rejects legacy 14-feature dicts (old pipeline).
 
     Args:
-        proba: numpy array of shape (5,) with probabilities for each class
+        payload: API request payload or feature dict
 
     Returns:
-        Predicted class index (0-4)
+        Flat dict with CIC-IDS2017 feature names and values
+
+    Raises:
+        ValueError: If payload uses legacy 14-feature format
     """
-    botnet_threshold = THRESHOLDS.get('Botnet', 0.9)
-    brute_force_threshold = THRESHOLDS.get('Brute Force', 0.9)
+    if "features" in payload and isinstance(payload["features"], dict):
+        data = payload["features"]
+    else:
+        data = payload
 
-    # Check high-threshold classes first (minority classes)
-    if proba[0] >= botnet_threshold:  # Botnet
-        return 0
-    if proba[1] >= brute_force_threshold:  # Brute Force
-        return 1
+    legacy_keys = {"flow_duration", "packet_count", "iat_mean", "iat_variance"}
+    has_cic = any(" " in k or k.startswith("Port_") or k.startswith("Flow") for k in data)
 
-    # All other classes use default argmax
-    return int(np.argmax(proba))
+    if not has_cic and legacy_keys.intersection(data.keys()):
+        raise ValueError(
+            "Legacy 14-feature payload rejected. Use CIC-IDS2017 feature names "
+            "(e.g., 'Flow Duration', 'Port_80')."
+        )
+
+    return data
 
 
 def batch_predict(feature_dicts: list) -> list:
-    """Predict attack classes for multiple flows (batch prediction).
-
-    Slightly more efficient than calling predict_flow() in a loop.
+    """Predict attack classes for multiple flows.
 
     Args:
-        feature_dicts: List of dicts, each with 14 features
+        feature_dicts: List of 94-feature dicts
 
     Returns:
-        List of prediction dicts (same format as predict_flow)
+        List of prediction results (same format as predict_flow)
     """
-    results = []
-    for fd in feature_dicts:
-        results.append(predict_flow(fd))
-    return results
+    return [predict_flow(fd) for fd in feature_dicts]

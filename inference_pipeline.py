@@ -145,7 +145,7 @@ class InferencePipeline:
         2. Multi (if attack): which attack type
 
         Args:
-            flow_features: dict with feature names and float values (87 features)
+            flow_features: dict with feature names and float values (94 features)
 
         Returns:
             dict with keys:
@@ -156,11 +156,21 @@ class InferencePipeline:
               - (if ATTACK) multi_prediction: int class index
               - (if ATTACK) multi_probability: float
               - (if ATTACK) multi_probabilities: dict of {class: prob}
+
+        Raises:
+            ValueError: If input dict lacks CIC-IDS2017 column names
         """
+        # Guard: reject legacy 14-feature dicts with no CIC-IDS2017 column names
+        has_cic = any(" " in k or k.startswith("Port_") or k.startswith("Flow") for k in flow_features)
+        if not has_cic and flow_features:
+            raise ValueError(
+                "Input dict has no CIC-IDS2017 column names. "
+                "Pass features using CIC-IDS2017 names (e.g., 'Flow Duration', 'Port_80')."
+            )
 
         # ── Stage 1: Binary classification
         binary_x = align_features(flow_features, self.binary["feature_columns"])
-        binary_x_scaled = self.binary["scaler"].transform(binary_x)
+        binary_x_scaled = self.binary["scaler"].transform(binary_x.values)
         binary_pred = self.binary["model"].predict(binary_x_scaled)[0]
         binary_proba = self.binary["model"].predict_proba(binary_x_scaled)[0]
 
@@ -174,7 +184,7 @@ class InferencePipeline:
 
         # ── Stage 2: Multi-class classification (only if binary predicts ATTACK)
         multi_x = align_features(flow_features, self.multi["feature_columns"])
-        multi_x_scaled = self.multi["scaler"].transform(multi_x)
+        multi_x_scaled = self.multi["scaler"].transform(multi_x.values)
         multi_pred = self.multi["model"].predict(multi_x_scaled)[0]
         multi_proba = self.multi["model"].predict_proba(multi_x_scaled)[0]
 

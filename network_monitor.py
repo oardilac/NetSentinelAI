@@ -21,7 +21,7 @@ from threading import Thread, Lock
 import time
 import logging
 
-from flow_extractor import FlowTable
+from live_feature_extractor import BidirectionalFlowTable
 from database import SentinelDB
 import ml_engine
 
@@ -59,7 +59,9 @@ class AlertEngine:
         syn = flow_summary.get("syn_count", 0)
         ack = flow_summary.get("ack_count", 0)
         is_port_scan_heuristic = syn > self.scan_syn_threshold and ack < syn * 0.3
-        is_port_scan_ml = ml_class == "Port Scan" and ml_confidence > 0.7
+        is_port_scan_ml = bool(ml_result) and (
+            "scan" in (ml_class or "").lower() or "portscan" in (ml_class or "").lower()
+        ) and ml_confidence > 0.7
 
         alert_key = f"scan:{fk}"
         if (is_port_scan_heuristic or is_port_scan_ml) and alert_key not in self._seen:
@@ -67,7 +69,7 @@ class AlertEngine:
             if is_port_scan_heuristic:
                 reason.append(f"High SYN/ACK ratio ({syn} SYN, {ack} ACK)")
             if is_port_scan_ml:
-                reason.append(f"ML detected Port Scan ({ml_confidence:.0%} confidence)")
+                reason.append(f"ML detected port scan ({ml_confidence:.0%} confidence)")
             description = " + ".join(reason) if reason else "Possible port scan"
             self._add("port_scan", src, description)
             self._seen.add(alert_key)
@@ -75,7 +77,9 @@ class AlertEngine:
         # Rule 2: Brute force attack — combine heuristics + ML
         rst = flow_summary.get("rst_count", 0)
         is_brute_force_heuristic = rst > self.rst_threshold
-        is_brute_force_ml = ml_class == "Brute Force" and ml_confidence > 0.7
+        is_brute_force_ml = bool(ml_result) and (
+            "patator" in (ml_class or "").lower() or "brute" in (ml_class or "").lower()
+        ) and ml_confidence > 0.7
 
         alert_key = f"brute:{fk}"
         if (is_brute_force_heuristic or is_brute_force_ml) and alert_key not in self._seen:
@@ -83,14 +87,16 @@ class AlertEngine:
             if is_brute_force_heuristic:
                 reason.append(f"{rst} RST packets (connection abuse)")
             if is_brute_force_ml:
-                reason.append(f"ML detected Brute Force ({ml_confidence:.0%} confidence)")
+                reason.append(f"ML detected brute force ({ml_confidence:.0%} confidence)")
             description = " + ".join(reason) if reason else "Possible brute force attack"
             self._add("brute_force", src, description)
             self._seen.add(alert_key)
 
         # Rule 3: DoS/DDoS attack — combine heuristics + ML
         total_bytes = flow_summary.get("total_bytes", 0)
-        is_dos_ml = ml_class == "DoS/DDoS" and ml_confidence > 0.7
+        is_dos_ml = bool(ml_result) and (
+            "dos" in (ml_class or "").lower() or "ddos" in (ml_class or "").lower()
+        ) and ml_confidence > 0.7
 
         alert_key = f"dos:{fk}"
         if is_dos_ml and alert_key not in self._seen:
@@ -162,7 +168,7 @@ class SecurityMetricsCollector:
         self._flows_saved: int = 0  # running counter of flows persisted
 
         # Flow engine
-        self.flow_table = FlowTable(max_flows=100_000, timeout=flow_timeout)
+        self.flow_table = BidirectionalFlowTable(max_flows=100_000, timeout_sec=flow_timeout)
         self.alert_engine = AlertEngine()
 
         # Global counters
@@ -285,16 +291,32 @@ class SecurityMetricsCollector:
             self.protocol_stats["OTHER"] += 1
             self.protocol_bytes["OTHER"] += pkt_len
 
+        # Calculate extra fields for BidirectionalFlowTable
+        payload_len = len(bytes(packet.payload.payload)) if packet.haslayer(TCP) or packet.haslayer(UDP) else 0
+        if packet.haslayer(TCP):
+            tcp_layer = packet[TCP]
+            header_len = ip.ihl * 4 + tcp_layer.dataofs * 4
+            tcp_window_val = int(tcp_layer.window)
+        elif packet.haslayer(UDP):
+            header_len = ip.ihl * 4 + 8
+            tcp_window_val = -1
+        else:
+            header_len = ip.ihl * 4
+            tcp_window_val = -1
+
         # Register in flow table
-        self.flow_table.update(
+        self.flow_table.update_flow(
             src_ip=src_ip,
             dst_ip=dst_ip,
             src_port=src_port,
             dst_port=dst_port,
             protocol=proto,
+            pkt_time=now,
             pkt_len=pkt_len,
-            timestamp=now,
-            tcp_flags=tcp_flags,
+            payload_len=payload_len,
+            tcp_flags=tcp_flags if tcp_flags is not None else 0,
+            header_len=header_len,
+            tcp_window=tcp_window_val,
         )
 
     def _process_ipv6(self, packet, pkt_len: int, now: float) -> None:
@@ -328,15 +350,32 @@ class SecurityMetricsCollector:
             self.protocol_stats["OTHER"] += 1
             self.protocol_bytes["OTHER"] += pkt_len
 
-        self.flow_table.update(
+        # Calculate extra fields for BidirectionalFlowTable
+        payload_len = len(bytes(packet.payload.payload)) if packet.haslayer(TCP) or packet.haslayer(UDP) else 0
+        if packet.haslayer(TCP):
+            tcp_layer = packet[TCP]
+            header_len = 40 + tcp_layer.dataofs * 4  # IPv6 header is 40 bytes
+            tcp_window_val = int(tcp_layer.window)
+        elif packet.haslayer(UDP):
+            header_len = 40 + 8
+            tcp_window_val = -1
+        else:
+            header_len = 40
+            tcp_window_val = -1
+
+        # Register in flow table
+        self.flow_table.update_flow(
             src_ip=src_ip,
             dst_ip=dst_ip,
             src_port=src_port,
             dst_port=dst_port,
             protocol=proto,
+            pkt_time=now,
             pkt_len=pkt_len,
-            timestamp=now,
-            tcp_flags=tcp_flags,
+            payload_len=payload_len,
+            tcp_flags=tcp_flags if tcp_flags is not None else 0,
+            header_len=header_len,
+            tcp_window=tcp_window_val,
         )
 
     def _count_flags(self, flags: int, src_ip: str, dst_port: int) -> None:
@@ -356,9 +395,9 @@ class SecurityMetricsCollector:
 
     def _expire_and_alert(self, now: float) -> None:
         """Expire old flows, run alert rules (rule-based + ML), and persist to the database."""
-        expired = self.flow_table.expire_old_flows(now)
-        if expired:
-            summaries = [rec.to_summary() for rec in expired]
+        expired_pairs = self.flow_table.expire_old_flows(now)
+        if expired_pairs:
+            summaries = [rec.to_summary() for rec, _age in expired_pairs]
             for s in summaries:
                 # ML-based prediction (run first so alert rules can use ML results)
                 ml_result = None

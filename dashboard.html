@@ -171,11 +171,18 @@
             display:inline-block; padding:3px 10px; border-radius:4px;
             font-weight:600; font-size:.68rem; letter-spacing:.5px;
         }
+        /* CIC-IDS2017 attack class colors */
         .ml-Normal { background:rgba(0,255,200,.15); color:var(--accent-cyan); }
-        .ml-Botnet { background:rgba(157,78,221,.2); color:var(--accent-purple); }
-        .ml-Brute_Force { background:rgba(251,86,7,.2); color:var(--accent-orange); }
-        .ml-DoS_DDoS { background:rgba(255,0,110,.15); color:var(--accent-red); }
-        .ml-Port_Scan { background:rgba(58,134,255,.15); color:var(--accent-blue); }
+        .ml-Bot { background:rgba(255,0,110,.15); color:var(--accent-red); }
+        .ml-DDoS { background:rgba(251,86,7,.15); color:var(--accent-orange); }
+        .ml-DoS_GoldenEye { background:rgba(255,190,11,.15); color:#d4af37; }
+        .ml-DoS_Hulk { background:rgba(255,0,110,.15); color:var(--accent-red); }
+        .ml-DoS_Slowhttptest { background:rgba(255,136,6,.15); color:#ff8806; }
+        .ml-DoS_slowloris { background:rgba(255,71,87,.15); color:#ff4757; }
+        .ml-FTP-Patator { background:rgba(157,78,221,.15); color:var(--accent-purple); }
+        .ml-PortScan { background:rgba(58,134,255,.15); color:var(--accent-blue); }
+        .ml-SSH-Patator { background:rgba(131,56,236,.15); color:#8338ec; }
+        .ml-Web_Attack { background:rgba(6,255,165,.15); color:#06ffa5; }
 
         .flag-pill {
             display:inline-block; padding:1px 6px; border-radius:3px;
@@ -477,6 +484,26 @@
 <script>
     /* ── Charts ── */
     let trafficChart, protocolChart, threatChart, updateInterval;
+
+    // CIC-IDS2017 attack classes (11 total: Normal + 10 attacks from label encoder)
+    const ML_CLASSES = ['Normal', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk',
+                        'DoS Slowhttptest', 'DoS slowloris', 'FTP-Patator',
+                        'PortScan', 'SSH-Patator', 'Web_Attack'];
+
+    // Color palette for threat classes
+    const ML_COLORS = [
+        '#00ffc8', // Normal — cyan
+        '#ff006e', // Bot — pink
+        '#fb5607', // DDoS — orange
+        '#ffbe0b', // DoS GoldenEye — yellow
+        '#ff006e', // DoS Hulk — pink
+        '#ff8806', // DoS Slowhttptest — orange-red
+        '#ff4757', // DoS slowloris — red
+        '#9d4edd', // FTP-Patator — purple
+        '#3a86ff', // PortScan — blue
+        '#8338ec', // SSH-Patator — indigo
+        '#06ffa5'  // Web_Attack — green
+    ];
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.borderColor = '#2d3e6f';
 
@@ -504,9 +531,9 @@
 
     threatChart = new Chart(document.getElementById('threatChart').getContext('2d'), {
         type: 'doughnut',
-        data: { labels: ['Normal','Botnet','Brute Force','DoS/DDoS','Port Scan'], datasets: [{
-            data: [0,0,0,0,0],
-            backgroundColor: ['#00ffc8','#9d4edd','#fb5607','#ff006e','#3a86ff'],
+        data: { labels: ML_CLASSES, datasets: [{
+            data: ML_CLASSES.map(() => 0),
+            backgroundColor: ML_COLORS,
             borderWidth: 0
         }]},
         options: { responsive:true, maintainAspectRatio:false,
@@ -576,22 +603,8 @@
 
         for (const f of pending) {
             try {
-                const features = {
-                    flow_duration: f.flow_duration,
-                    iat_mean: f.iat_mean,
-                    iat_variance: f.iat_variance,
-                    total_bytes: f.total_bytes,
-                    avg_bytes_per_pkt: f.avg_bytes_per_pkt,
-                    packet_count: f.packet_count,
-                    syn_count: f.syn_count,
-                    ack_count: f.ack_count,
-                    fin_count: f.fin_count,
-                    rst_count: f.rst_count,
-                    proto_tcp: f.protocol === 'TCP' ? 1 : 0,
-                    proto_udp: f.protocol === 'UDP' ? 1 : 0,
-                    proto_icmp: f.protocol === 'ICMP' ? 1 : 0,
-                    proto_other: (f.protocol !== 'TCP' && f.protocol !== 'UDP' && f.protocol !== 'ICMP') ? 1 : 0,
-                };
+                const features = f.features;
+                if (!features || Object.keys(features).length === 0) continue;
 
                 const pred = await fetch('/api/predict', {
                     method: 'POST',
@@ -615,12 +628,11 @@
         updateFlowTable(flows);
 
         // Update threat chart with frontend-calculated stats
-        const classes = ['Normal', 'Botnet', 'Brute Force', 'DoS/DDoS', 'Port Scan'];
         const stats = {};
-        classes.forEach(cls => stats[cls] = 0);
+        ML_CLASSES.forEach(cls => stats[cls] = 0);
         flows.forEach(f => {
             const cls = f.ml_class || 'Normal';
-            if (cls in stats) stats[cls]++;
+            stats[cls] = (stats[cls] || 0) + 1;
         });
         updateThreatChart(stats);
     }
@@ -657,9 +669,8 @@
     }
 
     function updateThreatChart(ml) {
-        const classes=['Normal','Botnet','Brute Force','DoS/DDoS','Port Scan'];
-        const data=classes.map(c=>ml[c]||0);
-        threatChart.data.datasets[0].data=data;
+        const data = ML_CLASSES.map(c => ml[c] || 0);
+        threatChart.data.datasets[0].data = data;
         threatChart.update('none');
     }
 

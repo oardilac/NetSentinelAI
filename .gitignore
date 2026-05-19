@@ -229,3 +229,5 @@ Grupo7_NetSentinel_E2.pdf
 /DataRaw
 /Models
 /Results
+/tests
+*.db*

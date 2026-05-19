@@ -1,7 +1,7 @@
 """
 Live bidirectional flow feature extractor for CIC-IDS2017 compatibility.
 
-Processes network packets and extracts 87 CIC-IDS2017 features per flow:
+Processes network packets and extracts 94 CIC-IDS2017 features per flow:
 - Forward/backward packet and byte counts
 - Forward/backward packet length statistics (max, min, mean, std)
 - Inter-arrival time (IAT) statistics per direction
@@ -21,6 +21,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Tuple
 from collections import OrderedDict
+from threading import Lock
 import struct
 
 from inc_stat import IncrementalStat
@@ -118,6 +119,7 @@ class BidirectionalFlowRecord:
         tcp_flags: int,
         header_len: int,
         direction: str = "fwd",
+        tcp_window: int = -1,
     ):
         """
         Update flow statistics with a new packet.
@@ -167,10 +169,8 @@ class BidirectionalFlowRecord:
             if tcp_flags & 0x02:  # SYN
                 self.fwd_syn += 1
                 # Capture initial window size from SYN packet
-                if self.init_win_fwd == -1:
-                    # Note: window size would need to be extracted from TCP header
-                    # For now, using -1 as placeholder
-                    pass
+                if self.init_win_fwd == -1 and tcp_window >= 0:
+                    self.init_win_fwd = tcp_window
             if tcp_flags & 0x04:  # RST
                 self.fwd_rst += 1
             if tcp_flags & 0x08:  # PSH
@@ -207,8 +207,8 @@ class BidirectionalFlowRecord:
                 self.bwd_fin += 1
             if tcp_flags & 0x02:  # SYN
                 self.bwd_syn += 1
-                if self.init_win_bwd == -1:
-                    pass
+                if self.init_win_bwd == -1 and tcp_window >= 0:
+                    self.init_win_bwd = tcp_window
             if tcp_flags & 0x04:  # RST
                 self.bwd_rst += 1
             if tcp_flags & 0x08:  # PSH
@@ -297,28 +297,29 @@ class BidirectionalFlowRecord:
             features["Flow Bytes/s"] = 0.0
             features["Flow Packets/s"] = 0.0
 
-        # ── IAT (Flow level)
+        # ── IAT (Flow level) — convert to microseconds to match CIC-IDS2017 training data
+        _US = 1_000_000.0
         flow_iat_stats = self.flow_iat_stat
-        features["Flow IAT Mean"] = float(flow_iat_stats.mean) if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Std"] = float(flow_iat_stats.std) if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Max"] = float(flow_iat_stats.max_val) if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Min"] = float(flow_iat_stats.min_val) if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Mean"] = float(flow_iat_stats.mean) * _US if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Std"] = float(flow_iat_stats.std) * _US if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Max"] = float(flow_iat_stats.max_val) * _US if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Min"] = float(flow_iat_stats.min_val) * _US if flow_iat_stats.count > 0 else 0.0
 
-        # ── IAT (Fwd)
+        # ── IAT (Fwd) — convert to microseconds
         fwd_iat_stats = self.fwd_iat_stat
-        features["Fwd IAT Total"] = float(self.fwd_iat_total)
-        features["Fwd IAT Mean"] = float(fwd_iat_stats.mean) if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Std"] = float(fwd_iat_stats.std) if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Max"] = float(fwd_iat_stats.max_val) if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Min"] = float(fwd_iat_stats.min_val) if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Total"] = float(self.fwd_iat_total) * _US
+        features["Fwd IAT Mean"] = float(fwd_iat_stats.mean) * _US if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Std"] = float(fwd_iat_stats.std) * _US if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Max"] = float(fwd_iat_stats.max_val) * _US if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Min"] = float(fwd_iat_stats.min_val) * _US if fwd_iat_stats.count > 0 else 0.0
 
-        # ── IAT (Bwd)
+        # ── IAT (Bwd) — convert to microseconds
         bwd_iat_stats = self.bwd_iat_stat
-        features["Bwd IAT Total"] = float(self.bwd_iat_total)
-        features["Bwd IAT Mean"] = float(bwd_iat_stats.mean) if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Std"] = float(bwd_iat_stats.std) if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Max"] = float(bwd_iat_stats.max_val) if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Min"] = float(bwd_iat_stats.min_val) if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Total"] = float(self.bwd_iat_total) * _US
+        features["Bwd IAT Mean"] = float(bwd_iat_stats.mean) * _US if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Std"] = float(bwd_iat_stats.std) * _US if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Max"] = float(bwd_iat_stats.max_val) * _US if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Min"] = float(bwd_iat_stats.min_val) * _US if bwd_iat_stats.count > 0 else 0.0
 
         # ── TCP Flags (Fwd/Bwd)
         features["Fwd PSH Flags"] = float(self.fwd_psh)
@@ -426,12 +427,52 @@ class BidirectionalFlowRecord:
 
         return features
 
+    def to_summary(self) -> dict:
+        """Return a dashboard-friendly summary dict.
+
+        Includes 5-tuple identity, convenience fields used by AlertEngine and database,
+        plus the full 94-feature dict under 'features' for ML inference.
+        """
+        fv = self.get_feature_vector()
+        src_ip, dst_ip, src_port, dst_port, proto_code = self.key
+        proto_map = {6: "TCP", 17: "UDP", 1: "ICMP"}
+        protocol = proto_map.get(proto_code, "OTHER")
+        total_pkts = self.fwd_pkt_count + self.bwd_pkt_count
+        total_bytes = self.fwd_bytes + self.bwd_bytes
+
+        return {
+            "src_ip": src_ip,
+            "dst_ip": dst_ip,
+            "src_port": src_port,
+            "dst_port": dst_port,
+            "protocol": protocol,
+            "flow_key": f"{src_ip}:{src_port} → {dst_ip}:{dst_port} [{protocol}]",
+            "total_bytes": total_bytes,
+            "syn_count": self.fwd_syn + self.bwd_syn,
+            "ack_count": self.fwd_ack + self.bwd_ack,
+            "rst_count": self.fwd_rst + self.bwd_rst,
+            "flow_duration": self.last_seen - self.start_time,
+            "packet_count": total_pkts,
+            "avg_bytes_per_pkt": total_bytes / total_pkts if total_pkts > 0 else 0.0,
+            "fin_count": self.fwd_fin + self.bwd_fin,
+            "iat_mean": fv.get("Flow IAT Mean", 0.0) / 1_000_000,
+            "iat_variance": 0.0,
+            "proto_tcp": 1 if protocol == "TCP" else 0,
+            "proto_udp": 1 if protocol == "UDP" else 0,
+            "proto_icmp": 1 if protocol == "ICMP" else 0,
+            "proto_other": 1 if protocol not in ("TCP", "UDP", "ICMP") else 0,
+            "features": fv,
+            "ml_class": None,
+            "ml_confidence": None,
+        }
+
 
 class BidirectionalFlowTable:
     """
     Thread-safe flow table with bidirectional flow lookup and timeout-based expiry.
 
     Maintains flows indexed by forward 5-tuple, handles reverse flow lookup.
+    Uses OrderedDict for O(1) LRU eviction and threading.Lock for thread safety.
     """
 
     def __init__(self, timeout_sec: float = 120.0, max_flows: int = 100000):
@@ -442,8 +483,9 @@ class BidirectionalFlowTable:
         """
         self.timeout = timeout_sec
         self.max_flows = max_flows
-        self.flows: Dict[Tuple[str, str, int, int, int], BidirectionalFlowRecord] = {}
-        self.flow_order = []  # Track insertion order for LRU
+        self.flows: OrderedDict[Tuple[str, str, int, int, int], BidirectionalFlowRecord] = OrderedDict()
+        self._lock = Lock()
+        self._expired: list = []  # Recently expired flows, kept for dashboard viewing
 
     def get_or_create_flow(
         self,
@@ -460,34 +502,38 @@ class BidirectionalFlowTable:
         Returns:
             (flow_record, direction) where direction is "fwd" or "bwd"
         """
-        proto_code = self._proto_to_code(protocol)
-        forward_key = (src_ip, dst_ip, src_port, dst_port, proto_code)
-        reverse_key = (dst_ip, src_ip, dst_port, src_port, proto_code)
+        with self._lock:
+            proto_code = self._proto_to_code(protocol)
+            forward_key = (src_ip, dst_ip, src_port, dst_port, proto_code)
+            reverse_key = (dst_ip, src_ip, dst_port, src_port, proto_code)
 
-        # Check forward key
-        if forward_key in self.flows:
-            return self.flows[forward_key], "fwd"
+            # Check forward key
+            if forward_key in self.flows:
+                self.flows.move_to_end(forward_key)  # Mark as recently used for LRU
+                return self.flows[forward_key], "fwd"
 
-        # Check reverse key
-        if reverse_key in self.flows:
-            return self.flows[reverse_key], "bwd"
+            # Check reverse key
+            if reverse_key in self.flows:
+                self.flows.move_to_end(reverse_key)  # Mark as recently used
+                return self.flows[reverse_key], "bwd"
 
-        # Create new flow
-        flow = BidirectionalFlowRecord(
-            key=forward_key,
-            dst_port=dst_port,
-            start_time=pkt_time,
-            last_seen=pkt_time,
-        )
-        self.flows[forward_key] = flow
-        self.flow_order.append(forward_key)
+            # Create new flow
+            flow = BidirectionalFlowRecord(
+                key=forward_key,
+                dst_port=dst_port,
+                start_time=pkt_time,
+                last_seen=pkt_time,
+            )
+            self.flows[forward_key] = flow
 
-        # LRU eviction if needed
-        if len(self.flows) > self.max_flows:
-            oldest_key = self.flow_order.pop(0)
-            del self.flows[oldest_key]
+            # LRU eviction if needed
+            if len(self.flows) > self.max_flows:
+                oldest_key, evicted_flow = self.flows.popitem(last=False)
+                self._expired.append(evicted_flow)
+                if len(self._expired) > 500:
+                    self._expired = self._expired[-500:]
 
-        return flow, "fwd"
+            return flow, "fwd"
 
     def update_flow(
         self,
@@ -501,6 +547,7 @@ class BidirectionalFlowTable:
         payload_len: int = 0,
         tcp_flags: int = 0,
         header_len: int = 0,
+        tcp_window: int = -1,
     ):
         """
         Update a flow with packet information. Creates flow if needed.
@@ -508,7 +555,7 @@ class BidirectionalFlowTable:
         flow, direction = self.get_or_create_flow(
             src_ip, dst_ip, src_port, dst_port, protocol, pkt_time
         )
-        flow.update(pkt_time, pkt_len, payload_len, tcp_flags, header_len, direction)
+        flow.update(pkt_time, pkt_len, payload_len, tcp_flags, header_len, direction, tcp_window)
 
     def expire_old_flows(self, current_time: float) -> list:
         """
@@ -517,24 +564,50 @@ class BidirectionalFlowTable:
         Returns:
             list of (BidirectionalFlowRecord, timedelta_sec) tuples
         """
-        expired = []
-        keys_to_remove = []
+        with self._lock:
+            expired = []
+            keys_to_remove = []
 
-        for key, flow in self.flows.items():
-            age = current_time - flow.last_seen
-            if age > self.timeout:
-                expired.append((flow, age))
-                keys_to_remove.append(key)
+            for key, flow in self.flows.items():
+                age = current_time - flow.last_seen
+                if age > self.timeout:
+                    expired.append((flow, age))
+                    keys_to_remove.append(key)
 
-        for key in keys_to_remove:
-            del self.flows[key]
-            self.flow_order.remove(key)
+            for key in keys_to_remove:
+                flow = self.flows.pop(key)
+                self._expired.append(flow)
 
-        return expired
+            # Trim _expired to last 500
+            if len(self._expired) > 500:
+                self._expired = self._expired[-500:]
+
+            return expired
 
     def get_all_flows(self) -> Dict[Tuple[str, str, int, int, int], BidirectionalFlowRecord]:
         """Return a shallow copy of all current flows."""
-        return dict(self.flows)
+        with self._lock:
+            return dict(self.flows)
+
+    def get_active_flows(self) -> list:
+        """Return list of to_summary() dicts for all active flows."""
+        with self._lock:
+            return [flow.to_summary() for flow in self.flows.values()]
+
+    def get_active_count(self) -> int:
+        """Return number of currently active flows."""
+        with self._lock:
+            return len(self.flows)
+
+    def get_expired_flows(self, limit: int = 50) -> list:
+        """Return the most recently expired flows as summary dicts."""
+        with self._lock:
+            return [flow.to_summary() for flow in self._expired[-limit:]]
+
+    def get_all_feature_vectors(self) -> list:
+        """Return raw 94-feature dicts for all active flows (ML pipeline)."""
+        with self._lock:
+            return [flow.get_feature_vector() for flow in self.flows.values()]
 
     def _proto_to_code(self, protocol: str) -> int:
         """Convert protocol name to IANA code."""

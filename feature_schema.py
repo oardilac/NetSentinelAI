@@ -154,11 +154,12 @@ def align_features(feature_dict: dict, feature_columns: list) -> pd.DataFrame:
     """
     df = pd.DataFrame([feature_dict])
 
-    # Log missing columns
+    # Log missing columns (truncated if too many)
     missing = [c for c in feature_columns if c not in df.columns]
     if missing:
+        display = missing[:5] + (["..."] if len(missing) > 5 else [])
         logger.warning(
-            f"align_features: {len(missing)} columnas faltantes, rellenando con 0: {missing}"
+            f"align_features: {len(missing)} columnas faltantes, rellenando con 0: {display}"
         )
 
     # Fill missing columns with 0

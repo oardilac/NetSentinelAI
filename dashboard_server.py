@@ -70,9 +70,16 @@ def _compute_ml_stats(sniffer):
         if ml_class:
             stats[ml_class] += 1
 
-    # Convert defaultdict to regular dict with all 5 classes initialized to 0
-    classes = ["Normal", "Botnet", "Brute Force", "DoS/DDoS", "Port Scan"]
-    return {cls: stats.get(cls, 0) for cls in classes}
+    # Initialize all known classes to 0, then overlay observed counts
+    try:
+        known_classes = ml_engine.get_attack_classes()
+    except Exception:
+        known_classes = ["Normal"]
+    result = {cls: stats.get(cls, 0) for cls in known_classes}
+    # Include any observed classes not in the known list (future-proof)
+    for cls, count in stats.items():
+        result.setdefault(cls, count)
+    return result
 
 
 # ──────────────────────────────────────────────
@@ -123,22 +130,13 @@ def get_features():
 def predict():
     """On-demand ML prediction for a single flow.
 
-    POST body: {
-        "flow_duration": float,
-        "iat_mean": float,
-        "iat_variance": float,
-        "total_bytes": int,
-        "avg_bytes_per_pkt": float,
-        "packet_count": int,
-        "syn_count": int,
-        "ack_count": int,
-        "fin_count": int,
-        "rst_count": int,
-        "proto_tcp": 0 or 1,
-        "proto_udp": 0 or 1,
-        "proto_icmp": 0 or 1,
-        "proto_other": 0 or 1,
-    }
+    POST body accepts either:
+    1. Nested: {"features": {feature_dict}}
+    2. Direct: {feature_name: value, ...}
+
+    CIC-IDS2017 feature names examples:
+      "Flow Duration", "Fwd Packet Length Mean", "Bwd IAT Mean",
+      "Port_80", "Port_443", "Port_Other_High", ...
 
     Returns: {
         "class": str,
@@ -148,13 +146,16 @@ def predict():
     }
     """
     try:
-        features = request.get_json()
-        if not features:
+        payload = request.get_json()
+        if not payload:
             return jsonify({"error": "Empty request body"}), 400
+        features = ml_engine.normalize_feature_payload(payload)
         result = ml_engine.predict_flow(features)
         return jsonify(result)
-    except Exception as e:
+    except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ──────────────────────────────────────────────
