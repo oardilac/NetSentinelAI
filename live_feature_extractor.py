@@ -289,13 +289,10 @@ class BidirectionalFlowRecord:
         features["Bwd Packet Length Mean"] = float(bwd_pkt_stats.mean) if bwd_pkt_stats.count > 0 else 0.0
         features["Bwd Packet Length Std"] = float(bwd_pkt_stats.std) if bwd_pkt_stats.count > 0 else 0.0
 
-        # ── Flow Rate Features
-        if flow_duration_s > 0:
-            features["Flow Bytes/s"] = float(self.fwd_bytes + self.bwd_bytes) / flow_duration_s
-            features["Flow Packets/s"] = float(self.fwd_pkt_count + self.bwd_pkt_count) / flow_duration_s
-        else:
-            features["Flow Bytes/s"] = 0.0
-            features["Flow Packets/s"] = 0.0
+        # ── Flow Rate Features (use minimum 1ms duration to avoid extreme rates for zero-duration flows)
+        _eff_dur = max(flow_duration_s, 0.001)  # mínimo 1 millisegundo
+        features["Flow Bytes/s"]   = float(self.fwd_bytes + self.bwd_bytes) / _eff_dur
+        features["Flow Packets/s"] = float(self.fwd_pkt_count + self.bwd_pkt_count) / _eff_dur
 
         # ── IAT (Flow level) — convert to microseconds to match CIC-IDS2017 training data
         _US = 1_000_000.0
@@ -331,13 +328,9 @@ class BidirectionalFlowRecord:
         features["Fwd Header Length"] = float(self.fwd_header_len)
         features["Bwd Header Length"] = float(self.bwd_header_len)
 
-        # ── Packet rates per direction
-        if flow_duration_s > 0:
-            features["Fwd Packets/s"] = float(self.fwd_pkt_count) / flow_duration_s
-            features["Bwd Packets/s"] = float(self.bwd_pkt_count) / flow_duration_s
-        else:
-            features["Fwd Packets/s"] = 0.0
-            features["Bwd Packets/s"] = 0.0
+        # ── Packet rates per direction (use same _eff_dur from flow rate section above)
+        features["Fwd Packets/s"] = float(self.fwd_pkt_count) / _eff_dur
+        features["Bwd Packets/s"] = float(self.bwd_pkt_count) / _eff_dur
 
         # ── Overall Packet Length Statistics
         all_pkt_stats = self.all_pkt_len_stat
@@ -384,14 +377,6 @@ class BidirectionalFlowRecord:
         # ── Fwd Header Length.1 (CICFlowMeter bug: same as Fwd Header Length)
         features["Fwd Header Length.1"] = features["Fwd Header Length"]
 
-        # ── Bulk Features (placeholder = 0, requires burst detection not implemented)
-        features["Fwd Avg Bytes/Bulk"] = 0.0
-        features["Fwd Avg Packets/Bulk"] = 0.0
-        features["Fwd Avg Bulk Rate"] = 0.0
-        features["Bwd Avg Bytes/Bulk"] = 0.0
-        features["Bwd Avg Packets/Bulk"] = 0.0
-        features["Bwd Avg Bulk Rate"] = 0.0
-
         # ── Subflow Features (= total flow features, no segmentation)
         features["Subflow Fwd Packets"] = float(self.fwd_pkt_count)
         features["Subflow Fwd Bytes"] = float(self.fwd_bytes)
@@ -408,22 +393,13 @@ class BidirectionalFlowRecord:
         # ── Min segment size
         features["min_seg_size_forward"] = float(self.min_seg_size_fwd) if self.min_seg_size_fwd > 0 else 0.0
 
-        # ── Active/Idle Statistics
-        active_stats = self.active_stat
-        features["Active Mean"] = float(active_stats.mean) if active_stats.count > 0 else 0.0
-        features["Active Std"] = float(active_stats.std) if active_stats.count > 0 else 0.0
-        features["Active Max"] = float(active_stats.max_val) if active_stats.count > 0 else 0.0
-        features["Active Min"] = float(active_stats.min_val) if active_stats.count > 0 else 0.0
-
-        idle_stats = self.idle_stat
-        features["Idle Mean"] = float(idle_stats.mean) if idle_stats.count > 0 else 0.0
-        features["Idle Std"] = float(idle_stats.std) if idle_stats.count > 0 else 0.0
-        features["Idle Max"] = float(idle_stats.max_val) if idle_stats.count > 0 else 0.0
-        features["Idle Min"] = float(idle_stats.min_val) if idle_stats.count > 0 else 0.0
-
         # ── Port Encoding (17 features from dst_port)
         port_features = encode_port(self.dst_port)
         features.update(port_features)
+
+        import logging as _logging
+        _logger = _logging.getLogger(__name__)
+        _logger.debug(f"[GET_FEATURE_VECTOR] Generated {len(features)} features, sample keys: {list(features.keys())[:10]}")
 
         return features
 

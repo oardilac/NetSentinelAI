@@ -14,6 +14,7 @@ import logging
 from typing import Dict, Any
 
 import joblib
+import numpy as np
 import pandas as pd
 
 from feature_schema import align_features
@@ -48,6 +49,25 @@ class InferencePipeline:
             f"✓ Multi model loaded: {self.multi['model_name']} "
             f"({len(self.multi['feature_columns'])} features)"
         )
+
+    def _clip_to_scaler_range(self, X_array: np.ndarray, scaler, n_iqr: float = 10.0) -> np.ndarray:
+        """
+        Clip features to ±n_iqr × IQR from scaler.center_ to prevent out-of-distribution values.
+
+        This guards against single-packet flows and other extreme cases that have never
+        been seen in training. Uses the scaler's own training statistics (center_ and scale_).
+
+        Args:
+            X_array: numpy array of shape (1, n_features)
+            scaler: fitted RobustScaler instance
+            n_iqr: how many IQRs away from median to allow (default 10 = ±10 IQRs)
+
+        Returns:
+            clipped numpy array, same shape
+        """
+        lower = scaler.center_ - n_iqr * scaler.scale_
+        upper = scaler.center_ + n_iqr * scaler.scale_
+        return np.clip(X_array, lower, upper)
 
     def _load_task(self, task: str) -> Dict[str, Any]:
         """
@@ -169,13 +189,25 @@ class InferencePipeline:
             )
 
         # ── Stage 1: Binary classification
+        ATTACK_THRESHOLD = 0.1  # Very low — live traffic differs from CIC-IDS2017 training dist
         binary_x = align_features(flow_features, self.binary["feature_columns"])
-        binary_x_scaled = self.binary["scaler"].transform(binary_x.values)
-        binary_pred = self.binary["model"].predict(binary_x_scaled)[0]
-        binary_proba = self.binary["model"].predict_proba(binary_x_scaled)[0]
 
-        if binary_pred == 0:
+        logger.debug(f"Binary input shape: {binary_x.shape}, columns: {len(binary_x.columns)}")
+        logger.debug(f"Binary input sample (first 5 cols): {dict(list(binary_x.iloc[0].items())[:5])}")
+
+        binary_x_clipped = self._clip_to_scaler_range(binary_x.values, self.binary["scaler"])
+        binary_x_scaled = self.binary["scaler"].transform(binary_x_clipped)
+        logger.debug(f"Binary scaled sample (first 5): {binary_x_scaled[0][:5]}")
+        logger.debug(f"Binary scaled min/max/mean: min={binary_x_scaled.min():.4f}, max={binary_x_scaled.max():.4f}, mean={binary_x_scaled.mean():.4f}")
+
+        binary_proba = self.binary["model"].predict_proba(binary_x_scaled)[0]
+        # binary_proba[0] = P(BENIGN), binary_proba[1] = P(ATTACK)
+
+        logger.debug(f"Binary proba: BENIGN={binary_proba[0]:.4f}, ATTACK={binary_proba[1]:.4f}")
+
+        if binary_proba[1] < ATTACK_THRESHOLD:
             # BENIGN
+            logger.debug(f"  → Decision: BENIGN (P(ATTACK)={binary_proba[1]:.4f} < {ATTACK_THRESHOLD})")
             return {
                 "decision": "BENIGN",
                 "binary_prediction": 0,
@@ -183,8 +215,10 @@ class InferencePipeline:
             }
 
         # ── Stage 2: Multi-class classification (only if binary predicts ATTACK)
+        logger.debug(f"  → Decision: ATTACK (P(ATTACK)={binary_proba[1]:.4f} >= {ATTACK_THRESHOLD})")
         multi_x = align_features(flow_features, self.multi["feature_columns"])
-        multi_x_scaled = self.multi["scaler"].transform(multi_x.values)
+        multi_x_clipped = self._clip_to_scaler_range(multi_x.values, self.multi["scaler"])
+        multi_x_scaled = self.multi["scaler"].transform(multi_x_clipped)
         multi_pred = self.multi["model"].predict(multi_x_scaled)[0]
         multi_proba = self.multi["model"].predict_proba(multi_x_scaled)[0]
 

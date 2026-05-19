@@ -202,6 +202,9 @@ class SecurityMetricsCollector:
         # Port scan detector (IP -> set of dst ports)
         self.port_scan_detector: dict = defaultdict(set)
 
+        # ML classification counters (session-wide, survives flush)
+        self.ml_class_counts: dict = defaultdict(int)
+
         # Periodic expiry counter
         self._last_expiry: float = time.time()
 
@@ -404,9 +407,20 @@ class SecurityMetricsCollector:
                 try:
                     features = s.get("features", {})
                     if features:
-                        ml_result = ml_engine.predict_flow(features)
-                        s["ml_class"] = ml_result.get("class")
-                        s["ml_confidence"] = ml_result.get("confidence", 0.0)
+                        # Skip single-packet flows: they're out-of-distribution by construction
+                        total_pkts = features.get("Total Fwd Packets", 0) + features.get("Total Backward Packets", 0)
+                        if total_pkts < 2:
+                            logger.debug(f"Skipping single-packet flow (total_pkts={total_pkts}): {s.get('src_ip')}:{s.get('src_port')} → {s.get('dst_ip')}:{s.get('dst_port')}")
+                            s["ml_class"] = None
+                            s["ml_confidence"] = None
+                        else:
+                            ml_result = ml_engine.predict_flow(features)
+                            s["ml_class"] = ml_result.get("class")
+                            s["ml_confidence"] = ml_result.get("confidence", 0.0)
+                            if s["ml_class"]:
+                                self.ml_class_counts[s["ml_class"]] += 1
+                            # Debug logging: show what the binary classifier probability is
+                            logger.debug(f"ML: {s.get('src_ip')}:{s.get('src_port')} → {s.get('dst_ip')}:{s.get('dst_port')} | class={ml_result.get('class')} | conf={s['ml_confidence']:.3f}")
                     else:
                         s["ml_class"] = None
                         s["ml_confidence"] = None
@@ -549,10 +563,20 @@ class NetworkSniffer:
 
     def start_sniffing(self):
         self.running = True
-        print(f"[+] Starting capture on interface: {self.interface or 'All'}")
+        iface = self.interface
+        if iface is None:
+            try:
+                from scapy.arch import get_if_list
+                all_ifaces = get_if_list()
+                # Include only real network interfaces: lo0 (loopback) and en* (ethernet)
+                # Filter out virtual/pseudo interfaces (anpi, stf, gif, llw, ap, awdl, bridge, utun, etc.)
+                iface = [i for i in all_ifaces if i.startswith(('lo', 'en'))]
+            except Exception:
+                iface = None
+        print(f"[+] Starting capture on interface: {iface or 'default'}")
         try:
             sniff(
-                iface=self.interface,
+                iface=iface,
                 prn=self.metrics.process_packet,
                 store=False,
                 stop_filter=lambda _: not self.running,
