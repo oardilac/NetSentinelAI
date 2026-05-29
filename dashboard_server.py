@@ -152,15 +152,13 @@ def predict():
     POST body accepts either:
     1. Nested: {"features": {feature_dict}}
     2. Direct: {feature_name: value, ...}
-
-    CIC-IDS2017 feature names examples:
-      "Flow Duration", "Fwd Packet Length Mean", "Bwd IAT Mean",
-      "Port_80", "Port_443", "Port_Other_High", ...
+    Optional: "src_ip", "dst_ip", "src_port", "dst_port", "protocol"
 
     Returns: {
         "class": str,
         "confidence": float,
         "probabilities": {class: prob, ...},
+        "flow_id": int (if saved to DB),
         "error": str (if any)
     }
     """
@@ -168,8 +166,52 @@ def predict():
         payload = request.get_json()
         if not payload:
             return jsonify({"error": "Empty request body"}), 400
+
         features = ml_engine.normalize_feature_payload(payload)
         result = ml_engine.predict_flow(features)
+
+        # Save predicted flow to database for UI visibility
+        db = network_monitor.get_db()
+        sniffer = network_monitor.get_sniffer()
+
+        synthetic_flow = {
+            "src_ip": payload.get("src_ip", "0.0.0.0"),
+            "dst_ip": payload.get("dst_ip", "0.0.0.0"),
+            "src_port": payload.get("src_port", 0),
+            "dst_port": payload.get("dst_port", 0),
+            "protocol": payload.get("protocol", "TCP"),
+            "flow_duration": 0,
+            "iat_mean": 0,
+            "iat_variance": 0,
+            "total_bytes": 0,
+            "avg_bytes_per_pkt": 0,
+            "packet_count": 0,
+            "syn_count": 0,
+            "ack_count": 0,
+            "fin_count": 0,
+            "rst_count": 0,
+            "proto_tcp": 1 if payload.get("protocol", "TCP") == "TCP" else 0,
+            "proto_udp": 1 if payload.get("protocol", "TCP") == "UDP" else 0,
+            "proto_icmp": 0,
+            "proto_other": 0,
+            "ml_class": result.get("class"),
+            "ml_confidence": result.get("confidence", 0.0),
+        }
+
+        saved = db.save_flows([synthetic_flow], session_id=sniffer.metrics.session_id)
+        if saved:
+            result["flow_id"] = saved
+
+            # Generate alert if attack detected
+            if result.get("class") != "Normal":
+                alert_data = {
+                    "timestamp": __import__("datetime").datetime.now().isoformat(),
+                    "type": f"ml_{result.get('class', 'unknown').lower().replace(' ', '_')}",
+                    "source": synthetic_flow["src_ip"],
+                    "description": f"ML detected {result.get('class')} (confidence: {result.get('confidence', 0):.1%})",
+                }
+                db.save_alerts([alert_data], session_id=sniffer.metrics.session_id)
+
         return jsonify(result)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
