@@ -9,19 +9,19 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# SHAP-selected features (binary task): top 10 features determined by TreeExplainer
-# These features explain model predictions most effectively
+# Top 10 features selected by the trained RandomForest model
+# These match Models/binary/feature_columns.json (source of truth)
 FEATURE_COLUMNS = [
-    "Min Packet Length",
-    "Total Fwd Packets",
-    "Fwd IAT Mean",
-    "Fwd Header Length",
-    "Init_Win_bytes_forward",
-    "Average Packet Size",
-    "min_seg_size_forward",
-    "Fwd Packet Length Mean",
+    "Bwd Packet Length Min",
+    "Bwd Packet Length Max",
+    "Port_80",
+    "Total Length of Fwd Packets",
     "Port_53",
-    "Down/Up Ratio",
+    "Total Length of Bwd Packets",
+    "Port_443",
+    "Total Backward Packets",
+    "Fwd Packet Length Max",
+    "Total Fwd Packets",
 ]
 
 # Single source of truth for port one-hot encoding — used by data_preparation.py and live_feature_extractor.py

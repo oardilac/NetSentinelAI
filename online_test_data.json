@@ -2,641 +2,161 @@
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 8.0,
-      "Fwd IAT Mean": 14200000.0,
-      "Fwd Header Length": 172.0,
-      "Init_Win_bytes_forward": 256.0,
-      "Average Packet Size": 833.5,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 7.0,
+      "Bwd Packet Length Min": 0.0,
+      "Bwd Packet Length Max": 5792.0,
+      "Port_80": 1.0,
+      "Total Length of Fwd Packets": 363.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
+      "Total Length of Bwd Packets": 11595.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 7.0,
+      "Fwd Packet Length Max": 345.0,
+      "Total Fwd Packets": 6.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 7.0,
-      "Fwd IAT Mean": 946173.6667,
-      "Fwd Header Length": 232.0,
-      "Init_Win_bytes_forward": 29200.0,
-      "Average Packet Size": 1107.181818,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 78.14285714,
+      "Bwd Packet Length Min": 6.0,
+      "Bwd Packet Length Max": 6.0,
+      "Port_80": 0.0,
+      "Total Length of Fwd Packets": 2.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
+      "Total Length of Bwd Packets": 6.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 1.0,
+      "Fwd Packet Length Max": 2.0,
+      "Total Fwd Packets": 1.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 8.0,
-      "Fwd IAT Mean": 12200000.0,
-      "Fwd Header Length": 252.0,
-      "Init_Win_bytes_forward": 274.0,
-      "Average Packet Size": 851.7857143,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 41.25,
+      "Bwd Packet Length Min": 6.0,
+      "Bwd Packet Length Max": 6.0,
+      "Port_80": 0.0,
+      "Total Length of Fwd Packets": 0.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
+      "Total Length of Bwd Packets": 6.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 1.0,
+      "Fwd Packet Length Max": 0.0,
+      "Total Fwd Packets": 1.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 3.0,
-      "Fwd IAT Mean": 1462.0,
-      "Fwd Header Length": 72.0,
-      "Init_Win_bytes_forward": 8192.0,
-      "Average Packet Size": 1454.125,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 8.666666667,
+      "Bwd Packet Length Min": 0.0,
+      "Bwd Packet Length Max": 4344.0,
+      "Port_80": 1.0,
+      "Total Length of Fwd Packets": 359.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
+      "Total Length of Bwd Packets": 11595.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 6.0,
+      "Fwd Packet Length Max": 353.0,
+      "Total Fwd Packets": 9.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 3.0,
-      "Fwd IAT Mean": 2696008.5,
-      "Fwd Header Length": 104.0,
-      "Init_Win_bytes_forward": 29200.0,
-      "Average Packet Size": 0.0,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 0.0,
+      "Bwd Packet Length Min": 0.0,
+      "Bwd Packet Length Max": 5792.0,
+      "Port_80": 1.0,
+      "Total Length of Fwd Packets": 334.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
+      "Total Length of Bwd Packets": 11595.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 6.0,
+      "Fwd Packet Length Max": 334.0,
+      "Total Fwd Packets": 8.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 2.0,
-      "Fwd IAT Mean": 4.0,
-      "Fwd Header Length": 64.0,
-      "Init_Win_bytes_forward": 251.0,
-      "Average Packet Size": 0.0,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 0.0,
+      "Bwd Packet Length Min": 0.0,
+      "Bwd Packet Length Max": 8699.0,
+      "Port_80": 1.0,
+      "Total Length of Fwd Packets": 391.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 45.0,
-      "Total Fwd Packets": 2.0,
-      "Fwd IAT Mean": 3.0,
-      "Fwd Header Length": 40.0,
-      "Init_Win_bytes_forward": -1.0,
-      "Average Packet Size": 74.75,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 45.0,
-      "Port_53": 1.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 2.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 24.0,
-      "Init_Win_bytes_forward": 1024.0,
-      "Average Packet Size": 5.0,
-      "min_seg_size_forward": 24.0,
-      "Fwd Packet Length Mean": 2.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
+      "Total Length of Bwd Packets": 11595.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 5.0,
+      "Fwd Packet Length Max": 379.0,
+      "Total Fwd Packets": 5.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 2.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 24.0,
-      "Init_Win_bytes_forward": 1024.0,
-      "Average Packet Size": 5.0,
-      "min_seg_size_forward": 24.0,
-      "Fwd Packet Length Mean": 2.0,
+      "Bwd Packet Length Min": 0.0,
+      "Bwd Packet Length Max": 8675.0,
+      "Port_80": 1.0,
+      "Total Length of Fwd Packets": 26.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
+      "Total Length of Bwd Packets": 11601.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 4.0,
+      "Fwd Packet Length Max": 20.0,
+      "Total Fwd Packets": 3.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 9.0,
-      "Fwd IAT Mean": 10800000.0,
-      "Fwd Header Length": 296.0,
-      "Init_Win_bytes_forward": 251.0,
-      "Average Packet Size": 796.8666667,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 39.77777778,
+      "Bwd Packet Length Min": 0.0,
+      "Bwd Packet Length Max": 5840.0,
+      "Port_80": 1.0,
+      "Total Length of Fwd Packets": 26.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 2.0,
-      "Fwd IAT Mean": 4.0,
-      "Fwd Header Length": 64.0,
-      "Init_Win_bytes_forward": 1091.0,
-      "Average Packet Size": 22.66666667,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 15.5,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 2.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 24.0,
-      "Init_Win_bytes_forward": 1024.0,
-      "Average Packet Size": 5.0,
-      "min_seg_size_forward": 24.0,
-      "Fwd Packet Length Mean": 2.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
+      "Total Length of Bwd Packets": 11601.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 6.0,
+      "Fwd Packet Length Max": 20.0,
+      "Total Fwd Packets": 3.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 2.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 24.0,
-      "Init_Win_bytes_forward": 1024.0,
-      "Average Packet Size": 5.0,
-      "min_seg_size_forward": 24.0,
-      "Fwd Packet Length Mean": 2.0,
+      "Bwd Packet Length Min": 6.0,
+      "Bwd Packet Length Max": 6.0,
+      "Port_80": 0.0,
+      "Total Length of Fwd Packets": 0.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
+      "Total Length of Bwd Packets": 6.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 1.0,
+      "Fwd Packet Length Max": 0.0,
+      "Total Fwd Packets": 1.0
     },
     "ground_truth": "ATTACK"
   },
   {
     "attack_type": "Training Attack",
     "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 8.0,
-      "Fwd IAT Mean": 14300000.0,
-      "Fwd Header Length": 264.0,
-      "Init_Win_bytes_forward": 251.0,
-      "Average Packet Size": 796.1333333,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 43.375,
+      "Bwd Packet Length Min": 0.0,
+      "Bwd Packet Length Max": 4380.0,
+      "Port_80": 1.0,
+      "Total Length of Fwd Packets": 26.0,
       "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
+      "Total Length of Bwd Packets": 11601.0,
+      "Port_443": 0.0,
+      "Total Backward Packets": 6.0,
+      "Fwd Packet Length Max": 20.0,
+      "Total Fwd Packets": 3.0
     },
     "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 40.0,
-      "Init_Win_bytes_forward": 29200.0,
-      "Average Packet Size": 3.0,
-      "min_seg_size_forward": 40.0,
-      "Fwd Packet Length Mean": 0.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 2.0,
-      "Fwd IAT Mean": 4.0,
-      "Fwd Header Length": 64.0,
-      "Init_Win_bytes_forward": 251.0,
-      "Average Packet Size": 0.0,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 0.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 6.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 20.0,
-      "Init_Win_bytes_forward": 946.0,
-      "Average Packet Size": 9.0,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 6.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 40.0,
-      "Init_Win_bytes_forward": 29200.0,
-      "Average Packet Size": 3.0,
-      "min_seg_size_forward": 40.0,
-      "Fwd Packet Length Mean": 0.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 2.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 24.0,
-      "Init_Win_bytes_forward": 1024.0,
-      "Average Packet Size": 5.0,
-      "min_seg_size_forward": 24.0,
-      "Fwd Packet Length Mean": 2.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 40.0,
-      "Init_Win_bytes_forward": 29200.0,
-      "Average Packet Size": 3.0,
-      "min_seg_size_forward": 40.0,
-      "Fwd Packet Length Mean": 0.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 44.0,
-      "Init_Win_bytes_forward": 32160.0,
-      "Average Packet Size": 18.5,
-      "min_seg_size_forward": 44.0,
-      "Fwd Packet Length Mean": 0.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 9.0,
-      "Fwd IAT Mean": 10600000.0,
-      "Fwd Header Length": 296.0,
-      "Init_Win_bytes_forward": 251.0,
-      "Average Packet Size": 792.8,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 33.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 5.0,
-      "Fwd IAT Mean": 24500000.0,
-      "Fwd Header Length": 144.0,
-      "Init_Win_bytes_forward": 0.0,
-      "Average Packet Size": 1193.9,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 67.6,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 7.0,
-      "Fwd IAT Mean": 14400000.0,
-      "Fwd Header Length": 240.0,
-      "Init_Win_bytes_forward": 251.0,
-      "Average Packet Size": 919.3076923,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 50.85714286,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 2.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 24.0,
-      "Init_Win_bytes_forward": 1024.0,
-      "Average Packet Size": 5.0,
-      "min_seg_size_forward": 24.0,
-      "Fwd Packet Length Mean": 2.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 8.0,
-      "Fwd IAT Mean": 14400000.0,
-      "Fwd Header Length": 172.0,
-      "Init_Win_bytes_forward": 256.0,
-      "Average Packet Size": 897.6153846,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 7.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 38.0,
-      "Total Fwd Packets": 2.0,
-      "Fwd IAT Mean": 3.0,
-      "Fwd Header Length": 64.0,
-      "Init_Win_bytes_forward": -1.0,
-      "Average Packet Size": 122.5,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 38.0,
-      "Port_53": 1.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 38.0,
-      "Fwd IAT Mean": 270939.2703,
-      "Fwd Header Length": 1228.0,
-      "Init_Win_bytes_forward": 65535.0,
-      "Average Packet Size": 1084.079646,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 33.57894737,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 3.0,
-      "Fwd IAT Mean": 327.5,
-      "Fwd Header Length": 72.0,
-      "Init_Win_bytes_forward": 8192.0,
-      "Average Packet Size": 1454.125,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 8.666666667,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 3.0,
-      "Fwd IAT Mean": 6002.0,
-      "Fwd Header Length": 104.0,
-      "Init_Win_bytes_forward": 29200.0,
-      "Average Packet Size": 1191.4,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 106.3333333,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 2.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 2.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 24.0,
-      "Init_Win_bytes_forward": 1024.0,
-      "Average Packet Size": 5.0,
-      "min_seg_size_forward": 24.0,
-      "Fwd Packet Length Mean": 2.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 3.0,
-      "Fwd IAT Mean": 7.5,
-      "Fwd Header Length": 96.0,
-      "Init_Win_bytes_forward": 274.0,
-      "Average Packet Size": 0.0,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 0.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 38.0,
-      "Fwd IAT Mean": 3127821.62162162,
-      "Fwd Header Length": 1224.0,
-      "Init_Win_bytes_forward": 29200.0,
-      "Average Packet Size": 494.6233766234,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 7.8157894737,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 6.0,
-      "Total Fwd Packets": 4.0,
-      "Fwd IAT Mean": 821709.3333,
-      "Fwd Header Length": 80.0,
-      "Init_Win_bytes_forward": 256.0,
-      "Average Packet Size": 7.5,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 6.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 6.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 20.0,
-      "Init_Win_bytes_forward": 256.0,
-      "Average Packet Size": 9.0,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 6.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 3.0,
-      "Fwd IAT Mean": 274.5,
-      "Fwd Header Length": 72.0,
-      "Init_Win_bytes_forward": 8192.0,
-      "Average Packet Size": 1292.555556,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 8.666666667,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 2.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 1.0,
-      "Fwd IAT Mean": 0.0,
-      "Fwd Header Length": 40.0,
-      "Init_Win_bytes_forward": 29200.0,
-      "Average Packet Size": 3.0,
-      "min_seg_size_forward": 40.0,
-      "Fwd Packet Length Mean": 0.0,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "Training Attack",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 3.0,
-      "Fwd IAT Mean": 3767.0,
-      "Fwd Header Length": 72.0,
-      "Init_Win_bytes_forward": 8192.0,
-      "Average Packet Size": 1453.375,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 8.666666667,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "ATTACK"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 35.0,
-      "Total Fwd Packets": 4.0,
-      "Fwd IAT Mean": 2936486.0,
-      "Fwd Header Length": 104.0,
-      "Init_Win_bytes_forward": -1.0,
-      "Average Packet Size": 50.5,
-      "min_seg_size_forward": 20.0,
-      "Fwd Packet Length Mean": 37.5,
-      "Port_53": 1.0,
-      "Down/Up Ratio": 1.0
-    },
-    "ground_truth": "BENIGN"
-  },
-  {
-    "attack_type": "BENIGN",
-    "features": {
-      "Min Packet Length": 0.0,
-      "Total Fwd Packets": 15.0,
-      "Fwd IAT Mean": 13052.78571,
-      "Fwd Header Length": 492.0,
-      "Init_Win_bytes_forward": 65535.0,
-      "Average Packet Size": 490.2857143,
-      "min_seg_size_forward": 32.0,
-      "Fwd Packet Length Mean": 56.73333333,
-      "Port_53": 0.0,
-      "Down/Up Ratio": 0.0
-    },
-    "ground_truth": "BENIGN"
   }
 ]

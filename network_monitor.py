@@ -567,11 +567,18 @@ class NetworkSniffer:
         if iface is None:
             try:
                 from scapy.arch import get_if_list
+                import platform
                 all_ifaces = get_if_list()
-                # Include only real network interfaces: lo0 (loopback) and en* (ethernet)
-                # Filter out virtual/pseudo interfaces (anpi, stf, gif, llw, ap, awdl, bridge, utun, etc.)
-                iface = [i for i in all_ifaces if i.startswith(('lo', 'en'))]
-            except Exception:
+
+                # Platform-specific interface filtering
+                if platform.system() == "Windows":
+                    # Windows: use first non-loopback interface, or default
+                    iface = next((i for i in all_ifaces if i and 'loopback' not in i.lower()), None)
+                else:
+                    # macOS/Linux: lo0 (loopback) and en* (ethernet)
+                    iface = [i for i in all_ifaces if i.startswith(('lo', 'en'))]
+            except Exception as e:
+                logger.debug(f"Interface detection failed: {e}")
                 iface = None
         print(f"[+] Starting capture on interface: {iface or 'default'}")
         try:
@@ -583,6 +590,7 @@ class NetworkSniffer:
             )
         except Exception as e:
             print(f"[ERROR] Capture error: {e}")
+            logger.error(f"Capture error details: {e}")
             self.running = False
 
     def stop_sniffing(self):
