@@ -45,13 +45,27 @@ def run_shap_selection(task_type: str):
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(X_sample)
 
-    # 1. PROCESAMIENTO GLOBAL
+    # 1. PROCESAMIENTO GLOBAL — Validar formato de shap_values
+    # SHAP retorna diferentes formatos según el número de clases:
+    # - Lista: multiclase (lista de arrays, uno por clase)
+    # - Array 3D: formato alternativo para multiclase (samples × features × clases)
+    # - Array 2D: binario (samples × features)
     if isinstance(shap_values, list):
+        # Multiclase: lista de arrays
         mean_shap = np.abs(np.array(shap_values)).mean(axis=(0, 1))
-    elif len(shap_values.shape) == 3:
-        mean_shap = np.abs(shap_values).mean(axis=(0, 2)) if shap_values.shape[2] == len(class_names) else np.abs(shap_values).mean(axis=0)
-    else:
+    elif isinstance(shap_values, np.ndarray) and len(shap_values.shape) == 3:
+        # Multiclase: array 3D — verificar dimensión de clases
+        if shap_values.shape[2] == len(class_names):
+            # Promediar sobre muestras y clases (mantener features)
+            mean_shap = np.abs(shap_values).mean(axis=(0, 2))
+        else:
+            # Fallback: promediar solo sobre muestras
+            mean_shap = np.abs(shap_values).mean(axis=0)
+    elif isinstance(shap_values, np.ndarray):
+        # Binario o array 2D: promediar sobre muestras
         mean_shap = np.abs(shap_values).mean(axis=0)
+    else:
+        raise TypeError(f"SHAP values format no soportado: {type(shap_values)}")
 
     df_shap_global = pd.DataFrame({"Caracteristica": X_train.columns, "Impacto_SHAP": mean_shap}).sort_values(by="Impacto_SHAP", ascending=False)
 
@@ -80,9 +94,20 @@ def run_shap_selection(task_type: str):
     # Añadir trazas independientes ocultas si es Multiclase
     if task_type == "multi":
         for idx, class_name in enumerate(class_names):
-            if isinstance(shap_values, list): class_matrix = shap_values[idx]
-            elif len(shap_values.shape) == 3: class_matrix = shap_values[:, :, idx] if shap_values.shape[2] == len(class_names) else shap_values[idx, :, :]
-            else: continue
+            # Extraer matriz de SHAP para la clase actual (manejo robusto de formatos)
+            if isinstance(shap_values, list):
+                # Formato: lista de arrays (lista[idx] = array de shape (samples, features))
+                class_matrix = shap_values[idx]
+            elif isinstance(shap_values, np.ndarray) and len(shap_values.shape) == 3:
+                # Formato: array 3D (samples × features × clases)
+                if shap_values.shape[2] == len(class_names):
+                    class_matrix = shap_values[:, :, idx]
+                else:
+                    # Fallback: intenta acceder por índice como primera dimensión
+                    class_matrix = shap_values[idx, :, :]
+            else:
+                # No es multiclase compatible o formato desconocido
+                continue
 
             mean_class_shap = np.abs(class_matrix).mean(axis=0)
             df_c = pd.DataFrame({"Caracteristica": X_train.columns, "Impacto_SHAP": mean_class_shap})

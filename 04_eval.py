@@ -117,10 +117,14 @@ def train_and_eval_final(task_type: str):
     else:
         class_names = ["BENIGN", "Ataque"]
 
-    # Escalado
+    # Escalado — Preservar feature names después del escalado
     scaler = RobustScaler()
     X_tr_scaled = scaler.fit_transform(X_train.values)
     X_te_scaled = scaler.transform(X_test.values)
+
+    # Reconstruir DataFrames con feature names para evitar warning de sklearn
+    X_tr_scaled = pd.DataFrame(X_tr_scaled, columns=X_train.columns)
+    X_te_scaled = pd.DataFrame(X_te_scaled, columns=X_test.columns)
 
     # Balanceo adaptativo
     counts = Counter(y_train)
