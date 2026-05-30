@@ -5,7 +5,7 @@ Two-stage inference:
 1. Binary classifier: BENIGN vs ATTACK
 2. Multi-class classifier (only if binary predicts ATTACK): which attack type
 
-Loads models from Models/binary and Models/multi directories.
+Loads models from Models/ directory with flat filenames.
 """
 
 import os
@@ -20,6 +20,9 @@ import pandas as pd
 from feature_schema import align_features
 
 logger = logging.getLogger(__name__)
+
+# Threshold for binary classification to maximize recall (prefer false positives over missed attacks)
+ATTACK_PROBABILITY_THRESHOLD = 0.05
 
 
 class InferencePipeline:
@@ -65,57 +68,57 @@ class InferencePipeline:
         Returns:
             clipped numpy array, same shape
         """
+        if not hasattr(scaler, "center_") or not hasattr(scaler, "scale_"):
+            logger.warning("Scaler does not have center_ or scale_ attributes; returning input unchanged")
+            return X_array
         lower = scaler.center_ - n_iqr * scaler.scale_
         upper = scaler.center_ + n_iqr * scaler.scale_
         return np.clip(X_array, lower, upper)
 
     def _load_task(self, task: str) -> Dict[str, Any]:
         """
-        Load model, scaler, label encoder (if multi), and feature columns.
+        Load model, scaler, label encoder (if multi), and feature columns from flat Models/ directory.
 
         Returns:
             dict with keys: model_name, model, scaler, label_encoder (or None),
                            feature_columns, classes (or None)
         """
-        task_dir = os.path.join(self.models_dir, task)
+        # Models are stored flat in Models/ with task-specific names
+        model_file = os.path.join(self.models_dir, f"champion_model_{task}.pkl")
+        if not os.path.exists(model_file):
+            raise FileNotFoundError(f"Model file not found: {model_file}")
 
-        # 1. Determine best model
-        best_model_name_file = os.path.join(task_dir, "best_model_name.txt")
-        if os.path.exists(best_model_name_file):
-            with open(best_model_name_file, "r") as f:
-                model_name = f.read().strip()
-            logger.debug(f"  {task}: best model from file = {model_name}")
-        else:
-            # Fallback: read from final_performance_report.csv
-            logger.warning(
-                f"  {task}: best_model_name.txt not found, reading from "
-                f"final_performance_report.csv"
-            )
-            model_name = self._select_best_from_report(task)
-            logger.debug(f"  {task}: best model selected = {model_name}")
+        scaler_file = os.path.join(self.models_dir, f"production_scaler_{task}.pkl")
+        if not os.path.exists(scaler_file):
+            raise FileNotFoundError(f"Scaler file not found: {scaler_file}")
 
-        # 2. Load feature columns
-        feature_cols_file = os.path.join(task_dir, "feature_columns.json")
-        with open(feature_cols_file, "r") as f:
-            feature_columns = json.load(f)
-        logger.debug(f"  {task}: loaded {len(feature_columns)} feature columns")
-
-        # 3. Load model
-        model_file = os.path.join(task_dir, f"{model_name}_final.pkl")
+        # Load model
         model = joblib.load(model_file)
+        model_name = f"champion_model_{task}"
         logger.debug(f"  {task}: loaded model from {model_file}")
 
-        # 4. Load scaler
-        scaler_file = os.path.join(task_dir, f"scaler_{model_name}.pkl")
+        # Load scaler
         scaler = joblib.load(scaler_file)
         logger.debug(f"  {task}: loaded scaler from {scaler_file}")
 
-        # 5. Load label encoder (only for multi)
+        # Load feature columns from Results/
+        feature_cols_file = os.path.join(self.results_dir, f"ranked_features_list_{task}.pkl")
+        if not os.path.exists(feature_cols_file):
+            raise FileNotFoundError(f"Feature columns file not found: {feature_cols_file}")
+        feature_columns = joblib.load(feature_cols_file)
+        logger.debug(f"  {task}: loaded {len(feature_columns)} feature columns")
+
+        # Load label encoder (only for multi)
         label_encoder = None
         classes = None
         if task == "multi":
-            le_file = os.path.join(task_dir, "label_encoder.pkl")
-            label_encoder = joblib.load(le_file)
+            le_file = os.path.join(self.results_dir, "champion_metadata_multi.pkl")
+            if not os.path.exists(le_file):
+                raise FileNotFoundError(f"Label encoder file not found: {le_file}")
+            metadata = joblib.load(le_file)
+            label_encoder = metadata.get("label_encoder")
+            if label_encoder is None:
+                raise ValueError("Label encoder not found in metadata")
             classes = label_encoder.classes_.tolist()
             logger.debug(f"  {task}: loaded label encoder with classes: {classes}")
 
@@ -130,9 +133,8 @@ class InferencePipeline:
 
     def _select_best_from_report(self, task: str) -> str:
         """
-        Fallback: read best model name from final_performance_report.csv.
-
-        Selects by highest F1 (or F1 Weighted for multi), MCC as tiebreaker.
+        Legacy: read best model name from final_performance_report.csv.
+        Not used in the current flat Models/ layout, but kept for backward compatibility.
         """
         report_file = os.path.join(self.results_dir, "final_performance_report.csv")
         if not os.path.exists(report_file):
@@ -140,10 +142,15 @@ class InferencePipeline:
 
         df = pd.read_csv(report_file)
 
-        # Filter by task
-        task_df = df[df["Task"] == task] if "Task" in df.columns else df
+        # Filter by task — MUST have Task column
+        if "Task" not in df.columns:
+            raise RuntimeError(
+                f"final_performance_report.csv missing 'Task' column. "
+                f"Cannot determine which model to load for task='{task}'"
+            )
+        task_df = df[df["Task"] == task]
         if task_df.empty:
-            raise ValueError(f"No models found for task {task}")
+            raise ValueError(f"No models found for task {task} in report")
 
         # Sort by F1 (or F1 Weighted), then MCC
         metric_col = "F1" if "F1" in task_df.columns else "F1 Weighted"
@@ -189,9 +196,6 @@ class InferencePipeline:
             )
 
         # ── Stage 1: Binary classification
-        # Threshold intentionally low (0.05) to maximize recall — we prefer false positives
-        # over missed attacks. The multi-class stage then refines the attack type.
-        ATTACK_THRESHOLD = 0.05
         binary_x = align_features(flow_features, self.binary["feature_columns"])
 
         logger.debug(f"Binary input shape: {binary_x.shape}, columns: {len(binary_x.columns)}")
@@ -212,9 +216,9 @@ class InferencePipeline:
 
         logger.debug(f"Binary proba: BENIGN={binary_proba[0]:.4f}, ATTACK={binary_proba[1]:.4f}")
 
-        if binary_proba[1] < ATTACK_THRESHOLD:
+        if binary_proba[1] < ATTACK_PROBABILITY_THRESHOLD:
             # BENIGN
-            logger.debug(f"  → Decision: BENIGN (P(ATTACK)={binary_proba[1]:.4f} < {ATTACK_THRESHOLD})")
+            logger.debug(f"  → Decision: BENIGN (P(ATTACK)={binary_proba[1]:.4f} < {ATTACK_PROBABILITY_THRESHOLD})")
             return {
                 "decision": "BENIGN",
                 "binary_prediction": 0,
@@ -222,7 +226,7 @@ class InferencePipeline:
             }
 
         # ── Stage 2: Multi-class classification (only if binary predicts ATTACK)
-        logger.debug(f"  → Decision: ATTACK (P(ATTACK)={binary_proba[1]:.4f} >= {ATTACK_THRESHOLD})")
+        logger.debug(f"  → Decision: ATTACK (P(ATTACK)={binary_proba[1]:.4f} >= {ATTACK_PROBABILITY_THRESHOLD})")
         multi_x = align_features(flow_features, self.multi["feature_columns"])
         multi_x_clipped = self._clip_to_scaler_range(multi_x.values, self.multi["scaler"])
         multi_x_scaled = self.multi["scaler"].transform(multi_x_clipped)
@@ -247,26 +251,5 @@ class InferencePipeline:
             "multi_probability": float(max(multi_proba)),
             "multi_probabilities": multi_probs_dict,
         }
-
-    def batch_predict(self, flow_features_list: list) -> list:
-        """
-        Predict on multiple flows.
-
-        Args:
-            flow_features_list: list of dicts, each with CIC-IDS2017 feature names
-
-        Returns:
-            list of prediction dicts
-        """
-        results = []
-        for features in flow_features_list:
-            try:
-                result = self.predict(features)
-                results.append(result)
-            except Exception as e:
-                logger.error(f"Prediction failed: {e}")
-                results.append({"error": str(e)})
-        return results
-
 
 __all__ = ["InferencePipeline"]

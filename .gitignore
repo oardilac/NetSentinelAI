@@ -231,5 +231,16 @@ Grupo7_NetSentinel_E2.pdf
 /Results
 /tests
 *.db*
+*.db-shm
+*.db-wal
 /.atl
 /DataReduced
+
+# macOS filesystem metadata
+.DS_Store
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo

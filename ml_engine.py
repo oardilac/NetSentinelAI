@@ -102,13 +102,3 @@ def normalize_feature_payload(payload: dict) -> dict:
     return data
 
 
-def batch_predict(feature_dicts: list) -> list:
-    """Predict attack classes for multiple flows.
-
-    Args:
-        feature_dicts: List of 94-feature dicts
-
-    Returns:
-        List of prediction results (same format as predict_flow)
-    """
-    return [predict_flow(fd) for fd in feature_dicts]

@@ -27,6 +27,12 @@ import ml_engine
 
 logger = logging.getLogger(__name__)
 
+# Module-level constants
+FLOW_EXPIRY_INTERVAL_SECS = 10.0
+SYN_SCAN_THRESHOLD = 15
+EXFIL_BYTE_THRESHOLD = 50_000_000  # 50 MB
+RST_THRESHOLD = 50
+
 
 # ──────────────────────────────────────────────
 # Alert Engine
@@ -39,11 +45,6 @@ class AlertEngine:
         self._alerts: deque = deque(maxlen=max_alerts)
         self._lock = Lock()
         self._seen: set = set()  # deduplicate alerts per flow_key
-
-        # Thresholds
-        self.scan_syn_threshold = 15
-        self.exfil_byte_threshold = 50_000_000  # 50 MB
-        self.rst_threshold = 50
 
     def evaluate_flow(self, flow_summary: dict, ml_result: dict = None) -> None:
         """Check a single flow summary against alert rules.
@@ -58,7 +59,7 @@ class AlertEngine:
         # Rule 1: Port scan — combine heuristics + ML
         syn = flow_summary.get("syn_count", 0)
         ack = flow_summary.get("ack_count", 0)
-        is_port_scan_heuristic = syn > self.scan_syn_threshold and ack < syn * 0.3
+        is_port_scan_heuristic = syn > SYN_SCAN_THRESHOLD and ack < syn * 0.3
         is_port_scan_ml = bool(ml_result) and (
             "scan" in (ml_class or "").lower() or "portscan" in (ml_class or "").lower()
         ) and ml_confidence > 0.7
@@ -76,7 +77,7 @@ class AlertEngine:
 
         # Rule 2: Brute force attack — combine heuristics + ML
         rst = flow_summary.get("rst_count", 0)
-        is_brute_force_heuristic = rst > self.rst_threshold
+        is_brute_force_heuristic = rst > RST_THRESHOLD
         is_brute_force_ml = bool(ml_result) and (
             "patator" in (ml_class or "").lower() or "brute" in (ml_class or "").lower()
         ) and ml_confidence > 0.7
@@ -106,7 +107,7 @@ class AlertEngine:
 
         # Rule 4: Data exfiltration (heuristic-based)
         alert_key = f"exfil:{fk}"
-        if total_bytes > self.exfil_byte_threshold and alert_key not in self._seen:
+        if total_bytes > EXFIL_BYTE_THRESHOLD and alert_key not in self._seen:
             mb = round(total_bytes / (1024 * 1024), 1)
             self._add("data_exfiltration", src,
                        f"Flow transferred {mb} MB — possible data exfiltration")
@@ -244,19 +245,18 @@ class SecurityMetricsCollector:
                 self.protocol_stats["ARP"] += 1
                 self.protocol_bytes["ARP"] += pkt_len
 
-            # Periodic flow expiry (every 10 s)
-            if now - self._last_expiry > 10.0:
+            # Periodic flow expiry
+            if now - self._last_expiry > FLOW_EXPIRY_INTERVAL_SECS:
                 self._expire_and_alert(now)
                 self._last_expiry = now
 
-    def _process_ip(self, packet, pkt_len: int, now: float) -> None:
-        ip = packet[IP]
-        src_ip, dst_ip = ip.src, ip.dst
+    def _process_packet_layer(self, src_ip: str, dst_ip: str, packet, pkt_len: int, now: float, ip_header_len: int) -> None:
+        """Common logic for processing IPv4 and IPv6 packets."""
         self.src_ips[src_ip] += 1
         self.dst_ips[dst_ip] += 1
         self.top_talkers_bytes[src_ip] += pkt_len
 
-        tcp_flags = None
+        tcp_flags = 0
 
         if packet.haslayer(TCP):
             layer = packet[TCP]
@@ -267,6 +267,8 @@ class SecurityMetricsCollector:
             self.protocol_stats["TCP"] += 1
             self.protocol_bytes["TCP"] += pkt_len
             self.dst_ports[dst_port] += 1
+            header_len = ip_header_len + layer.dataofs * 4
+            tcp_window_val = int(layer.window)
 
         elif packet.haslayer(UDP):
             layer = packet[UDP]
@@ -275,6 +277,8 @@ class SecurityMetricsCollector:
             self.protocol_stats["UDP"] += 1
             self.protocol_bytes["UDP"] += pkt_len
             self.dst_ports[dst_port] += 1
+            header_len = ip_header_len + 8
+            tcp_window_val = -1
 
             # DNS sub-protocol
             if packet.haslayer(DNS) and packet.haslayer(DNSQR):
@@ -288,24 +292,18 @@ class SecurityMetricsCollector:
             src_port, dst_port = 0, 0
             self.protocol_stats["ICMP"] += 1
             self.protocol_bytes["ICMP"] += pkt_len
+            header_len = ip_header_len
+            tcp_window_val = -1
         else:
             proto = "OTHER"
             src_port, dst_port = 0, 0
             self.protocol_stats["OTHER"] += 1
             self.protocol_bytes["OTHER"] += pkt_len
+            header_len = ip_header_len
+            tcp_window_val = -1
 
-        # Calculate extra fields for BidirectionalFlowTable
-        payload_len = len(bytes(packet.payload.payload)) if packet.haslayer(TCP) or packet.haslayer(UDP) else 0
-        if packet.haslayer(TCP):
-            tcp_layer = packet[TCP]
-            header_len = ip.ihl * 4 + tcp_layer.dataofs * 4
-            tcp_window_val = int(tcp_layer.window)
-        elif packet.haslayer(UDP):
-            header_len = ip.ihl * 4 + 8
-            tcp_window_val = -1
-        else:
-            header_len = ip.ihl * 4
-            tcp_window_val = -1
+        # Calculate payload length (len() directly on Scapy layer, no need to bytes() it)
+        payload_len = len(packet.payload.payload) if packet.haslayer(TCP) or packet.haslayer(UDP) else 0
 
         # Register in flow table
         self.flow_table.update_flow(
@@ -317,69 +315,20 @@ class SecurityMetricsCollector:
             pkt_time=now,
             pkt_len=pkt_len,
             payload_len=payload_len,
-            tcp_flags=tcp_flags if tcp_flags is not None else 0,
+            tcp_flags=tcp_flags,
             header_len=header_len,
             tcp_window=tcp_window_val,
         )
+
+    def _process_ip(self, packet, pkt_len: int, now: float) -> None:
+        ip = packet[IP]
+        ip_header_len = ip.ihl * 4
+        self._process_packet_layer(ip.src, ip.dst, packet, pkt_len, now, ip_header_len)
 
     def _process_ipv6(self, packet, pkt_len: int, now: float) -> None:
         ip6 = packet[IPv6]
-        src_ip, dst_ip = ip6.src, ip6.dst
-        self.src_ips[src_ip] += 1
-        self.dst_ips[dst_ip] += 1
-        self.top_talkers_bytes[src_ip] += pkt_len
-
-        tcp_flags = None
-
-        if packet.haslayer(TCP):
-            layer = packet[TCP]
-            proto = "TCP"
-            src_port, dst_port = layer.sport, layer.dport
-            tcp_flags = int(layer.flags)
-            self._count_flags(tcp_flags, src_ip, dst_port)
-            self.protocol_stats["TCP"] += 1
-            self.protocol_bytes["TCP"] += pkt_len
-            self.dst_ports[dst_port] += 1
-        elif packet.haslayer(UDP):
-            layer = packet[UDP]
-            proto = "UDP"
-            src_port, dst_port = layer.sport, layer.dport
-            self.protocol_stats["UDP"] += 1
-            self.protocol_bytes["UDP"] += pkt_len
-            self.dst_ports[dst_port] += 1
-        else:
-            proto = "OTHER"
-            src_port, dst_port = 0, 0
-            self.protocol_stats["OTHER"] += 1
-            self.protocol_bytes["OTHER"] += pkt_len
-
-        # Calculate extra fields for BidirectionalFlowTable
-        payload_len = len(bytes(packet.payload.payload)) if packet.haslayer(TCP) or packet.haslayer(UDP) else 0
-        if packet.haslayer(TCP):
-            tcp_layer = packet[TCP]
-            header_len = 40 + tcp_layer.dataofs * 4  # IPv6 header is 40 bytes
-            tcp_window_val = int(tcp_layer.window)
-        elif packet.haslayer(UDP):
-            header_len = 40 + 8
-            tcp_window_val = -1
-        else:
-            header_len = 40
-            tcp_window_val = -1
-
-        # Register in flow table
-        self.flow_table.update_flow(
-            src_ip=src_ip,
-            dst_ip=dst_ip,
-            src_port=src_port,
-            dst_port=dst_port,
-            protocol=proto,
-            pkt_time=now,
-            pkt_len=pkt_len,
-            payload_len=payload_len,
-            tcp_flags=tcp_flags if tcp_flags is not None else 0,
-            header_len=header_len,
-            tcp_window=tcp_window_val,
-        )
+        ip_header_len = 40  # IPv6 header is always 40 bytes
+        self._process_packet_layer(ip6.src, ip6.dst, packet, pkt_len, now, ip_header_len)
 
     def _count_flags(self, flags: int, src_ip: str, dst_port: int) -> None:
         if flags & 0x02:
@@ -396,6 +345,30 @@ class SecurityMetricsCollector:
         if flags & 0x20:
             self.tcp_flags["URG"] += 1
 
+    def _run_ml_on_flow(self, flow: dict) -> None:
+        """Run ML inference on a flow summary dict, updating ml_class and ml_confidence in-place."""
+        try:
+            features = flow.get("features", {})
+            if features:
+                total_pkts = features.get("Total Fwd Packets", 0) + features.get("Total Backward Packets", 0)
+                if total_pkts < 2:
+                    flow["ml_class"] = None
+                    flow["ml_confidence"] = None
+                else:
+                    ml_result = ml_engine.predict_flow(features)
+                    flow["ml_class"] = ml_result.get("class")
+                    flow["ml_confidence"] = ml_result.get("confidence", 0.0)
+                    if flow["ml_class"]:
+                        self.ml_class_counts[flow["ml_class"]] += 1
+                    logger.debug(f"ML: {flow.get('src_ip')}:{flow.get('src_port')} → {flow.get('dst_ip')}:{flow.get('dst_port')} | class={ml_result.get('class')} | conf={flow['ml_confidence']:.3f}")
+            else:
+                flow["ml_class"] = None
+                flow["ml_confidence"] = None
+        except Exception as e:
+            logger.error(f"ML prediction failed: {e}")
+            flow["ml_class"] = None
+            flow["ml_confidence"] = None
+
     def _expire_and_alert(self, now: float) -> None:
         """Expire old flows, run alert rules (rule-based + ML), and persist to the database."""
         expired_pairs = self.flow_table.expire_old_flows(now)
@@ -403,31 +376,8 @@ class SecurityMetricsCollector:
             summaries = [rec.to_summary() for rec, _age in expired_pairs]
             for s in summaries:
                 # ML-based prediction (run first so alert rules can use ML results)
-                ml_result = None
-                try:
-                    features = s.get("features", {})
-                    if features:
-                        # Skip single-packet flows: they're out-of-distribution by construction
-                        total_pkts = features.get("Total Fwd Packets", 0) + features.get("Total Backward Packets", 0)
-                        if total_pkts < 2:
-                            logger.debug(f"Skipping single-packet flow (total_pkts={total_pkts}): {s.get('src_ip')}:{s.get('src_port')} → {s.get('dst_ip')}:{s.get('dst_port')}")
-                            s["ml_class"] = None
-                            s["ml_confidence"] = None
-                        else:
-                            ml_result = ml_engine.predict_flow(features)
-                            s["ml_class"] = ml_result.get("class")
-                            s["ml_confidence"] = ml_result.get("confidence", 0.0)
-                            if s["ml_class"]:
-                                self.ml_class_counts[s["ml_class"]] += 1
-                            # Debug logging: show what the binary classifier probability is
-                            logger.debug(f"ML: {s.get('src_ip')}:{s.get('src_port')} → {s.get('dst_ip')}:{s.get('dst_port')} | class={ml_result.get('class')} | conf={s['ml_confidence']:.3f}")
-                    else:
-                        s["ml_class"] = None
-                        s["ml_confidence"] = None
-                except Exception as e:
-                    logger.error(f"ML prediction failed: {e}")
-                    s["ml_class"] = None
-                    s["ml_confidence"] = None
+                self._run_ml_on_flow(s)
+                ml_result = {"class": s.get("ml_class"), "confidence": s.get("ml_confidence")} if s.get("ml_class") else None
 
                 # Rule-based + ML-aware alerts
                 self.alert_engine.evaluate_flow(s, ml_result=ml_result)
@@ -501,19 +451,7 @@ class SecurityMetricsCollector:
 
             # Add ML predictions to active flows
             for flow in active:
-                try:
-                    features = flow.get("features", {})
-                    if features:
-                        ml_result = ml_engine.predict_flow(features)
-                        flow["ml_class"] = ml_result.get("class")
-                        flow["ml_confidence"] = ml_result.get("confidence", 0.0)
-                    else:
-                        flow["ml_class"] = None
-                        flow["ml_confidence"] = None
-                except Exception as e:
-                    logger.error(f"ML prediction failed in flush: {e}")
-                    flow["ml_class"] = None
-                    flow["ml_confidence"] = None
+                self._run_ml_on_flow(flow)
 
             saved = self.db.save_flows(active, session_id=self.session_id)
             self._flows_saved += saved
@@ -592,9 +530,6 @@ class NetworkSniffer:
             print(f"[ERROR] Capture error: {e}")
             logger.error(f"Capture error details: {e}")
             self.running = False
-
-    def stop_sniffing(self):
-        self.running = False
 
     def shutdown(self):
         """Stop sniffing and flush all data to the database."""

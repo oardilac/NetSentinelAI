@@ -26,6 +26,8 @@ from inc_stat import IncrementalStat
 from feature_schema import encode_port, FEATURE_COLUMNS
 
 _MICROSECONDS = 1_000_000.0
+MIN_FLOW_DURATION_SECS = 0.001
+MAX_EXPIRED_FLOWS_CACHE = 500
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +86,6 @@ class BidirectionalFlowRecord:
     bwd_ack: int = 0
     fwd_urg: int = 0
     bwd_urg: int = 0
-    fwd_cwe: int = 0
-    bwd_cwe: int = 0
     fwd_ece: int = 0
     bwd_ece: int = 0
 
@@ -169,8 +169,6 @@ class BidirectionalFlowRecord:
                 self.fwd_ack += 1
             if tcp_flags & 0x20:  # URG
                 self.fwd_urg += 1
-            if tcp_flags & 0x80:  # CWE (rarely used)
-                self.fwd_cwe += 1
             if tcp_flags & 0x40:  # ECE
                 self.fwd_ece += 1
 
@@ -207,8 +205,6 @@ class BidirectionalFlowRecord:
                 self.bwd_ack += 1
             if tcp_flags & 0x20:  # URG
                 self.bwd_urg += 1
-            if tcp_flags & 0x80:  # CWE
-                self.bwd_cwe += 1
             if tcp_flags & 0x40:  # ECE
                 self.bwd_ece += 1
 
@@ -258,8 +254,8 @@ class BidirectionalFlowRecord:
         features["Bwd Packet Length Mean"] = float(bwd_pkt_stats.mean) if bwd_pkt_stats.count > 0 else 0.0
         features["Bwd Packet Length Std"] = float(bwd_pkt_stats.std) if bwd_pkt_stats.count > 0 else 0.0
 
-        # ── Flow Rate Features (use minimum 1ms duration to avoid extreme rates for zero-duration flows)
-        _eff_dur = max((self.last_seen - self.start_time), 0.001)
+        # ── Flow Rate Features (use minimum duration to avoid extreme rates for zero-duration flows)
+        _eff_dur = max((self.last_seen - self.start_time), MIN_FLOW_DURATION_SECS)
         features["Flow Bytes/s"]   = float(self.fwd_bytes + self.bwd_bytes) / _eff_dur
         features["Flow Packets/s"] = float(self.fwd_pkt_count + self.bwd_pkt_count) / _eff_dur
 
@@ -315,7 +311,6 @@ class BidirectionalFlowRecord:
         features["PSH Flag Count"] = float(self.fwd_psh + self.bwd_psh)
         features["ACK Flag Count"] = float(self.fwd_ack + self.bwd_ack)
         features["URG Flag Count"] = float(self.fwd_urg + self.bwd_urg)
-        features["CWE Flag Count"] = float(self.fwd_cwe + self.bwd_cwe)
         features["ECE Flag Count"] = float(self.fwd_ece + self.bwd_ece)
 
         # ── Down/Up Ratio (bwd_bytes / fwd_bytes, or 0 if no fwd)
@@ -520,16 +515,11 @@ class BidirectionalFlowTable:
                 flow = self.flows.pop(key)
                 self._expired.append(flow)
 
-            # Trim _expired to last 500
-            if len(self._expired) > 500:
-                self._expired = self._expired[-500:]
+            # Trim _expired cache to recent flows only
+            if len(self._expired) > MAX_EXPIRED_FLOWS_CACHE:
+                self._expired = self._expired[-MAX_EXPIRED_FLOWS_CACHE:]
 
             return expired
-
-    def get_all_flows(self) -> Dict[Tuple[str, str, int, int, int], BidirectionalFlowRecord]:
-        """Return a shallow copy of all current flows."""
-        with self._lock:
-            return dict(self.flows)
 
     def get_active_flows(self) -> list:
         """Return list of to_summary() dicts for all active flows."""

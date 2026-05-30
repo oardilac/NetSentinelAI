@@ -27,6 +27,8 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(name)s: %(message)s')
 
+DEFAULT_PORT = int(os.environ.get("PORT", 5050))
+
 app = Flask(__name__)
 CORS(app)
 
@@ -356,7 +358,7 @@ def main():
     os.makedirs("static", exist_ok=True)
 
     try:
-        app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)
+        app.run(host="0.0.0.0", port=DEFAULT_PORT, debug=False, threaded=True)
     except KeyboardInterrupt:
         _graceful_shutdown()
         sys.exit(0)
