@@ -142,19 +142,6 @@ class SentinelDB:
         """)
         conn.commit()
 
-        # Migration: Add ML columns if they don't exist (for databases created before ML integration)
-        try:
-            conn.execute("ALTER TABLE flows ADD COLUMN ml_class TEXT")
-            conn.commit()
-        except sqlite3.OperationalError:
-            pass  # Column already exists
-
-        try:
-            conn.execute("ALTER TABLE flows ADD COLUMN ml_confidence REAL")
-            conn.commit()
-        except sqlite3.OperationalError:
-            pass  # Column already exists
-
     # ── sessions ──
 
     def create_session(self) -> int:

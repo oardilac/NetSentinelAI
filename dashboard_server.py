@@ -17,6 +17,8 @@ from flask_cors import CORS
 from threading import Thread
 import atexit
 import signal
+import datetime
+import time
 import network_monitor
 import ml_engine
 import os
@@ -139,9 +141,9 @@ def flush_flows():
     Used by attack simulation scripts to get instant classification results
     without waiting for the 120s flow timeout.
     """
-    import time
+    FAR_FUTURE_OFFSET_SECONDS = 99999
     sniffer = network_monitor.get_sniffer()
-    sniffer.metrics._expire_and_alert(time.time() + 99999)
+    sniffer.metrics._expire_and_alert(time.time() + FAR_FUTURE_OFFSET_SECONDS)
     return jsonify({"status": "ok", "message": "All flows flushed and classified"})
 
 
@@ -174,12 +176,13 @@ def predict():
         db = network_monitor.get_db()
         sniffer = network_monitor.get_sniffer()
 
+        protocol = payload.get("protocol", "TCP")
         synthetic_flow = {
             "src_ip": payload.get("src_ip", "0.0.0.0"),
             "dst_ip": payload.get("dst_ip", "0.0.0.0"),
             "src_port": payload.get("src_port", 0),
             "dst_port": payload.get("dst_port", 0),
-            "protocol": payload.get("protocol", "TCP"),
+            "protocol": protocol,
             "flow_duration": 0,
             "iat_mean": 0,
             "iat_variance": 0,
@@ -190,10 +193,10 @@ def predict():
             "ack_count": 0,
             "fin_count": 0,
             "rst_count": 0,
-            "proto_tcp": 1 if payload.get("protocol", "TCP") == "TCP" else 0,
-            "proto_udp": 1 if payload.get("protocol", "TCP") == "UDP" else 0,
-            "proto_icmp": 0,
-            "proto_other": 0,
+            "proto_tcp": 1 if protocol == "TCP" else 0,
+            "proto_udp": 1 if protocol == "UDP" else 0,
+            "proto_icmp": 1 if protocol == "ICMP" else 0,
+            "proto_other": 1 if protocol not in ("TCP", "UDP", "ICMP") else 0,
             "ml_class": result.get("class"),
             "ml_confidence": result.get("confidence", 0.0),
         }
@@ -205,7 +208,7 @@ def predict():
             # Generate alert if attack detected
             if result.get("class") != "Normal":
                 alert_data = {
-                    "timestamp": __import__("datetime").datetime.now().isoformat(),
+                    "timestamp": datetime.datetime.now().isoformat(),
                     "type": f"ml_{result.get('class', 'unknown').lower().replace(' ', '_')}",
                     "source": synthetic_flow["src_ip"],
                     "description": f"ML detected {result.get('class')} (confidence: {result.get('confidence', 0):.1%})",

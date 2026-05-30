@@ -12,7 +12,7 @@ This script:
 import json
 import requests
 import sys
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 DASHBOARD_URL = "http://localhost:5050"
 
@@ -30,7 +30,7 @@ def load_test_attacks(limit: int = 20) -> List[Dict]:
         return []
 
 
-def send_attack(features: Dict, index: int) -> Dict:
+def send_attack(features: Dict, index: int) -> Optional[Dict]:
     """Send single attack to dashboard and show request/response."""
 
     print(f"\n{'='*70}")

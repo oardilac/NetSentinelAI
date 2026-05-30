@@ -102,7 +102,7 @@ def run_tuning_arena(task_type="binary"):
 
     best_scores = []
     os.makedirs(MODELS_DIR, exist_ok=True)
-    if le:
+    if le is not None:
         joblib.dump(le, os.path.join(MODELS_DIR, f"label_encoder_{task_type}.pkl"))
 
     for name, config in candidates.items():

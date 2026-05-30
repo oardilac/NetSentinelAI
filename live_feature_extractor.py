@@ -25,6 +25,8 @@ from threading import Lock
 from inc_stat import IncrementalStat
 from feature_schema import encode_port, FEATURE_COLUMNS
 
+_MICROSECONDS = 1_000_000.0
+
 logger = logging.getLogger(__name__)
 
 
@@ -101,18 +103,10 @@ class BidirectionalFlowRecord:
     # Min segment size forward (min TCP header length)
     min_seg_size_fwd: int = 0
 
-    # Active/Idle periods (using IncrementalStat)
-    active_stat: IncrementalStat = field(default_factory=IncrementalStat)
-    idle_stat: IncrementalStat = field(default_factory=IncrementalStat)
-
-    current_active_start: Optional[float] = None
-    last_active_time: Optional[float] = None
-    ACTIVITY_THRESHOLD: float = 1.0  # 1 second threshold for active/idle
-
     def update(
         self,
         pkt_time: float,
-        pkt_len: int,
+        _pkt_len: int,
         payload_len: int,
         tcp_flags: int,
         header_len: int,
@@ -132,9 +126,6 @@ class BidirectionalFlowRecord:
             direction: "fwd" or "bwd"
         """
         self.last_seen = pkt_time
-
-        # Update active/idle times
-        self._update_active_idle(pkt_time)
 
         if direction == "fwd":
             self.fwd_pkt_count += 1
@@ -227,28 +218,6 @@ class BidirectionalFlowRecord:
             self.flow_iat_stat.update(iat)
         self.last_pkt_time = pkt_time
 
-    def _update_active_idle(self, pkt_time: float):
-        """
-        Track active/idle periods. A gap > ACTIVITY_THRESHOLD marks idle time.
-        """
-        if self.last_active_time is None:
-            # First packet
-            self.current_active_start = pkt_time
-            self.last_active_time = pkt_time
-            return
-
-        gap = pkt_time - self.last_active_time
-
-        if gap > self.ACTIVITY_THRESHOLD:
-            # End current active period, record idle
-            if self.current_active_start is not None:
-                active_duration = self.last_active_time - self.current_active_start
-                self.active_stat.update(active_duration)
-            self.idle_stat.update(gap)
-            self.current_active_start = pkt_time
-
-        self.last_active_time = pkt_time
-
     def get_feature_vector(self) -> Dict[str, float]:
         """
         Extract CIC-IDS2017 features and return the SHAP-selected subset.
@@ -265,7 +234,6 @@ class BidirectionalFlowRecord:
 
         # Compute flow duration in microseconds (like CIC-IDS2017)
         flow_duration_us = (self.last_seen - self.start_time) * 1e6
-        flow_duration_s = self.last_seen - self.start_time
 
         # ── Basic Flow Statistics
         features["Flow Duration"] = flow_duration_us
@@ -291,33 +259,32 @@ class BidirectionalFlowRecord:
         features["Bwd Packet Length Std"] = float(bwd_pkt_stats.std) if bwd_pkt_stats.count > 0 else 0.0
 
         # ── Flow Rate Features (use minimum 1ms duration to avoid extreme rates for zero-duration flows)
-        _eff_dur = max(flow_duration_s, 0.001)  # mínimo 1 millisegundo
+        _eff_dur = max((self.last_seen - self.start_time), 0.001)
         features["Flow Bytes/s"]   = float(self.fwd_bytes + self.bwd_bytes) / _eff_dur
         features["Flow Packets/s"] = float(self.fwd_pkt_count + self.bwd_pkt_count) / _eff_dur
 
         # ── IAT (Flow level) — convert to microseconds to match CIC-IDS2017 training data
-        _US = 1_000_000.0
         flow_iat_stats = self.flow_iat_stat
-        features["Flow IAT Mean"] = float(flow_iat_stats.mean) * _US if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Std"] = float(flow_iat_stats.std) * _US if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Max"] = float(flow_iat_stats.max_val) * _US if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Min"] = float(flow_iat_stats.min_val) * _US if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Mean"] = float(flow_iat_stats.mean) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Std"] = float(flow_iat_stats.std) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Max"] = float(flow_iat_stats.max_val) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Min"] = float(flow_iat_stats.min_val) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
 
         # ── IAT (Fwd) — convert to microseconds
         fwd_iat_stats = self.fwd_iat_stat
-        features["Fwd IAT Total"] = float(self.fwd_iat_total) * _US
-        features["Fwd IAT Mean"] = float(fwd_iat_stats.mean) * _US if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Std"] = float(fwd_iat_stats.std) * _US if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Max"] = float(fwd_iat_stats.max_val) * _US if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Min"] = float(fwd_iat_stats.min_val) * _US if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Total"] = float(self.fwd_iat_total) * _MICROSECONDS
+        features["Fwd IAT Mean"] = float(fwd_iat_stats.mean) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Std"] = float(fwd_iat_stats.std) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Max"] = float(fwd_iat_stats.max_val) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Min"] = float(fwd_iat_stats.min_val) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
 
         # ── IAT (Bwd) — convert to microseconds
         bwd_iat_stats = self.bwd_iat_stat
-        features["Bwd IAT Total"] = float(self.bwd_iat_total) * _US
-        features["Bwd IAT Mean"] = float(bwd_iat_stats.mean) * _US if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Std"] = float(bwd_iat_stats.std) * _US if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Max"] = float(bwd_iat_stats.max_val) * _US if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Min"] = float(bwd_iat_stats.min_val) * _US if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Total"] = float(self.bwd_iat_total) * _MICROSECONDS
+        features["Bwd IAT Mean"] = float(bwd_iat_stats.mean) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Std"] = float(bwd_iat_stats.std) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Max"] = float(bwd_iat_stats.max_val) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Min"] = float(bwd_iat_stats.min_val) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
 
         # ── TCP Flags (Fwd/Bwd)
         features["Fwd PSH Flags"] = float(self.fwd_psh)

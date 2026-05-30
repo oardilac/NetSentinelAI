@@ -5,7 +5,6 @@ for existing code that expects old ml_engine interface.
 """
 
 import logging
-from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 

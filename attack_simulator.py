@@ -14,9 +14,8 @@ Workflow:
 
 import sys
 import json
-import logging
 import requests
-from typing import Dict
+from typing import Dict, Optional
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -30,7 +29,6 @@ class EndToEndValidator:
         self.metrics = {
             "total": 0,
             "correct_decisions": 0,
-            "correct_probabilities": 0,
             "mismatches": [],
             "by_type": {}
         }
@@ -42,6 +40,7 @@ class EndToEndValidator:
             if resp.status_code == 200:
                 print(f"✓ Dashboard is running at {self.dashboard_url}")
                 return True
+            return False
         except Exception as e:
             print(f"✗ Dashboard not accessible at {self.dashboard_url}: {e}")
             return False
@@ -126,7 +125,6 @@ class EndToEndValidator:
         for idx, sample in enumerate(self.test_data):
             features = sample.get("features", {})
             expected_decision = sample.get("ground_truth", "UNKNOWN")
-            expected_prob = sample.get("expected_probability", None)
             attack_type = sample.get("attack_type", "UNKNOWN")
 
             # Send to dashboard
