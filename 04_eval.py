@@ -26,13 +26,16 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 import lightgbm as lgb
 
-CLEAN_DATA_DIR = "./DataClean"
-MODELS_DIR = "./Models"
-RESULTS_DIR = "./Results"
-PLOTS_DIR = "./Results/plots"
-RANDOM_STATE = 42
-UNDER_SAMPLE_TARGET = 50000  # Downsample classes larger than this
-OVER_SAMPLE_TARGET = 15000   # Upsample classes smaller than this
+from training_config import (
+    RANDOM_STATE,
+    UNDER_SAMPLE_TARGET,
+    OVER_SAMPLE_TARGET,
+    SMOTE_K_NEIGHBORS,
+    CLEAN_DATA_DIR,
+    MODELS_DIR,
+    RESULTS_DIR,
+    PLOTS_DIR,
+)
 
 def analyze_binary_false_negatives(y_test_binary, y_pred_binary):
     print("\n>>> [Módulo 4] Extrayendo proporciones de Falsos Negativos en Capa Binaria...")
@@ -128,7 +131,7 @@ def train_and_eval_final(task_type: str):
         over_strat = {k: OVER_SAMPLE_TARGET for k, v in counts.items() if v < OVER_SAMPLE_TARGET}
         X_bal, y_bal = X_tr_scaled, y_train
         if under_strat: X_bal, y_bal = RandomUnderSampler(sampling_strategy=under_strat, random_state=RANDOM_STATE).fit_resample(X_bal, y_bal)
-        if over_strat: X_bal, y_bal = SMOTE(sampling_strategy=over_strat, k_neighbors=3, random_state=RANDOM_STATE).fit_resample(X_bal, y_bal)
+        if over_strat: X_bal, y_bal = SMOTE(sampling_strategy=over_strat, k_neighbors=SMOTE_K_NEIGHBORS, random_state=RANDOM_STATE).fit_resample(X_bal, y_bal)
 
     # Entrenamiento del modelo configurado
     t0 = time.time()

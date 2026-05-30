@@ -112,13 +112,10 @@ class InferencePipeline:
         label_encoder = None
         classes = None
         if task == "multi":
-            le_file = os.path.join(self.results_dir, "champion_metadata_multi.pkl")
+            le_file = os.path.join(self.results_dir, "label_encoder_multi.pkl")
             if not os.path.exists(le_file):
                 raise FileNotFoundError(f"Label encoder file not found: {le_file}")
-            metadata = joblib.load(le_file)
-            label_encoder = metadata.get("label_encoder")
-            if label_encoder is None:
-                raise ValueError("Label encoder not found in metadata")
+            label_encoder = joblib.load(le_file)
             classes = label_encoder.classes_.tolist()
             logger.debug(f"  {task}: loaded label encoder with classes: {classes}")
 
@@ -130,40 +127,6 @@ class InferencePipeline:
             "feature_columns": feature_columns,
             "classes": classes,
         }
-
-    def _select_best_from_report(self, task: str) -> str:
-        """
-        Legacy: read best model name from final_performance_report.csv.
-        Not used in the current flat Models/ layout, but kept for backward compatibility.
-        """
-        report_file = os.path.join(self.results_dir, "final_performance_report.csv")
-        if not os.path.exists(report_file):
-            raise FileNotFoundError(f"Cannot find {report_file}")
-
-        df = pd.read_csv(report_file)
-
-        # Filter by task — MUST have Task column
-        if "Task" not in df.columns:
-            raise RuntimeError(
-                f"final_performance_report.csv missing 'Task' column. "
-                f"Cannot determine which model to load for task='{task}'"
-            )
-        task_df = df[df["Task"] == task]
-        if task_df.empty:
-            raise ValueError(f"No models found for task {task} in report")
-
-        # Sort by F1 (or F1 Weighted), then MCC
-        metric_col = "F1" if "F1" in task_df.columns else "F1 Weighted"
-        if metric_col not in task_df.columns:
-            raise ValueError(
-                f"Cannot find F1 or F1 Weighted metric in {report_file}"
-            )
-
-        best = task_df.sort_values(
-            [metric_col, "MCC"] if "MCC" in task_df.columns else [metric_col],
-            ascending=False,
-        ).iloc[0]
-        return best["Model"]
 
     def predict(self, flow_features: Dict[str, float]) -> Dict[str, Any]:
         """

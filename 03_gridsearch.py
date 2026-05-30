@@ -22,12 +22,17 @@ from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.pipeline import Pipeline as ImbPipeline
 
-CLEAN_DATA_DIR = "./DataClean"
-RESULTS_DIR = "./Results"
-PLOTS_DIR = "./Results/plots"
-RANDOM_STATE = 42
-UNDER_SAMPLE_TARGET = 50000  # Downsample classes larger than this
-OVER_SAMPLE_TARGET = 15000   # Upsample classes smaller than this
+from training_config import (
+    RANDOM_STATE,
+    UNDER_SAMPLE_TARGET,
+    OVER_SAMPLE_TARGET,
+    SMOTE_K_NEIGHBORS,
+    CV_SPLITS,
+    CV_SCORING,
+    CLEAN_DATA_DIR,
+    RESULTS_DIR,
+    PLOTS_DIR,
+)
 
 # ──────────────────────────────────────────────────────────────────────────
 # CONFIGURACIÓN INDEPENDIENTE DE CARACTERÍSTICAS POR TAREA (PRODUCCIÓN)
@@ -60,7 +65,7 @@ def run_grid_search(task_type: str):
     X_train_filtered = X_train_raw[selected_cols].copy()
     print(f"    Matriz de entrenamiento reducida a dimensiones: {X_train_filtered.shape}")
 
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
+    cv = StratifiedKFold(n_splits=CV_SPLITS, shuffle=True, random_state=RANDOM_STATE)
     
     models_spec = {
         'LightGBM': {
@@ -105,12 +110,12 @@ def run_grid_search(task_type: str):
             under_strat = {k: UNDER_SAMPLE_TARGET for k, v in counts.items() if v > UNDER_SAMPLE_TARGET}
             over_strat = {k: OVER_SAMPLE_TARGET for k, v in counts.items() if v < OVER_SAMPLE_TARGET}
             if under_strat: steps.append(('under', RandomUnderSampler(sampling_strategy=under_strat, random_state=RANDOM_STATE)))
-            if over_strat: steps.append(('smote', SMOTE(sampling_strategy=over_strat, k_neighbors=3, random_state=RANDOM_STATE)))
+            if over_strat: steps.append(('smote', SMOTE(sampling_strategy=over_strat, k_neighbors=SMOTE_K_NEIGHBORS, random_state=RANDOM_STATE)))
             
         steps.append(('clf', spec['clf']))
         pipeline = ImbPipeline(steps=steps)
         
-        grid = GridSearchCV(pipeline, spec['grid'], cv=cv, scoring='f1_macro', n_jobs=-1)
+        grid = GridSearchCV(pipeline, spec['grid'], cv=cv, scoring=CV_SCORING, n_jobs=-1)
         grid.fit(X_train_filtered, y_train)
         
         print(f"     Mejor F1-Macro: {grid.best_score_:.4f} | Hiperparámetros optimizados: {grid.best_params_}")

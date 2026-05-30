@@ -356,10 +356,6 @@ class BidirectionalFlowRecord:
         # ── Min segment size
         features["min_seg_size_forward"] = float(self.min_seg_size_fwd) if self.min_seg_size_fwd > 0 else 0.0
 
-        # ── Port Encoding (17 features from dst_port)
-        port_features = encode_port(self.dst_port)
-        features.update(port_features)
-
         logger.debug(f"[GET_FEATURE_VECTOR] Generated {len(features)} features, selecting {len(FEATURE_COLUMNS)} core features")
 
         return {k: features.get(k, 0.0) for k in FEATURE_COLUMNS}

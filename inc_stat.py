@@ -19,14 +19,14 @@ class IncrementalStat:
     making this suitable for long-lived or high-volume flows.
     """
 
-    __slots__ = ("count", "_mean", "_m2", "min_val", "max_val")
+    __slots__ = ("count", "_mean", "_m2", "_min_val", "_max_val")
 
     def __init__(self):
         self.count: int = 0
         self._mean: float = 0.0
         self._m2: float = 0.0  # sum of squares of differences from the mean
-        self.min_val: float = float('inf')
-        self.max_val: float = float('-inf')
+        self._min_val: float = float('inf')
+        self._max_val: float = float('-inf')
 
     def update(self, value: float) -> None:
         """Feed a new observation using Welford's online algorithm."""
@@ -37,10 +37,10 @@ class IncrementalStat:
         self._m2 += delta * delta2
 
         # Track min and max
-        if value < self.min_val:
-            self.min_val = value
-        if value > self.max_val:
-            self.max_val = value
+        if value < self._min_val:
+            self._min_val = value
+        if value > self._max_val:
+            self._max_val = value
 
     @property
     def mean(self) -> float:
@@ -55,3 +55,11 @@ class IncrementalStat:
     @property
     def std(self) -> float:
         return math.sqrt(self.variance)
+
+    @property
+    def min_val(self) -> float:
+        return self._min_val if self._min_val != float('inf') else float('nan')
+
+    @property
+    def max_val(self) -> float:
+        return self._max_val if self._max_val != float('-inf') else float('nan')

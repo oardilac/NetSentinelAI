@@ -10,15 +10,28 @@ Workflow:
 
 import json
 import sys
+import os
 import requests
 from typing import Optional
 
 DASHBOARD_URL = "http://localhost:5050"
 
+# HTTP timeouts
+HTTP_TIMEOUT_SHORT = 2
+HTTP_TIMEOUT_LONG = 5
+
+# Accuracy evaluation thresholds
+PASS_THRESHOLD = 95
+WARN_THRESHOLD = 90
+
+# UI display parameters
+FEATURES_PREVIEW_COUNT = 5
+PROGRESS_BAR_WIDTH = 40
+
 
 def check_dashboard() -> bool:
     try:
-        resp = requests.get(f"{DASHBOARD_URL}/api/status", timeout=2)
+        resp = requests.get(f"{DASHBOARD_URL}/api/status", timeout=HTTP_TIMEOUT_SHORT)
         if resp.status_code == 200:
             print(f"✓ Dashboard running at {DASHBOARD_URL}")
             return True
@@ -29,7 +42,9 @@ def check_dashboard() -> bool:
         return False
 
 
-def load_attacks(data_file: str = "./online_test_data.json") -> list:
+def load_attacks(data_file: str = None) -> list:
+    if data_file is None:
+        data_file = os.path.join(os.path.dirname(__file__), "online_test_data.json")
     try:
         with open(data_file, "r") as f:
             data = json.load(f)
@@ -48,16 +63,16 @@ def send_and_display(features: dict, index: int, attack_type: str) -> Optional[d
     print(f"\n📤 REQUEST:")
     print(f"   POST {DASHBOARD_URL}/api/predict")
     print(f"   Features: {len(features)} indicators")
-    for k, v in list(features.items())[:5]:
+    for k, v in list(features.items())[:FEATURES_PREVIEW_COUNT]:
         print(f"      {k}: {v}")
-    if len(features) > 5:
-        print(f"      ... and {len(features) - 5} more")
+    if len(features) > FEATURES_PREVIEW_COUNT:
+        print(f"      ... and {len(features) - FEATURES_PREVIEW_COUNT} more")
 
     try:
         resp = requests.post(
             f"{DASHBOARD_URL}/api/predict",
             json={"features": features},
-            timeout=5,
+            timeout=HTTP_TIMEOUT_LONG,
         )
 
         if resp.status_code != 200:
@@ -71,10 +86,10 @@ def send_and_display(features: dict, index: int, attack_type: str) -> Optional[d
         print(f"   Confidence: {result.get('confidence', 0) * 100:.1f}%")
 
         probs = result.get("probabilities", {})
-        if probs and "Normal" not in probs:
+        if probs and not (len(probs) == 1 and "Normal" in probs):
             print(f"   Attack probabilities:")
             for cls, prob in sorted(probs.items(), key=lambda x: x[1], reverse=True)[:3]:
-                bar = "█" * int(prob * 40) + "░" * (40 - int(prob * 40))
+                bar = "█" * int(prob * PROGRESS_BAR_WIDTH) + "░" * (PROGRESS_BAR_WIDTH - int(prob * PROGRESS_BAR_WIDTH))
                 print(f"      {cls:<22} {bar} {prob * 100:5.1f}%")
 
         return result
@@ -150,12 +165,12 @@ def main():
         print(f"{atype:<25} {d['correct']:<10} {d['total']:<10} {acc:.1f}%")
 
     print()
-    if accuracy >= 95:
-        print("✅ PASS — dashboard predictions match ground truth (≥95%)")
-    elif accuracy >= 90:
-        print("⚠️  WARNING — mostly correct (90–95%), check edge cases")
+    if accuracy >= PASS_THRESHOLD:
+        print(f"✅ PASS — dashboard predictions match ground truth (≥{PASS_THRESHOLD}%)")
+    elif accuracy >= WARN_THRESHOLD:
+        print(f"⚠️  WARNING — mostly correct ({WARN_THRESHOLD}–{PASS_THRESHOLD}%), check edge cases")
     else:
-        print("❌ FAIL — predictions diverge from ground truth (<90%)")
+        print(f"❌ FAIL — predictions diverge from ground truth (<{WARN_THRESHOLD}%)")
     print()
 
 

@@ -15,6 +15,7 @@ alerts to the database before exiting, so nothing is lost.
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from threading import Thread
+from collections import defaultdict
 import atexit
 import signal
 import datetime
@@ -25,9 +26,18 @@ import os
 import sys
 import logging
 
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(name)s: %(message)s')
 
 DEFAULT_PORT = int(os.environ.get("PORT", 5050))
+
+# History endpoint limits
+_HISTORY_FLOWS_LIMIT = 200
+_HISTORY_ALERTS_LIMIT = 100
+_HISTORY_SESSIONS_LIMIT = 20
+
+# Flow expiry simulation offset
+FAR_FUTURE_OFFSET_SECONDS = 99999
 
 app = Flask(__name__)
 CORS(app)
@@ -66,7 +76,6 @@ signal.signal(signal.SIGTERM, lambda *a: (_graceful_shutdown(), sys.exit(0)))
 
 def _compute_ml_stats(sniffer):
     """Compute ML class distribution from expired (classified) flows + active flows."""
-    from collections import defaultdict
     stats = defaultdict(int)
 
     # Session-wide counts from expired/classified flows (survives flush)
@@ -143,7 +152,6 @@ def flush_flows():
     Used by attack simulation scripts to get instant classification results
     without waiting for the 120s flow timeout.
     """
-    FAR_FUTURE_OFFSET_SECONDS = 99999
     sniffer = network_monitor.get_sniffer()
     sniffer.metrics._expire_and_alert(time.time() + FAR_FUTURE_OFFSET_SECONDS)
     return jsonify({"status": "ok", "message": "All flows flushed and classified"})
@@ -204,7 +212,7 @@ def predict():
         }
 
         saved = db.save_flows([synthetic_flow], session_id=sniffer.metrics.session_id)
-        if saved:
+        if saved is not None:
             result["flow_id"] = saved
 
             # Generate alert if attack detected
@@ -273,7 +281,7 @@ def history_summary():
 @app.route("/api/history/sessions")
 def history_sessions():
     """List recent capture sessions."""
-    limit = request.args.get("limit", 20, type=int)
+    limit = request.args.get("limit", _HISTORY_SESSIONS_LIMIT, type=int)
     db = network_monitor.get_db()
     return jsonify(db.get_sessions(limit=limit))
 
@@ -294,7 +302,7 @@ def history_flows():
         session_id=request.args.get("session_id", None, type=int),
         protocol=request.args.get("protocol", None, type=str),
         src_ip=request.args.get("src_ip", None, type=str),
-        limit=request.args.get("limit", 200, type=int),
+        limit=request.args.get("limit", _HISTORY_FLOWS_LIMIT, type=int),
         offset=request.args.get("offset", 0, type=int),
     )
     return jsonify({
@@ -309,7 +317,7 @@ def history_alerts():
     """Query stored alerts."""
     db = network_monitor.get_db()
     session_id = request.args.get("session_id", None, type=int)
-    limit = request.args.get("limit", 100, type=int)
+    limit = request.args.get("limit", _HISTORY_ALERTS_LIMIT, type=int)
     alerts = db.get_alerts(session_id=session_id, limit=limit)
     return jsonify({
         "count": len(alerts),
@@ -338,7 +346,7 @@ def main():
     print("  IMPORTANT: Run as Administrator on Windows")
     print("             (Right-click -> Run as administrator)")
     print()
-    print("  Dashboard:  http://localhost:5050")
+    print(f"  Dashboard:  http://localhost:{DEFAULT_PORT}")
     print()
     print("  API endpoints:")
     print("    GET  /api/metrics          — live metrics snapshot (incl. ML stats)")
@@ -354,8 +362,6 @@ def main():
     print("  Press Ctrl+C to stop (data auto-saved to database)")
     print("=" * 70)
     print()
-
-    os.makedirs("static", exist_ok=True)
 
     try:
         app.run(host="0.0.0.0", port=DEFAULT_PORT, debug=False, threaded=True)

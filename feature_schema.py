@@ -9,8 +9,9 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# Union of binary + multi feature columns from Models/*/feature_columns.json
-# Used by live_feature_extractor.get_feature_vector() to select which features to emit
+# Top-16 features selected by SHAP from the 94 CIC-IDS2017 features
+# These are the features that survived SHAP feature importance ranking in the training pipeline
+# Used by live_feature_extractor.get_feature_vector() to select which features to emit to models
 FEATURE_COLUMNS = [
     "Bwd Packet Length Min",
     "Bwd Packet Length Max",
@@ -39,10 +40,10 @@ def encode_port(dst_port: int) -> dict:
     Encode destination port as one-hot + range flags.
     Returns dict with Port_XX, Port_WellKnown, Port_Registered, Port_Dynamic keys.
 
-    Logic from main.py:
+    Port ranges (IANA):
     - WellKnown: 0-1023
     - Registered: 1024-49151
-    - Dynamic: > 49151
+    - Dynamic/Private: > 49151
     """
     result = {}
 
@@ -82,7 +83,7 @@ def align_features(feature_dict: dict, feature_columns: list) -> pd.DataFrame:
     if missing:
         display = missing[:5] + (["..."] if len(missing) > 5 else [])
         logger.warning(
-            f"align_features: {len(missing)} columnas faltantes, rellenando con 0: {display}"
+            f"align_features: {len(missing)} missing columns, filling with 0: {display}"
         )
 
     # Fill missing columns with 0
