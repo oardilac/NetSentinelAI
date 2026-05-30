@@ -205,9 +205,10 @@ class InferencePipeline:
         binary_proba = self.binary["model"].predict_proba(binary_x_scaled)[0]
         # binary_proba[0] = P(BENIGN), binary_proba[1] = P(ATTACK)
         if hasattr(self.binary["model"], "classes_"):
-            assert self.binary["model"].classes_[1] == 1, (
-                "Binary model class ordering unexpected: classes_[1] must be 1 (ATTACK)"
-            )
+            if self.binary["model"].classes_[1] != 1:
+                raise RuntimeError(
+                    "Binary model class ordering unexpected: classes_[1] must be 1 (ATTACK)"
+                )
 
         logger.debug(f"Binary proba: BENIGN={binary_proba[0]:.4f}, ATTACK={binary_proba[1]:.4f}")
 
@@ -243,7 +244,7 @@ class InferencePipeline:
             "binary_prediction": 1,
             "binary_probability": float(binary_proba[1]),
             "multi_prediction": int(multi_pred),
-            "multi_probability": float(multi_proba[multi_pred]),
+            "multi_probability": float(max(multi_proba)),
             "multi_probabilities": multi_probs_dict,
         }
 
