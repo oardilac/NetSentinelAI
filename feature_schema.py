@@ -9,19 +9,25 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# Top 10 features selected by the trained RandomForest model
-# These match Models/binary/feature_columns.json (source of truth)
+# Union of binary + multi feature columns from Models/*/feature_columns.json
+# Used by live_feature_extractor.get_feature_vector() to select which features to emit
 FEATURE_COLUMNS = [
     "Bwd Packet Length Min",
     "Bwd Packet Length Max",
-    "Port_80",
-    "Total Length of Fwd Packets",
-    "Port_53",
-    "Total Length of Bwd Packets",
-    "Port_443",
-    "Total Backward Packets",
     "Fwd Packet Length Max",
+    "Fwd Packet Length Min",
+    "Total Length of Fwd Packets",
+    "Total Length of Bwd Packets",
     "Total Fwd Packets",
+    "Total Backward Packets",
+    "Flow Bytes/s",
+    "Flow Packets/s",
+    "Flow Duration",
+    "URG Flag Count",
+    "PSH Flag Count",
+    "Fwd PSH Flags",
+    "ACK Flag Count",
+    "Down/Up Ratio",
 ]
 
 # Single source of truth for port one-hot encoding — used by data_preparation.py and live_feature_extractor.py

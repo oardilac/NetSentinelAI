@@ -52,7 +52,7 @@ sns.set_theme(style="white")
 
 def plot_final_confusion(y_true, y_pred, labels, task_type, champion_name):
     cm = confusion_matrix(y_true, y_pred, labels=range(len(labels)))
-    cm_norm = confusion_matrix(y_true, y_pred, labels=range(len(labels)), normalize='true')
+    cm_norm = cm / cm.sum(axis=1, keepdims=True)
 
     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
     fig.suptitle(f"Matriz de Confusión Final — {champion_name} ({task_type.upper()})", fontsize=14, fontweight="bold")

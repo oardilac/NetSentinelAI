@@ -80,7 +80,7 @@ def apply_shap_reduction(task_type="binary", top_n=15):
     explainer = shap.TreeExplainer(model)
     shap_output = explainer(X_sample)
 
-    class_names = ["BENIGN", "Ataque"] if task_type == "binary" else [str(c) for c in np.unique(y_train)]
+    class_names = [] if task_type == "binary" else [str(c) for c in np.unique(y_train)]
     shap_matrix = shap_output.values[:, :, 1] if task_type == "binary" and len(shap_output.shape) == 3 else shap_output.values
 
     top_features = generate_plotly_html(task_type, shap_matrix, X_train.columns.tolist(), class_names, top_n)
