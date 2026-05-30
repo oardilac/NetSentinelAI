@@ -1,145 +1,162 @@
 #!/usr/bin/env python3
 """
-Send validated attack samples to dashboard and display results in UI.
+Send attack samples to dashboard and validate predictions.
 
-This script:
-1. Loads attack samples from online_test_data.json
-2. Sends them to /api/predict
-3. Displays petición/respuesta details
-4. Registers successful detections for UI display
+Workflow:
+1. Load all samples from online_test_data.json
+2. POST each to /api/predict showing full request/response detail
+3. Compare against ground_truth and report accuracy
 """
 
 import json
-import requests
 import sys
-from typing import Dict, List, Optional
+import requests
+from typing import Optional
 
 DASHBOARD_URL = "http://localhost:5050"
 
-def load_test_attacks(limit: int = 20) -> List[Dict]:
-    """Load first N attack samples."""
-    try:
-        with open("./online_test_data.json", 'r') as f:
-            data = json.load(f)
 
-        attacks = [s for s in data if s.get("attack_type") == "Training Attack"][:limit]
-        print(f"✓ Loaded {len(attacks)} attack samples\n")
-        return attacks
+def check_dashboard() -> bool:
+    try:
+        resp = requests.get(f"{DASHBOARD_URL}/api/status", timeout=2)
+        if resp.status_code == 200:
+            print(f"✓ Dashboard running at {DASHBOARD_URL}")
+            return True
+        return False
+    except Exception as e:
+        print(f"✗ Cannot reach dashboard: {e}")
+        print(f"  Start it with: python dashboard_server.py")
+        return False
+
+
+def load_attacks(data_file: str = "./online_test_data.json") -> list:
+    try:
+        with open(data_file, "r") as f:
+            data = json.load(f)
+        print(f"✓ Loaded {len(data)} samples from {data_file}\n")
+        return data
     except Exception as e:
         print(f"✗ Failed to load data: {e}")
         return []
 
 
-def send_attack(features: Dict, index: int) -> Optional[Dict]:
-    """Send single attack to dashboard and show request/response."""
-
+def send_and_display(features: dict, index: int, attack_type: str) -> Optional[dict]:
     print(f"\n{'='*70}")
-    print(f"[ATTACK {index+1}] Sending malicious flow to dashboard...")
+    print(f"[ATTACK {index + 1}] {attack_type}")
     print(f"{'='*70}")
 
-    # Show REQUEST details
     print(f"\n📤 REQUEST:")
     print(f"   POST {DASHBOARD_URL}/api/predict")
-    print(f"   Content-Type: application/json")
-    print(f"   Payload size: {len(json.dumps({'features': features}))} bytes")
-    print(f"   Features: {len(features)} network flow indicators")
-
-    # Print sample features
-    sample_features = dict(list(features.items())[:5])
-    print(f"   Sample data:")
-    for k, v in sample_features.items():
+    print(f"   Features: {len(features)} indicators")
+    for k, v in list(features.items())[:5]:
         print(f"      {k}: {v}")
     if len(features) > 5:
-        print(f"      ... and {len(features)-5} more features")
+        print(f"      ... and {len(features) - 5} more")
 
-    # Send request
     try:
         resp = requests.post(
             f"{DASHBOARD_URL}/api/predict",
             json={"features": features},
-            timeout=5
+            timeout=5,
         )
 
         if resp.status_code != 200:
-            print(f"\n❌ ERROR: Server returned {resp.status_code}")
+            print(f"\n❌ Server returned {resp.status_code}")
             return None
 
-        dashboard_response = resp.json()
+        result = resp.json()
 
-        # Show RESPONSE details
         print(f"\n📥 RESPONSE:")
-        print(f"   Status: {resp.status_code} OK")
-        print(f"   Detected class: {dashboard_response.get('class', 'UNKNOWN')}")
-        print(f"   Confidence: {dashboard_response.get('confidence', 0):.4f} ({dashboard_response.get('confidence', 0)*100:.1f}%)")
+        print(f"   Detected: {result.get('class', 'UNKNOWN')}")
+        print(f"   Confidence: {result.get('confidence', 0) * 100:.1f}%")
 
-        # Show attack probabilities
-        probs = dashboard_response.get('probabilities', {})
-        if probs and 'Normal' not in probs:
-            print(f"   Attack type probabilities:")
-            sorted_probs = sorted(probs.items(), key=lambda x: x[1], reverse=True)[:3]
-            for attack_type, prob in sorted_probs:
-                bar_length = int(prob * 40)
-                bar = "█" * bar_length + "░" * (40 - bar_length)
-                print(f"      {attack_type:<20} {bar} {prob*100:6.2f}%")
+        probs = result.get("probabilities", {})
+        if probs and "Normal" not in probs:
+            print(f"   Attack probabilities:")
+            for cls, prob in sorted(probs.items(), key=lambda x: x[1], reverse=True)[:3]:
+                bar = "█" * int(prob * 40) + "░" * (40 - int(prob * 40))
+                print(f"      {cls:<22} {bar} {prob * 100:5.1f}%")
 
-        return dashboard_response
+        return result
 
     except Exception as e:
-        print(f"\n❌ REQUEST FAILED: {e}")
+        print(f"\n❌ Request failed: {e}")
         return None
 
 
 def main():
-    # Check dashboard
-    try:
-        resp = requests.get(f"{DASHBOARD_URL}/api/status", timeout=2)
-        if resp.status_code != 200:
-            print(f"❌ Dashboard not running at {DASHBOARD_URL}")
-            sys.exit(1)
-    except Exception as e:
-        print(f"❌ Cannot reach dashboard: {e}")
-        print(f"   Start it with: python3 dashboard_server.py")
+    print("\n" + "=" * 70)
+    print("  NetSentinelAI — Attack Sender & Validator")
+    print("=" * 70)
+
+    if not check_dashboard():
         sys.exit(1)
 
-    print(f"✓ Dashboard is running at {DASHBOARD_URL}\n")
-
-    # Load attacks
-    attacks = load_test_attacks(limit=10)
-    if not attacks:
-        print("❌ No attacks to send")
+    samples = load_attacks()
+    if not samples:
         sys.exit(1)
 
-    # Send each attack
-    results = []
-    for idx, attack in enumerate(attacks):
-        features = attack.get("features", {})
+    total = correct = 0
+    by_type: dict = {}
+
+    for idx, sample in enumerate(samples):
+        features = sample.get("features", {})
+        attack_type = sample.get("attack_type", "UNKNOWN")
+        ground_truth = sample.get("ground_truth", "UNKNOWN")
+
         if not features:
             continue
 
-        result = send_attack(features, idx)
-        if result:
-            results.append({
-                "index": idx,
-                "class": result.get("class"),
-                "confidence": result.get("confidence"),
-                "success": True
-            })
+        result = send_and_display(features, idx, attack_type)
+
+        if result is None:
+            continue
+
+        # Normalize to binary decision
+        detected = result.get("class", "Normal")
+        detected_binary = "BENIGN" if detected == "Normal" else "ATTACK"
+        expected_binary = "BENIGN" if ground_truth in ("Normal", "BENIGN") else "ATTACK"
+
+        match = detected_binary == expected_binary
+        total += 1
+        if match:
+            correct += 1
+
+        print(f"\n   Ground truth : {ground_truth}")
+        print(f"   Match        : {'✅' if match else '❌'} ({detected_binary} vs {expected_binary})")
+
+        if attack_type not in by_type:
+            by_type[attack_type] = {"correct": 0, "total": 0}
+        by_type[attack_type]["total"] += 1
+        if match:
+            by_type[attack_type]["correct"] += 1
 
     # Summary
     print(f"\n\n{'='*70}")
-    print(f"📊 SUMMARY")
+    print(f"  📊 SUMMARY")
     print(f"{'='*70}")
-    print(f"\nSent {len(results)} attacks to dashboard")
-    print(f"\nDetected attacks:")
 
-    for r in results:
-        status = "✅ Detected" if r["class"] != "Normal" else "⚠️ Benign"
-        print(f"  [{r['index']+1}] {r['class']:<20} {status:<15} confidence: {r['confidence']:.4f}")
+    if total == 0:
+        print("No results.")
+        sys.exit(1)
 
-    print(f"\n✓ All attacks sent successfully to {DASHBOARD_URL}/api/predict")
-    print(f"\nCheck the dashboard UI to see detected attacks:\n")
-    print(f"   💻 Open: {DASHBOARD_URL}")
-    print(f"   Look for these attacks in the 'ML Detection' or 'Recent Alerts' section\n")
+    accuracy = correct / total * 100
+    print(f"\nOverall accuracy : {accuracy:.1f}%  ({correct}/{total})")
+    print(f"\n{'Attack Type':<25} {'Correct':<10} {'Total':<10} {'Accuracy'}")
+    print("-" * 60)
+    for atype in sorted(by_type):
+        d = by_type[atype]
+        acc = d["correct"] / d["total"] * 100 if d["total"] > 0 else 0
+        print(f"{atype:<25} {d['correct']:<10} {d['total']:<10} {acc:.1f}%")
+
+    print()
+    if accuracy >= 95:
+        print("✅ PASS — dashboard predictions match ground truth (≥95%)")
+    elif accuracy >= 90:
+        print("⚠️  WARNING — mostly correct (90–95%), check edge cases")
+    else:
+        print("❌ FAIL — predictions diverge from ground truth (<90%)")
+    print()
 
 
 if __name__ == "__main__":
