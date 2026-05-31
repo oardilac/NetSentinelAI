@@ -185,6 +185,9 @@ def predict():
         predicted_class = result.get("class", "Normal")
         predicted_confidence = result.get("confidence", 0.0)
         flow_key = payload.get("_flow_key")
+        # JSON deserializes tuples as lists — convert back for dict lookup
+        if isinstance(flow_key, list):
+            flow_key = tuple(flow_key)
 
         if flow_key and hasattr(sniffer.metrics, "flow_table"):
             flow = sniffer.metrics.flow_table.flows.get(flow_key)
