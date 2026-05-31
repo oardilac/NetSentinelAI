@@ -610,10 +610,15 @@
                 const features = f.features;
                 if (!features || Object.keys(features).length === 0) continue;
 
+                const payload = { ...features };
+                if (f._flow_key) {
+                    payload._flow_key = f._flow_key;
+                }
+
                 const pred = await fetch('/api/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(features)
+                    body: JSON.stringify(payload)
                 });
 
                 if (!pred.ok) continue;

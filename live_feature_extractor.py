@@ -103,6 +103,10 @@ class BidirectionalFlowRecord:
     # Min segment size forward (min TCP header length)
     min_seg_size_fwd: int = 0
 
+    # ML prediction state
+    ml_class: Optional[str] = None
+    ml_confidence: Optional[float] = None
+
     def _update_flags(self, direction: str, tcp_flags: int, tcp_window: int) -> None:
         """Update TCP flag counters for a direction (fwd or bwd)."""
         prefix = direction
@@ -372,8 +376,8 @@ class BidirectionalFlowRecord:
             "proto_icmp": 1 if protocol == "ICMP" else 0,
             "proto_other": 1 if protocol not in ("TCP", "UDP", "ICMP") else 0,
             "features": fv,
-            "ml_class": None,
-            "ml_confidence": None,
+            "ml_class": self.ml_class,
+            "ml_confidence": self.ml_confidence,
         }
 
 
@@ -497,7 +501,12 @@ class BidirectionalFlowTable:
     def get_active_flows(self) -> list:
         """Return list of to_summary() dicts for all active flows."""
         with self._lock:
-            return [flow.to_summary() for flow in self.flows.values()]
+            summaries = []
+            for key, flow in self.flows.items():
+                s = flow.to_summary()
+                s["_flow_key"] = key
+                summaries.append(s)
+            return summaries
 
     def get_active_count(self) -> int:
         """Return number of currently active flows."""

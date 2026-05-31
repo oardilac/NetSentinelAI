@@ -180,11 +180,27 @@ def predict():
         features = ml_engine.normalize_feature_payload(payload)
         result = ml_engine.predict_flow(features)
 
+        # Update live flow object if flow_key is provided
+        sniffer = network_monitor.get_sniffer()
+        predicted_class = result.get("class", "Normal")
+        predicted_confidence = result.get("confidence", 0.0)
+        flow_key = payload.get("_flow_key")
+
+        if flow_key and hasattr(sniffer, "flow_table"):
+            flow = sniffer.flow_table.flows.get(flow_key)
+            if flow:
+                flow.ml_class = predicted_class
+                flow.ml_confidence = predicted_confidence
+
+                # Trigger alert immediately if attack detected
+                if predicted_class != "Normal":
+                    flow_summary = flow.to_summary()
+                    sniffer.alert_engine.add_ml_alert(flow_summary, result)
+
         # Defer database writes to background (non-critical path)
         def _async_save():
             try:
                 sniffer = network_monitor.get_sniffer()
-                predicted_class = result.get("class", "Normal")
                 with sniffer.metrics.lock:
                     sniffer.metrics.ml_class_counts[predicted_class] += 1
 
