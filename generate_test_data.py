@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Regenerate online_test_data.json from test CSV data with correct model features.
+Regenerate online_test_data.json from test CSV data with ALL required model features.
 
-Loads the exact 15 features the binary model was trained on,
+Loads all features needed by both the binary and multi-class models (16 features total),
 samples a balanced set of attacks and benign flows,
 validates each sample against the model (only keeps correctly predicted ones),
 and writes properly formatted JSON for send_attacks_to_dashboard.py.
@@ -40,12 +40,25 @@ def main():
     # Set seed for reproducibility
     np.random.seed(42)
 
-    # Load the exact feature list the model was trained on
-    meta_path = os.path.join(RESULTS_DIR, "champion_metadata_binary.pkl")
-    meta = joblib.load(meta_path)
-    feature_columns = meta["features_used"]
+    # Load feature lists from both models to get the complete union
+    binary_meta_path = os.path.join(RESULTS_DIR, "champion_metadata_binary.pkl")
+    multi_meta_path = os.path.join(RESULTS_DIR, "champion_metadata_multi.pkl")
 
-    print(f"[OK] Loaded {len(feature_columns)} model features:")
+    binary_meta = joblib.load(binary_meta_path)
+    multi_meta = joblib.load(multi_meta_path)
+
+    binary_features = set(binary_meta["features_used"])
+    multi_features = set(multi_meta["features_used"])
+
+    # Union of all features needed by both models
+    all_features = sorted(binary_features | multi_features)
+    feature_columns = all_features
+
+    print(f"[OK] Loaded features from both models:")
+    print(f"  Binary model: {len(binary_features)} features")
+    print(f"  Multi-class model: {len(multi_features)} features")
+    print(f"  Union (total needed): {len(all_features)} features")
+    print(f"\n[OK] All features to export ({len(feature_columns)}):")
     for i, feat in enumerate(feature_columns, 1):
         print(f"  {i:2d}. {feat}")
 
