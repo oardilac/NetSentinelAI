@@ -64,14 +64,23 @@ class AlertEngine:
         ml_class = ml_result.get("class") if ml_result else None
         ml_confidence = ml_result.get("confidence", 0) if ml_result else 0
 
-        # Rule 1: Port scan — ML detection only (per-flow heuristic removed as it's architecturally unsound)
+        # Rule 1: Port scan — combine heuristics + ML
+        syn = flow_summary.get("syn_count", 0)
+        ack = flow_summary.get("ack_count", 0)
+        is_port_scan_heuristic = syn > SYN_SCAN_THRESHOLD and ack < syn * 0.3
         is_port_scan_ml = bool(ml_result) and (
             "scan" in (ml_class or "").lower() or "portscan" in (ml_class or "").lower()
         ) and ml_confidence > 0.7
 
         alert_key = f"scan:{fk}"
-        if is_port_scan_ml and alert_key not in self._seen:
-            self._add("port_scan", src, f"ML detected port scan ({ml_confidence:.0%} confidence)")
+        if (is_port_scan_heuristic or is_port_scan_ml) and alert_key not in self._seen:
+            reason = []
+            if is_port_scan_heuristic:
+                reason.append(f"High SYN/ACK ratio ({syn} SYN, {ack} ACK)")
+            if is_port_scan_ml:
+                reason.append(f"ML detected port scan ({ml_confidence:.0%} confidence)")
+            description = " + ".join(reason) if reason else "Possible port scan"
+            self._add("port_scan", src, description)
             self._add_seen(alert_key)
 
         # Rule 2: Brute force attack — combine heuristics + ML
@@ -127,22 +136,6 @@ class AlertEngine:
             description = f"ML detected {ml_class} (confidence: {confidence:.1%})"
             self._add(alert_type, src_ip, description)
             self._add_seen(alert_key)
-
-    def evaluate_port_scans(self, port_scan_detector: dict, threshold: int = 10) -> None:
-        """Fire alerts for source IPs that have probed many distinct destination ports.
-
-        Args:
-            port_scan_detector: dict mapping source_ip → set of distinct dest_ports probed
-            threshold: number of distinct ports to trigger alert (default 10)
-        """
-        for src_ip, ports in port_scan_detector.items():
-            if len(ports) >= threshold:
-                alert_key = f"port_scan_multi:{src_ip}"
-                if alert_key not in self._seen:
-                    num_ports = len(ports)
-                    description = f"Port scan detected from {src_ip}: {num_ports} distinct ports probed"
-                    self._add("port_scan", src_ip, description)
-                    self._add_seen(alert_key)
 
     def _add(self, alert_type: str, source: str, description: str) -> None:
         with self._lock:
@@ -343,10 +336,7 @@ class SecurityMetricsCollector:
     def _count_flags(self, flags: int, src_ip: str, dst_port: int) -> None:
         if flags & 0x02:
             self.tcp_flags["SYN"] += 1
-            # Only count as a port probe if SYN is set but ACK is not
-            # (SYN-ACK responses from servers shouldn't count as their scan activity)
-            if not (flags & 0x10):
-                self.port_scan_detector[src_ip].add(dst_port)
+            self.port_scan_detector[src_ip].add(dst_port)
         if flags & 0x10:
             self.tcp_flags["ACK"] += 1
         if flags & 0x01:
@@ -405,9 +395,6 @@ class SecurityMetricsCollector:
                 # Fire ML alert if non-Normal class detected
                 if ml_result and ml_result.get("class") != "Normal":
                     self.alert_engine.add_ml_alert(s, ml_result)
-
-            # Evaluate port scans: check source IPs that probed many distinct ports
-            self.alert_engine.evaluate_port_scans(self.port_scan_detector, threshold=10)
 
             # Persist expired flows to SQLite
             saved = self.db.save_flows(summaries, session_id=self.session_id)
