@@ -95,9 +95,21 @@ def send_and_display(features: dict, index: int, attack_type: str) -> Optional[d
         print(f"      ... and {len(features) - FEATURES_PREVIEW_COUNT} more")
 
     try:
+        payload = {"features": features}
+
+        # Add flow_key for live alert engine triggering
+        # Use deterministic synthetic key: hash of attack type + index
+        flow_key = (f"synthetic-{attack_type}-{index}", 0, 0, 0, "tcp")
+        payload["_flow_key"] = flow_key
+        payload["src_ip"] = "192.168.1.100"
+        payload["dst_ip"] = "10.0.0.50"
+        payload["src_port"] = 12345 + index
+        payload["dst_port"] = 80
+        payload["protocol"] = "tcp"
+
         resp = _session.post(
             f"{DASHBOARD_URL}/api/predict",
-            json={"features": features},
+            json=payload,
             timeout=HTTP_TIMEOUT_LONG,
         )
 
@@ -132,13 +144,6 @@ def main():
 
     if not check_dashboard():
         sys.exit(1)
-
-    # Reset ML stats for clean demo slate
-    try:
-        _session.post(f"{DASHBOARD_URL}/api/reset-ml-stats", timeout=HTTP_TIMEOUT_SHORT)
-        print("[OK] ML stats reset")
-    except Exception as e:
-        print(f"[WARN] Could not reset ML stats: {e}")
 
     samples = load_attacks()
     if not samples:
