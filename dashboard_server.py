@@ -186,8 +186,8 @@ def predict():
         predicted_confidence = result.get("confidence", 0.0)
         flow_key = payload.get("_flow_key")
 
-        if flow_key and hasattr(sniffer, "flow_table"):
-            flow = sniffer.flow_table.flows.get(flow_key)
+        if flow_key and hasattr(sniffer.metrics, "flow_table"):
+            flow = sniffer.metrics.flow_table.flows.get(flow_key)
             if flow:
                 flow.ml_class = predicted_class
                 flow.ml_confidence = predicted_confidence
@@ -195,7 +195,7 @@ def predict():
                 # Trigger alert immediately if attack detected
                 if predicted_class != "Normal":
                     flow_summary = flow.to_summary()
-                    sniffer.alert_engine.add_ml_alert(flow_summary, result)
+                    sniffer.metrics.alert_engine.add_ml_alert(flow_summary, result)
 
         # Defer database writes to background (non-critical path)
         def _async_save():
