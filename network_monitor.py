@@ -18,7 +18,7 @@ from scapy.all import sniff, AsyncSniffer, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, D
 from datetime import datetime
 from collections import defaultdict, deque, OrderedDict
 from typing import Tuple
-from threading import Lock
+from threading import Lock, Event
 import time
 import logging
 
@@ -509,7 +509,7 @@ class NetworkSniffer:
         self.metrics = SecurityMetricsCollector(db=self.db, flow_timeout=600.0)
         self.running = False
         self._async_sniffer = None
-        self._shutdown_complete = threading.Event()
+        self._shutdown_complete = Event()
 
     def start_sniffing(self):
         self.running = True
