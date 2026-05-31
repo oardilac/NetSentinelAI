@@ -27,14 +27,13 @@ import lightgbm as lgb
 
 from training_config import (
     RANDOM_STATE,
-    UNDER_SAMPLE_TARGET,
-    OVER_SAMPLE_TARGET,
     SMOTE_K_NEIGHBORS,
     CLEAN_DATA_DIR,
     MODELS_DIR,
     RESULTS_DIR,
     PLOTS_DIR,
     build_resampling_strategies,
+    build_ml_pipeline,
 )
 
 def analyze_binary_false_negatives(y_test_binary, y_pred_binary):
@@ -82,21 +81,22 @@ def train_and_eval_final(task_type: str):
     selected_features = meta['features_used']
     
     # ──────────────────────────────────────────────────────────────────────────
-    # CORRECCIÓN: Deducción e instanciación dinámica del modelo
+    # Deducción e instanciación dinámica del modelo
     # ──────────────────────────────────────────────────────────────────────────
     # Limpiamos el prefijo 'clf__' de los parámetros guardados
     clf_params = {k.replace('clf__', ''): v for k, v in meta['best_params'].items()}
-    
-    # Buscamos la huella digital (hiperparámetros únicos) para saber qué modelo fue el campeón
-    if 'num_leaves' in clf_params:
-        model_name = "LightGBM"
-        final_clf = lgb.LGBMClassifier(random_state=RANDOM_STATE, n_jobs=-1, verbose=-1)
-    elif 'min_samples_split' in clf_params:
-        model_name = "RandomForest"
-        final_clf = RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=-1)
+
+    # Leemos el nombre del modelo clase del metadata (guardado por 03_gridsearch.py)
+    model_name = meta.get('model_class_name', 'Unknown')
+
+    if model_name == "LightGBM":
+        final_clf = lgb.LGBMClassifier(random_state=RANDOM_STATE, n_jobs=1, verbose=-1)
+    elif model_name == "RandomForest":
+        final_clf = RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1)
+    elif model_name == "XGBoost":
+        final_clf = XGBClassifier(random_state=RANDOM_STATE, n_jobs=1, eval_metric='logloss')
     else:
-        model_name = "XGBoost"
-        final_clf = XGBClassifier(random_state=RANDOM_STATE, n_jobs=-1, eval_metric='logloss')
+        raise ValueError(f"Unknown model class name: {model_name}")
 
     # Inyectamos los parámetros ganadores al modelo limpio
     final_clf.set_params(**clf_params)

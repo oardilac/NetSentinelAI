@@ -109,24 +109,40 @@ class BidirectionalFlowRecord:
 
     def _update_flags(self, direction: str, tcp_flags: int, tcp_window: int) -> None:
         """Update TCP flag counters for a direction (fwd or bwd)."""
-        prefix = direction
-        if tcp_flags & 0x01:  # FIN
-            setattr(self, f"{prefix}_fin", getattr(self, f"{prefix}_fin") + 1)
-        if tcp_flags & 0x02:  # SYN
-            setattr(self, f"{prefix}_syn", getattr(self, f"{prefix}_syn") + 1)
-            init_win_attr = f"init_win_{prefix}"
-            if getattr(self, init_win_attr) == -1 and tcp_window >= 0:
-                setattr(self, init_win_attr, tcp_window)
-        if tcp_flags & 0x04:  # RST
-            setattr(self, f"{prefix}_rst", getattr(self, f"{prefix}_rst") + 1)
-        if tcp_flags & 0x08:  # PSH
-            setattr(self, f"{prefix}_psh", getattr(self, f"{prefix}_psh") + 1)
-        if tcp_flags & 0x10:  # ACK
-            setattr(self, f"{prefix}_ack", getattr(self, f"{prefix}_ack") + 1)
-        if tcp_flags & 0x20:  # URG
-            setattr(self, f"{prefix}_urg", getattr(self, f"{prefix}_urg") + 1)
-        if tcp_flags & 0x40:  # ECE
-            setattr(self, f"{prefix}_ece", getattr(self, f"{prefix}_ece") + 1)
+        if direction == "fwd":
+            if tcp_flags & 0x01:  # FIN
+                self.fwd_fin += 1
+            if tcp_flags & 0x02:  # SYN
+                self.fwd_syn += 1
+                if self.init_win_fwd == -1 and tcp_window >= 0:
+                    self.init_win_fwd = tcp_window
+            if tcp_flags & 0x04:  # RST
+                self.fwd_rst += 1
+            if tcp_flags & 0x08:  # PSH
+                self.fwd_psh += 1
+            if tcp_flags & 0x10:  # ACK
+                self.fwd_ack += 1
+            if tcp_flags & 0x20:  # URG
+                self.fwd_urg += 1
+            if tcp_flags & 0x40:  # ECE
+                self.fwd_ece += 1
+        else:  # backward
+            if tcp_flags & 0x01:  # FIN
+                self.bwd_fin += 1
+            if tcp_flags & 0x02:  # SYN
+                self.bwd_syn += 1
+                if self.init_win_bwd == -1 and tcp_window >= 0:
+                    self.init_win_bwd = tcp_window
+            if tcp_flags & 0x04:  # RST
+                self.bwd_rst += 1
+            if tcp_flags & 0x08:  # PSH
+                self.bwd_psh += 1
+            if tcp_flags & 0x10:  # ACK
+                self.bwd_ack += 1
+            if tcp_flags & 0x20:  # URG
+                self.bwd_urg += 1
+            if tcp_flags & 0x40:  # ECE
+                self.bwd_ece += 1
 
     def update(
         self,
@@ -195,12 +211,75 @@ class BidirectionalFlowRecord:
             self.flow_iat_stat.update(iat)
         self.last_pkt_time = pkt_time
 
+    def _compute_iat_features(self, features: OrderedDict) -> None:
+        """Compute inter-arrival time (IAT) statistics for all directions.
+
+        Updates features dict in-place with flow-level, forward, and backward IAT stats.
+        All IAT values are converted to microseconds to match CIC-IDS2017 training data.
+        """
+        _eff_dur = max((self.last_seen - self.start_time), MIN_FLOW_DURATION_SECS)
+
+        # Flow-level IAT
+        flow_iat_stats = self.flow_iat_stat
+        features["Flow IAT Mean"] = float(flow_iat_stats.mean) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Std"] = float(flow_iat_stats.std) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Max"] = float(flow_iat_stats.max_val) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
+        features["Flow IAT Min"] = float(flow_iat_stats.min_val) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
+
+        # Forward IAT
+        fwd_iat_stats = self.fwd_iat_stat
+        features["Fwd IAT Total"] = float(self.fwd_iat_total) * _MICROSECONDS
+        features["Fwd IAT Mean"] = float(fwd_iat_stats.mean) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Std"] = float(fwd_iat_stats.std) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Max"] = float(fwd_iat_stats.max_val) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
+        features["Fwd IAT Min"] = float(fwd_iat_stats.min_val) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
+
+        # Backward IAT
+        bwd_iat_stats = self.bwd_iat_stat
+        features["Bwd IAT Total"] = float(self.bwd_iat_total) * _MICROSECONDS
+        features["Bwd IAT Mean"] = float(bwd_iat_stats.mean) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Std"] = float(bwd_iat_stats.std) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Max"] = float(bwd_iat_stats.max_val) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
+        features["Bwd IAT Min"] = float(bwd_iat_stats.min_val) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
+
+    def _compute_flag_ratios(self, features: OrderedDict) -> None:
+        """Compute TCP flag counts and push/urgent indicators.
+
+        Updates features dict in-place with PSH/URG flags per direction and
+        total flag counts across both directions.
+        """
+        # Per-direction flags
+        features["Fwd PSH Flags"] = float(self.fwd_psh)
+        features["Bwd PSH Flags"] = float(self.bwd_psh)
+        features["Fwd URG Flags"] = float(self.fwd_urg)
+        features["Bwd URG Flags"] = float(self.bwd_urg)
+
+        # Total flag counts (fwd + bwd)
+        features["FIN Flag Count"] = float(self.fwd_fin + self.bwd_fin)
+        features["SYN Flag Count"] = float(self.fwd_syn + self.bwd_syn)
+        features["RST Flag Count"] = float(self.fwd_rst + self.bwd_rst)
+        features["PSH Flag Count"] = float(self.fwd_psh + self.bwd_psh)
+        features["ACK Flag Count"] = float(self.fwd_ack + self.bwd_ack)
+        features["URG Flag Count"] = float(self.fwd_urg + self.bwd_urg)
+        features["ECE Flag Count"] = float(self.fwd_ece + self.bwd_ece)
+
+    def _compute_subflow_stats(self, features: OrderedDict) -> None:
+        """Compute subflow-level statistics (packet/byte counts per direction).
+
+        In the current implementation, subflows are equal to the total flow
+        (no segmentation), so these mirror forward/backward packet and byte counts.
+        """
+        features["Subflow Fwd Packets"] = float(self.fwd_pkt_count)
+        features["Subflow Fwd Bytes"] = float(self.fwd_bytes)
+        features["Subflow Bwd Packets"] = float(self.bwd_pkt_count)
+        features["Subflow Bwd Bytes"] = float(self.bwd_bytes)
+
     def get_feature_vector(self) -> Dict[str, float]:
         """
         Extract CIC-IDS2017 features and return the SHAP-selected subset.
 
-        Computes all measurable features then filters to the subset defined by
-        FEATURE_COLUMNS (loaded from feature_columns.json at import time).
+        Orchestrates computation of all feature categories (IAT, flags, packet stats, etc.)
+        via private helper methods, then filters to the subset defined by FEATURE_COLUMNS.
         Active/idle features are tracked internally but not emitted because they
         are not part of the current SHAP top-10 feature set.
 
@@ -211,13 +290,12 @@ class BidirectionalFlowRecord:
 
         # Compute flow duration in microseconds (like CIC-IDS2017)
         flow_duration_us = (self.last_seen - self.start_time) * 1e6
+        _eff_dur = max((self.last_seen - self.start_time), MIN_FLOW_DURATION_SECS)
 
         # ── Basic Flow Statistics
         features["Flow Duration"] = flow_duration_us
-
         features["Total Fwd Packets"] = float(self.fwd_pkt_count)
         features["Total Backward Packets"] = float(self.bwd_pkt_count)
-
         features["Total Length of Fwd Packets"] = float(self.fwd_bytes)
         features["Total Length of Bwd Packets"] = float(self.bwd_bytes)
 
@@ -236,44 +314,17 @@ class BidirectionalFlowRecord:
         features["Bwd Packet Length Std"] = float(bwd_pkt_stats.std) if bwd_pkt_stats.count > 0 else 0.0
 
         # ── Flow Rate Features (use minimum duration to avoid extreme rates for zero-duration flows)
-        _eff_dur = max((self.last_seen - self.start_time), MIN_FLOW_DURATION_SECS)
         features["Flow Bytes/s"]   = float(self.fwd_bytes + self.bwd_bytes) / _eff_dur
         features["Flow Packets/s"] = float(self.fwd_pkt_count + self.bwd_pkt_count) / _eff_dur
 
-        # ── IAT (Flow level) — convert to microseconds to match CIC-IDS2017 training data
-        flow_iat_stats = self.flow_iat_stat
-        features["Flow IAT Mean"] = float(flow_iat_stats.mean) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Std"] = float(flow_iat_stats.std) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Max"] = float(flow_iat_stats.max_val) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Min"] = float(flow_iat_stats.min_val) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
-
-        # ── IAT (Fwd) — convert to microseconds
-        fwd_iat_stats = self.fwd_iat_stat
-        features["Fwd IAT Total"] = float(self.fwd_iat_total) * _MICROSECONDS
-        features["Fwd IAT Mean"] = float(fwd_iat_stats.mean) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Std"] = float(fwd_iat_stats.std) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Max"] = float(fwd_iat_stats.max_val) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Min"] = float(fwd_iat_stats.min_val) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
-
-        # ── IAT (Bwd) — convert to microseconds
-        bwd_iat_stats = self.bwd_iat_stat
-        features["Bwd IAT Total"] = float(self.bwd_iat_total) * _MICROSECONDS
-        features["Bwd IAT Mean"] = float(bwd_iat_stats.mean) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Std"] = float(bwd_iat_stats.std) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Max"] = float(bwd_iat_stats.max_val) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Min"] = float(bwd_iat_stats.min_val) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
-
-        # ── TCP Flags (Fwd/Bwd)
-        features["Fwd PSH Flags"] = float(self.fwd_psh)
-        features["Bwd PSH Flags"] = float(self.bwd_psh)
-        features["Fwd URG Flags"] = float(self.fwd_urg)
-        features["Bwd URG Flags"] = float(self.bwd_urg)
+        # ── IAT Features (helper method)
+        self._compute_iat_features(features)
 
         # ── Header Lengths
         features["Fwd Header Length"] = float(self.fwd_header_len)
         features["Bwd Header Length"] = float(self.bwd_header_len)
 
-        # ── Packet rates per direction (use same _eff_dur from flow rate section above)
+        # ── Packet rates per direction
         features["Fwd Packets/s"] = float(self.fwd_pkt_count) / _eff_dur
         features["Bwd Packets/s"] = float(self.bwd_pkt_count) / _eff_dur
 
@@ -285,14 +336,8 @@ class BidirectionalFlowRecord:
         features["Packet Length Std"] = float(all_pkt_stats.std) if all_pkt_stats.count > 0 else 0.0
         features["Packet Length Variance"] = float(all_pkt_stats.variance) if all_pkt_stats.count > 0 else 0.0
 
-        # ── TCP Flag Counts (total fwd + bwd)
-        features["FIN Flag Count"] = float(self.fwd_fin + self.bwd_fin)
-        features["SYN Flag Count"] = float(self.fwd_syn + self.bwd_syn)
-        features["RST Flag Count"] = float(self.fwd_rst + self.bwd_rst)
-        features["PSH Flag Count"] = float(self.fwd_psh + self.bwd_psh)
-        features["ACK Flag Count"] = float(self.fwd_ack + self.bwd_ack)
-        features["URG Flag Count"] = float(self.fwd_urg + self.bwd_urg)
-        features["ECE Flag Count"] = float(self.fwd_ece + self.bwd_ece)
+        # ── TCP Flag Features (helper method)
+        self._compute_flag_ratios(features)
 
         # ── Down/Up Ratio (bwd_bytes / fwd_bytes, or 0 if no fwd)
         if self.fwd_bytes > 0:
@@ -321,11 +366,8 @@ class BidirectionalFlowRecord:
         # ── Fwd Header Length.1 (CICFlowMeter bug: same as Fwd Header Length)
         features["Fwd Header Length.1"] = features["Fwd Header Length"]
 
-        # ── Subflow Features (= total flow features, no segmentation)
-        features["Subflow Fwd Packets"] = float(self.fwd_pkt_count)
-        features["Subflow Fwd Bytes"] = float(self.fwd_bytes)
-        features["Subflow Bwd Packets"] = float(self.bwd_pkt_count)
-        features["Subflow Bwd Bytes"] = float(self.bwd_bytes)
+        # ── Subflow Features (helper method)
+        self._compute_subflow_stats(features)
 
         # ── TCP Init Windows
         features["Init_Win_bytes_forward"] = float(self.init_win_fwd) if self.init_win_fwd >= 0 else 0.0

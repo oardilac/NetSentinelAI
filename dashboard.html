@@ -570,7 +570,8 @@
     /* ── Controls ── */
     async function startMonitoring() {
         try {
-            await fetch('/api/start');
+            const res = await fetch('/api/start', { method: 'POST' });
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
             document.getElementById('btnStart').disabled = true;
             document.getElementById('btnStop').disabled = false;
             document.getElementById('statusDot').classList.add('active');
@@ -585,7 +586,7 @@
 
     async function stopMonitoring() {
         try {
-            const res = await fetch('/api/stop');
+            const res = await fetch('/api/stop', { method: 'POST' });
             if (!res.ok) throw new Error(`Server returned ${res.status}`);
             document.getElementById('btnStart').disabled = false;
             document.getElementById('btnStop').disabled = true;
@@ -680,10 +681,6 @@
         document.getElementById('uniqueIPs').textContent = '—';
         // DB badge
         if(o.session_id) document.getElementById('dbSessionBadge').textContent = 'Session #'+o.session_id;
-        if(o.flows_saved_to_db !== undefined) {
-            const el = document.getElementById('dbFlowsSaved');
-            if(el) el.textContent = o.flows_saved_to_db;
-        }
     }
 
     function updateTrafficChart(tl) {
@@ -931,10 +928,21 @@
     async function clearHistory() {
         if(!confirm('Are you sure you want to delete ALL historical data? This cannot be undone.')) return;
         try {
-            await fetch('/api/history/clear', {method:'POST'});
+            const res = await fetch('/api/history/clear', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({confirm: true})
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || `Server returned ${res.status}`);
+            }
             loadHistory();
             alert('All historical data has been cleared.');
-        } catch(e) { console.error('Clear history error:', e); }
+        } catch(e) {
+            console.error('Clear history error:', e);
+            alert('Error clearing history: ' + e.message);
+        }
     }
 
     /* ── Init ── */

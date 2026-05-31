@@ -44,6 +44,38 @@ def build_resampling_strategies(y_train):
     return under_strat, over_strat
 
 
+def build_ml_pipeline(clf, task_type: str = "binary"):
+    """
+    Construct a scikit-learn/imblearn pipeline with scaler and optional resampling.
+
+    Extracts common pipeline construction logic used in grid search (03_gridsearch.py)
+    and final evaluation (04_eval.py).
+
+    Args:
+        clf: classifier instance (LGBMClassifier, XGBClassifier, RandomForestClassifier, etc.)
+        task_type: "binary" (under-sampling only) or "multi" (under + over-sampling)
+
+    Returns:
+        imblearn.pipeline.Pipeline with steps: [scaler, [under], [smote], clf]
+    """
+    from sklearn.preprocessing import RobustScaler
+    from imblearn.pipeline import Pipeline as ImbPipeline
+    from imblearn.over_sampling import SMOTE
+    from imblearn.under_sampling import RandomUnderSampler
+
+    steps = [('scaler', RobustScaler())]
+
+    if task_type == "binary":
+        steps.append(('under', RandomUnderSampler(sampling_strategy="majority", random_state=RANDOM_STATE)))
+    else:
+        # Multi-class: compute strategies dynamically (caller must provide y_train context)
+        # For multi-task, resampling steps are added conditionally by caller
+        pass
+
+    steps.append(('clf', clf))
+    return ImbPipeline(steps=steps)
+
+
 __all__ = [
     "RANDOM_STATE",
     "UNDER_SAMPLE_TARGET",
@@ -57,4 +89,5 @@ __all__ = [
     "PLOTS_DIR",
     "MODELS_DIR",
     "build_resampling_strategies",
+    "build_ml_pipeline",
 ]

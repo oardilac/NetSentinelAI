@@ -204,19 +204,24 @@ def predict():
                         sniffer.metrics.alert_engine.add_ml_alert(flow_summary, result)
 
         # Defer database writes to background (non-critical path)
+        # Capture variables NOW to avoid closure race condition with concurrent requests
+        predicted_class_value = predicted_class
+        result_value = result
+        payload_value = payload
+
         def _async_save():
             try:
                 sniffer = network_monitor.get_sniffer()
                 with sniffer.metrics.lock:
-                    sniffer.metrics.ml_class_counts[predicted_class] += 1
+                    sniffer.metrics.ml_class_counts[predicted_class_value] += 1
 
                 db = network_monitor.get_db()
-                protocol = payload.get("protocol", "TCP")
+                protocol = payload_value.get("protocol", "TCP")
                 synthetic_flow = {
-                    "src_ip": payload.get("src_ip", "0.0.0.0"),
-                    "dst_ip": payload.get("dst_ip", "0.0.0.0"),
-                    "src_port": payload.get("src_port", 0),
-                    "dst_port": payload.get("dst_port", 0),
+                    "src_ip": payload_value.get("src_ip", "0.0.0.0"),
+                    "dst_ip": payload_value.get("dst_ip", "0.0.0.0"),
+                    "src_port": payload_value.get("src_port", 0),
+                    "dst_port": payload_value.get("dst_port", 0),
                     "protocol": protocol,
                     "flow_duration": 0,
                     "iat_mean": 0,
@@ -232,18 +237,18 @@ def predict():
                     "proto_udp": 1 if protocol == "UDP" else 0,
                     "proto_icmp": 1 if protocol == "ICMP" else 0,
                     "proto_other": 1 if protocol not in ("TCP", "UDP", "ICMP") else 0,
-                    "ml_class": result.get("class"),
-                    "ml_confidence": result.get("confidence", 0.0),
+                    "ml_class": result_value.get("class"),
+                    "ml_confidence": result_value.get("confidence", 0.0),
                 }
 
                 db.save_flows([synthetic_flow], session_id=sniffer.metrics.session_id)
 
-                if result.get("class") != "Normal":
+                if result_value.get("class") != "Normal":
                     alert_data = {
                         "timestamp": datetime.datetime.now().isoformat(),
-                        "type": f"ml_{result.get('class', 'unknown').lower().replace(' ', '_')}",
+                        "type": f"ml_{result_value.get('class', 'unknown').lower().replace(' ', '_')}",
                         "source": synthetic_flow["src_ip"],
-                        "description": f"ML detected {result.get('class')} (confidence: {result.get('confidence', 0):.1%})",
+                        "description": f"ML detected {result_value.get('class')} (confidence: {result_value.get('confidence', 0):.1%})",
                     }
                     db.save_alerts([alert_data], session_id=sniffer.metrics.session_id)
             except Exception as e:
@@ -271,7 +276,7 @@ def debug_ml_counts():
     })
 
 
-@app.route("/api/start")
+@app.route("/api/start", methods=["POST"])
 def start_monitoring():
     global sniffer_thread
 
@@ -286,7 +291,7 @@ def start_monitoring():
     return jsonify({"status": "started", "message": "Monitoring started"})
 
 
-@app.route("/api/stop")
+@app.route("/api/stop", methods=["POST"])
 def stop_monitoring():
     """Stop sniffer and flush current data to database."""
     global sniffer_thread
@@ -367,10 +372,20 @@ def history_alerts():
 
 @app.route("/api/history/clear", methods=["POST"])
 def history_clear():
-    """Delete all stored history (sessions, flows, alerts)."""
-    db = network_monitor.get_db()
-    db.clear_all()
-    return jsonify({"status": "cleared", "message": "All historical data deleted"})
+    """Delete all stored history (sessions, flows, alerts).
+
+    Requires JSON body: {"confirm": true}
+    """
+    try:
+        data = request.get_json() or {}
+        if not data.get("confirm"):
+            return jsonify({"error": "Confirmation required. Send JSON body with {\"confirm\": true}"}), 400
+
+        db = network_monitor.get_db()
+        db.clear_all()
+        return jsonify({"status": "cleared", "message": "All historical data deleted"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/reset-ml-stats", methods=["POST"])

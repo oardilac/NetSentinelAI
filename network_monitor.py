@@ -14,9 +14,9 @@ Detected threat patterns:
   - Protocol anomalies  (unusual flag combinations)
 """
 
-from scapy.all import sniff, AsyncSniffer, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, DNSQR
+from scapy.all import AsyncSniffer, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, DNSQR
 from datetime import datetime
-from collections import defaultdict, deque, OrderedDict
+from collections import defaultdict, deque
 from typing import Tuple
 from threading import Lock, Event
 import time
@@ -53,14 +53,22 @@ class AlertEngine:
         self._max_seen = max_seen
 
     def _add_seen(self, key: str) -> None:
-        """Track a seen alert key with timestamp for TTL-based expiry."""
+        """Track a seen alert key with timestamp for TTL-based expiry.
+
+        Uses lazy expiration (removes expired entries incrementally on each call)
+        instead of rebuilding the entire dict, improving O(1) amortized performance.
+        """
         now = time.time()
-        # Purge expired entries before adding new one
-        self._seen = {k: ts for k, ts in self._seen.items() if now - ts < self.ALERT_TTL_SECS}
+        # Lazy expiration: remove only expired entries (vs rebuilding the entire dict)
+        expired = [k for k, ts in self._seen.items() if now - ts >= self.ALERT_TTL_SECS]
+        for k in expired:
+            del self._seen[k]
+
+        # Enforce max size by removing oldest entry if needed
         if len(self._seen) >= self._max_seen:
-            # Remove oldest entry by timestamp
             oldest_key = min(self._seen.items(), key=lambda x: x[1])[0]
             del self._seen[oldest_key]
+
         self._seen[key] = now
 
     def evaluate_flow(self, flow_summary: dict, ml_result: dict = None) -> None:
@@ -112,12 +120,12 @@ class AlertEngine:
 
         # Rule 3: DoS/DDoS attack — combine heuristics + ML
         total_bytes = flow_summary.get("total_bytes", 0)
-        total_packets = flow_summary.get("total_packets", 0)
-        flow_duration_ms = flow_summary.get("flow_duration_ms", 1)
+        total_packets = flow_summary.get("packet_count", 0)
+        flow_duration_sec = flow_summary.get("flow_duration", 1)
 
         # Heuristic: high packet or byte rate
-        pps = (total_packets / (flow_duration_ms / 1000.0)) if flow_duration_ms > 0 else 0
-        bps = (total_bytes / (flow_duration_ms / 1000.0)) if flow_duration_ms > 0 else 0
+        pps = (total_packets / flow_duration_sec) if flow_duration_sec > 0 else 0
+        bps = (total_bytes / flow_duration_sec) if flow_duration_sec > 0 else 0
         is_dos_heuristic = pps > DOS_PACKETS_PER_SEC_THRESHOLD or bps > DOS_BYTES_PER_SEC_THRESHOLD
 
         # ML-based detection

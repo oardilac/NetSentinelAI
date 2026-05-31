@@ -27,7 +27,7 @@ import sqlite3
 import threading
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 
 # ──────────────────────────────────────────────
@@ -65,6 +65,8 @@ class SentinelDB:
         conn = getattr(self._local, "conn", None)
         if conn is None:
             conn = sqlite3.connect(self.db_path, timeout=10)
+            # Enable WAL mode before any DDL/DML to ensure it applies to the entire connection
+            conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("PRAGMA busy_timeout=5000")
             conn.row_factory = sqlite3.Row
             self._local.conn = conn
@@ -230,7 +232,7 @@ class SentinelDB:
             CREATE INDEX IF NOT EXISTS idx_alerts_type     ON alerts(alert_type);
         """)
         conn.commit()
-        conn.execute("PRAGMA journal_mode=WAL")
+        # WAL mode is already set in _get_conn() before DDL, so just set synchronous mode here
         conn.execute("PRAGMA synchronous=NORMAL")
         conn.commit()
 
