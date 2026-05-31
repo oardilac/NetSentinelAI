@@ -38,6 +38,10 @@ def predict_flow(feature_dict: dict) -> dict:
 
     Returns:
         {'class': 'BENIGN'/'ATTACK'/'...' , 'confidence': float, 'probabilities': {}}
+
+    Note:
+        'confidence' always represents P(class). For BENIGN, this is 1 - P(ATTACK).
+        For ATTACK, this is the multi-class probability of the detected attack type.
     """
     try:
         pipe = _get_pipeline()
@@ -45,7 +49,7 @@ def predict_flow(feature_dict: dict) -> dict:
 
         if result["decision"] == "BENIGN":
             cls = "Normal"
-            confidence = float(result["binary_probability"])
+            confidence = 1.0 - float(result["binary_probability"])
             probabilities = {"Normal": confidence}
         else:
             cls = result.get("attack_type", "ATTACK")

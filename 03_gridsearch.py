@@ -32,6 +32,7 @@ from training_config import (
     CLEAN_DATA_DIR,
     RESULTS_DIR,
     PLOTS_DIR,
+    build_resampling_strategies,
 )
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -100,15 +101,13 @@ def run_grid_search(task_type: str):
     # Ahora todos los modelos se ajustan sobre la misma X_train_filtered
     for name, spec in models_spec.items():
         print(f"  -> Evaluando arquitectura: {name}...")
-        
-        counts = Counter(y_train)
+
         steps = [('scaler', RobustScaler())]
-        
+
         if task_type == "binary":
             steps.append(('under', RandomUnderSampler(sampling_strategy="majority", random_state=RANDOM_STATE)))
         else:
-            under_strat = {k: UNDER_SAMPLE_TARGET for k, v in counts.items() if v > UNDER_SAMPLE_TARGET}
-            over_strat = {k: OVER_SAMPLE_TARGET for k, v in counts.items() if v < OVER_SAMPLE_TARGET}
+            under_strat, over_strat = build_resampling_strategies(y_train)
             if under_strat: steps.append(('under', RandomUnderSampler(sampling_strategy=under_strat, random_state=RANDOM_STATE)))
             if over_strat: steps.append(('smote', SMOTE(sampling_strategy=over_strat, k_neighbors=SMOTE_K_NEIGHBORS, random_state=RANDOM_STATE)))
             

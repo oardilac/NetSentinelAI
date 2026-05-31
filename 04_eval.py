@@ -14,10 +14,9 @@ import numpy as np
 import plotly.figure_factory as ff
 import plotly.express as px
 
-from sklearn.preprocessing import LabelEncoder, RobustScaler
+from sklearn.preprocessing import RobustScaler
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score,
                              matthews_corrcoef, confusion_matrix)
-from collections import Counter
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 
@@ -35,6 +34,7 @@ from training_config import (
     MODELS_DIR,
     RESULTS_DIR,
     PLOTS_DIR,
+    build_resampling_strategies,
 )
 
 def analyze_binary_false_negatives(y_test_binary, y_pred_binary):
@@ -127,12 +127,10 @@ def train_and_eval_final(task_type: str):
     X_te_scaled = pd.DataFrame(X_te_scaled, columns=X_test.columns)
 
     # Balanceo adaptativo
-    counts = Counter(y_train)
     if task_type == "binary":
         X_bal, y_bal = RandomUnderSampler(sampling_strategy="majority", random_state=RANDOM_STATE).fit_resample(X_tr_scaled, y_train)
     else:
-        under_strat = {k: UNDER_SAMPLE_TARGET for k, v in counts.items() if v > UNDER_SAMPLE_TARGET}
-        over_strat = {k: OVER_SAMPLE_TARGET for k, v in counts.items() if v < OVER_SAMPLE_TARGET}
+        under_strat, over_strat = build_resampling_strategies(y_train)
         X_bal, y_bal = X_tr_scaled, y_train
         if under_strat: X_bal, y_bal = RandomUnderSampler(sampling_strategy=under_strat, random_state=RANDOM_STATE).fit_resample(X_bal, y_bal)
         if over_strat: X_bal, y_bal = SMOTE(sampling_strategy=over_strat, k_neighbors=SMOTE_K_NEIGHBORS, random_state=RANDOM_STATE).fit_resample(X_bal, y_bal)

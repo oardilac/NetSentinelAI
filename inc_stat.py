@@ -58,8 +58,16 @@ class IncrementalStat:
 
     @property
     def min_val(self) -> float:
+        """Return minimum value observed, or NaN if no data has been fed.
+
+        Callers should guard with `count > 0` before using this value.
+        """
         return self._min_val if self._min_val != float('inf') else float('nan')
 
     @property
     def max_val(self) -> float:
+        """Return maximum value observed, or NaN if no data has been fed.
+
+        Callers should guard with `count > 0` before using this value.
+        """
         return self._max_val if self._max_val != float('-inf') else float('nan')

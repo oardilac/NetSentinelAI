@@ -20,10 +20,29 @@ CV_SPLITS = 5
 CV_SCORING = "f1_macro"
 
 # Data directories
+RAW_DATA_DIR = "./DataRaw"
 CLEAN_DATA_DIR = "./DataClean"
 RESULTS_DIR = "./Results"
 PLOTS_DIR = "./Results/plots"
 MODELS_DIR = "./Models"
+
+
+def build_resampling_strategies(y_train):
+    """
+    Compute SMOTE and random under-sampler strategies based on class distribution.
+
+    Args:
+        y_train: target array with class labels
+
+    Returns:
+        (under_strat, over_strat): dicts mapping class label to target count
+    """
+    from collections import Counter
+    counts = Counter(y_train)
+    under_strat = {k: UNDER_SAMPLE_TARGET for k, v in counts.items() if v > UNDER_SAMPLE_TARGET}
+    over_strat = {k: OVER_SAMPLE_TARGET for k, v in counts.items() if v < OVER_SAMPLE_TARGET}
+    return under_strat, over_strat
+
 
 __all__ = [
     "RANDOM_STATE",
@@ -32,8 +51,10 @@ __all__ = [
     "SMOTE_K_NEIGHBORS",
     "CV_SPLITS",
     "CV_SCORING",
+    "RAW_DATA_DIR",
     "CLEAN_DATA_DIR",
     "RESULTS_DIR",
     "PLOTS_DIR",
     "MODELS_DIR",
+    "build_resampling_strategies",
 ]

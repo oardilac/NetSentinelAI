@@ -9,7 +9,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# Top-16 features selected by SHAP from the 94 CIC-IDS2017 features
+# Top-15 features selected by SHAP from the 94 CIC-IDS2017 features
 # These are the features that survived SHAP feature importance ranking in the training pipeline
 # Used by live_feature_extractor.get_feature_vector() to select which features to emit to models
 FEATURE_COLUMNS = [
@@ -27,36 +27,9 @@ FEATURE_COLUMNS = [
     "URG Flag Count",
     "PSH Flag Count",
     "Fwd PSH Flags",
-    "ACK Flag Count",
     "Down/Up Ratio",
 ]
 
-# Single source of truth for port one-hot encoding — used by data_preparation.py and live_feature_extractor.py
-COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3306, 3389, 8080, 8443]
-
-
-def encode_port(dst_port: int) -> dict:
-    """
-    Encode destination port as one-hot + range flags.
-    Returns dict with Port_XX, Port_WellKnown, Port_Registered, Port_Dynamic keys.
-
-    Port ranges (IANA):
-    - WellKnown: 0-1023
-    - Registered: 1024-49151
-    - Dynamic/Private: > 49151
-    """
-    result = {}
-
-    # One-hot encoding for common ports
-    for port in COMMON_PORTS:
-        result[f"Port_{port}"] = 1 if dst_port == port else 0
-
-    # Range-based flags
-    result["Port_WellKnown"] = 1 if dst_port <= 1023 else 0
-    result["Port_Registered"] = 1 if 1024 <= dst_port <= 49151 else 0
-    result["Port_Dynamic"] = 1 if dst_port > 49151 else 0
-
-    return result
 
 
 def align_features(feature_dict: dict, feature_columns: list) -> pd.DataFrame:

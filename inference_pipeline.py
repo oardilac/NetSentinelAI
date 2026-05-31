@@ -9,7 +9,6 @@ Loads models from Models/ directory with flat filenames.
 """
 
 import os
-import json
 import logging
 from typing import Dict, Any
 
@@ -52,6 +51,14 @@ class InferencePipeline:
             f"✓ Multi model loaded: {self.multi['model_name']} "
             f"({len(self.multi['feature_columns'])} features)"
         )
+
+        # Validate feature consistency between live extractor and trained models
+        from feature_schema import FEATURE_COLUMNS
+        if set(FEATURE_COLUMNS) != set(self.binary["feature_columns"]):
+            raise RuntimeError(
+                f"Feature mismatch between live extractor (FEATURE_COLUMNS) and binary model. "
+                f"Live extractor: {set(FEATURE_COLUMNS)}, Binary model: {set(self.binary['feature_columns'])}"
+            )
 
     def _clip_to_scaler_range(self, X_array: np.ndarray, scaler, n_iqr: float = 10.0) -> np.ndarray:
         """
@@ -109,6 +116,13 @@ class InferencePipeline:
         feature_columns = metadata["features_used"]
         logger.debug(f"  {task}: loaded {len(feature_columns)} feature columns")
 
+        # Validate model class ordering (binary: class 1 must be ATTACK)
+        if task == "binary" and hasattr(model, "classes_"):
+            if model.classes_[1] != 1:
+                raise RuntimeError(
+                    "Binary model class ordering unexpected: classes_[1] must be 1 (ATTACK)"
+                )
+
         # Load label encoder (only for multi)
         label_encoder = None
         classes = None
@@ -129,24 +143,52 @@ class InferencePipeline:
             "classes": classes,
         }
 
+    def _predict_binary(self, binary_x_scaled: np.ndarray) -> tuple:
+        """Run binary classification. Returns (binary_proba, early_return_dict or None)."""
+        binary_proba = self.binary["model"].predict_proba(binary_x_scaled)[0]
+        logger.debug(f"Binary proba: BENIGN={binary_proba[0]:.4f}, ATTACK={binary_proba[1]:.4f}")
+
+        if binary_proba[1] < ATTACK_PROBABILITY_THRESHOLD:
+            logger.debug(f"  → Decision: BENIGN (P(ATTACK)={binary_proba[1]:.4f} < {ATTACK_PROBABILITY_THRESHOLD})")
+            return binary_proba, {
+                "decision": "BENIGN",
+                "binary_prediction": 0,
+                "binary_probability": float(binary_proba[1]),
+            }
+        return binary_proba, None
+
+    def _predict_multiclass(self, flow_features: Dict[str, float], binary_proba: np.ndarray) -> Dict[str, Any]:
+        """Run multi-class classification (only if binary predicted ATTACK)."""
+        logger.debug(f"  → Decision: ATTACK (P(ATTACK)={binary_proba[1]:.4f} >= {ATTACK_PROBABILITY_THRESHOLD})")
+        multi_x = align_features(flow_features, self.multi["feature_columns"])
+        multi_x_clipped = self._clip_to_scaler_range(multi_x.values, self.multi["scaler"])
+        multi_x_scaled = self.multi["scaler"].transform(multi_x_clipped)
+
+        multi_pred = self.multi["model"].predict(multi_x_scaled)[0]
+        multi_proba = self.multi["model"].predict_proba(multi_x_scaled)[0]
+        attack_label = self.multi["label_encoder"].inverse_transform([multi_pred])[0]
+
+        multi_probs_dict = {cls: float(p) for cls, p in zip(self.multi["classes"], multi_proba)}
+
+        return {
+            "decision": "ATTACK",
+            "attack_type": attack_label,
+            "binary_prediction": 1,
+            "binary_probability": float(binary_proba[1]),
+            "multi_prediction": int(multi_pred),
+            "multi_probability": float(max(multi_proba)),
+            "multi_probabilities": multi_probs_dict,
+        }
+
     def predict(self, flow_features: Dict[str, float]) -> Dict[str, Any]:
         """
-        Two-stage inference:
-        1. Binary: BENIGN vs ATTACK
-        2. Multi (if attack): which attack type
+        Two-stage inference: Binary (BENIGN vs ATTACK), then Multi-class if ATTACK.
 
         Args:
-            flow_features: dict with feature names and float values (94 features)
+            flow_features: dict with feature names and float values
 
         Returns:
-            dict with keys:
-              - decision: "BENIGN" or "ATTACK"
-              - binary_prediction: 0 or 1
-              - binary_probability: float in [0, 1]
-              - (if ATTACK) attack_type: string
-              - (if ATTACK) multi_prediction: int class index
-              - (if ATTACK) multi_probability: float
-              - (if ATTACK) multi_probabilities: dict of {class: prob}
+            dict with decision, predictions, and probabilities
 
         Raises:
             ValueError: If input dict lacks CIC-IDS2017 column names
@@ -159,61 +201,18 @@ class InferencePipeline:
                 "Pass features using CIC-IDS2017 names (e.g., 'Flow Duration', 'Port_80')."
             )
 
-        # ── Stage 1: Binary classification
+        # Stage 1: Binary classification
         binary_x = align_features(flow_features, self.binary["feature_columns"])
-
         logger.debug(f"Binary input shape: {binary_x.shape}, columns: {len(binary_x.columns)}")
-        logger.debug(f"Binary input sample (first 5 cols): {dict(list(binary_x.iloc[0].items())[:5])}")
 
         binary_x_clipped = self._clip_to_scaler_range(binary_x.values, self.binary["scaler"])
         binary_x_scaled = self.binary["scaler"].transform(binary_x_clipped)
-        logger.debug(f"Binary scaled sample (first 5): {binary_x_scaled[0][:5]}")
-        logger.debug(f"Binary scaled min/max/mean: min={binary_x_scaled.min():.4f}, max={binary_x_scaled.max():.4f}, mean={binary_x_scaled.mean():.4f}")
 
-        binary_proba = self.binary["model"].predict_proba(binary_x_scaled)[0]
-        # binary_proba[0] = P(BENIGN), binary_proba[1] = P(ATTACK)
-        if hasattr(self.binary["model"], "classes_"):
-            if self.binary["model"].classes_[1] != 1:
-                raise RuntimeError(
-                    "Binary model class ordering unexpected: classes_[1] must be 1 (ATTACK)"
-                )
+        binary_proba, early_return = self._predict_binary(binary_x_scaled)
+        if early_return:
+            return early_return
 
-        logger.debug(f"Binary proba: BENIGN={binary_proba[0]:.4f}, ATTACK={binary_proba[1]:.4f}")
-
-        if binary_proba[1] < ATTACK_PROBABILITY_THRESHOLD:
-            # BENIGN
-            logger.debug(f"  → Decision: BENIGN (P(ATTACK)={binary_proba[1]:.4f} < {ATTACK_PROBABILITY_THRESHOLD})")
-            return {
-                "decision": "BENIGN",
-                "binary_prediction": 0,
-                "binary_probability": float(binary_proba[1]),  # Always return P(ATTACK)
-            }
-
-        # ── Stage 2: Multi-class classification (only if binary predicts ATTACK)
-        logger.debug(f"  → Decision: ATTACK (P(ATTACK)={binary_proba[1]:.4f} >= {ATTACK_PROBABILITY_THRESHOLD})")
-        multi_x = align_features(flow_features, self.multi["feature_columns"])
-        multi_x_clipped = self._clip_to_scaler_range(multi_x.values, self.multi["scaler"])
-        multi_x_scaled = self.multi["scaler"].transform(multi_x_clipped)
-        multi_pred = self.multi["model"].predict(multi_x_scaled)[0]
-        multi_proba = self.multi["model"].predict_proba(multi_x_scaled)[0]
-
-        # Decode attack label
-        attack_label = self.multi["label_encoder"].inverse_transform([multi_pred])[0]
-
-        # Build probabilities dict
-        multi_probs_dict = {
-            cls: float(p)
-            for cls, p in zip(self.multi["classes"], multi_proba)
-        }
-
-        return {
-            "decision": "ATTACK",
-            "attack_type": attack_label,
-            "binary_prediction": 1,
-            "binary_probability": float(binary_proba[1]),
-            "multi_prediction": int(multi_pred),
-            "multi_probability": float(max(multi_proba)),
-            "multi_probabilities": multi_probs_dict,
-        }
+        # Stage 2: Multi-class classification (only if binary predicts ATTACK)
+        return self._predict_multiclass(flow_features, binary_proba)
 
 __all__ = ["InferencePipeline"]

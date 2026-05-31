@@ -367,10 +367,8 @@ class SentinelDB:
     def clear_all(self) -> None:
         """Delete all stored data (for reset)."""
         conn = self._get_conn()
-        conn.executescript("""
-            DELETE FROM alerts;
-            DELETE FROM flows;
-            DELETE FROM sessions;
-        """)
-        conn.commit()
+        with conn:
+            conn.execute("DELETE FROM alerts")
+            conn.execute("DELETE FROM flows")
+            conn.execute("DELETE FROM sessions")
         print("[DB] All data cleared")

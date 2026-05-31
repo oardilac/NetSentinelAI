@@ -15,9 +15,8 @@ import plotly.graph_objects as go
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
-CLEAN_DATA_DIR = "./DataClean"
-RESULTS_DIR = "./Results"
-PLOTS_DIR = "./Results/plots"
+from training_config import CLEAN_DATA_DIR, RESULTS_DIR, PLOTS_DIR
+
 SHAP_SAMPLE_SIZE = 30000  
 
 def run_shap_selection(task_type: str):

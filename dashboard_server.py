@@ -14,7 +14,7 @@ alerts to the database before exiting, so nothing is lost.
 
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from threading import Thread
+from threading import Thread, Event
 from collections import defaultdict
 import atexit
 import signal
@@ -43,7 +43,7 @@ app = Flask(__name__)
 CORS(app)
 
 sniffer_thread = None
-_shutdown_done = False
+_shutdown_done = Event()
 
 
 # ──────────────────────────────────────────────
@@ -52,10 +52,9 @@ _shutdown_done = False
 
 def _graceful_shutdown(*_args) -> None:
     """Flush data to DB before the process terminates."""
-    global _shutdown_done
-    if _shutdown_done:
+    if _shutdown_done.is_set():
         return
-    _shutdown_done = True
+    _shutdown_done.set()
     print("\n[*] Graceful shutdown — saving data to database...")
     try:
         sniffer = network_monitor.get_sniffer()
@@ -185,7 +184,8 @@ def predict():
         # Update in-memory ML stats so the pie chart reflects /api/predict results
         sniffer = network_monitor.get_sniffer()
         predicted_class = result.get("class", "Normal")
-        sniffer.metrics.ml_class_counts[predicted_class] += 1
+        with sniffer.metrics.lock:
+            sniffer.metrics.ml_class_counts[predicted_class] += 1
 
         # Save predicted flow to database for UI visibility
         db = network_monitor.get_db()
@@ -215,19 +215,17 @@ def predict():
             "ml_confidence": result.get("confidence", 0.0),
         }
 
-        saved = db.save_flows([synthetic_flow], session_id=sniffer.metrics.session_id)
-        if saved is not None:
-            result["flow_id"] = saved
+        db.save_flows([synthetic_flow], session_id=sniffer.metrics.session_id)
 
-            # Generate alert if attack detected
-            if result.get("class") != "Normal":
-                alert_data = {
-                    "timestamp": datetime.datetime.now().isoformat(),
-                    "type": f"ml_{result.get('class', 'unknown').lower().replace(' ', '_')}",
-                    "source": synthetic_flow["src_ip"],
-                    "description": f"ML detected {result.get('class')} (confidence: {result.get('confidence', 0):.1%})",
-                }
-                db.save_alerts([alert_data], session_id=sniffer.metrics.session_id)
+        # Generate alert if attack detected
+        if result.get("class") != "Normal":
+            alert_data = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "type": f"ml_{result.get('class', 'unknown').lower().replace(' ', '_')}",
+                "source": synthetic_flow["src_ip"],
+                "description": f"ML detected {result.get('class')} (confidence: {result.get('confidence', 0):.1%})",
+            }
+            db.save_alerts([alert_data], session_id=sniffer.metrics.session_id)
 
         return jsonify(result)
     except ValueError as e:

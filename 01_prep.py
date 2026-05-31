@@ -12,14 +12,11 @@ import numpy as np
 import plotly.express as px
 from sklearn.model_selection import train_test_split
 
-RAW_DATA_DIR = "./DataRaw"
-CLEAN_DATA_DIR = "./DataClean"
-PLOTS_DIR = "./Results/plots"
+from training_config import RAW_DATA_DIR, CLEAN_DATA_DIR, PLOTS_DIR, RANDOM_STATE
 
 CLASSES_TO_DROP = ["Infiltration", "Heartbleed"]
 MIN_SAMPLES = 100
 TEST_SIZE = 0.15
-RANDOM_STATE = 42
 
 def load_and_clean_l4_strict(path_to_csvs: str) -> pd.DataFrame:
     print(">>> [Módulo 1] Cargando y filtrando datos (Lista Blanca - Sniffer)...")

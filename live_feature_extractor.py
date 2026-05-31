@@ -23,7 +23,7 @@ from collections import OrderedDict
 from threading import Lock
 
 from inc_stat import IncrementalStat
-from feature_schema import encode_port, FEATURE_COLUMNS
+from feature_schema import FEATURE_COLUMNS
 
 _MICROSECONDS = 1_000_000.0
 MIN_FLOW_DURATION_SECS = 0.001
@@ -103,6 +103,27 @@ class BidirectionalFlowRecord:
     # Min segment size forward (min TCP header length)
     min_seg_size_fwd: int = 0
 
+    def _update_flags(self, direction: str, tcp_flags: int, tcp_window: int) -> None:
+        """Update TCP flag counters for a direction (fwd or bwd)."""
+        prefix = direction
+        if tcp_flags & 0x01:  # FIN
+            setattr(self, f"{prefix}_fin", getattr(self, f"{prefix}_fin") + 1)
+        if tcp_flags & 0x02:  # SYN
+            setattr(self, f"{prefix}_syn", getattr(self, f"{prefix}_syn") + 1)
+            init_win_attr = f"init_win_{prefix}"
+            if getattr(self, init_win_attr) == -1 and tcp_window >= 0:
+                setattr(self, init_win_attr, tcp_window)
+        if tcp_flags & 0x04:  # RST
+            setattr(self, f"{prefix}_rst", getattr(self, f"{prefix}_rst") + 1)
+        if tcp_flags & 0x08:  # PSH
+            setattr(self, f"{prefix}_psh", getattr(self, f"{prefix}_psh") + 1)
+        if tcp_flags & 0x10:  # ACK
+            setattr(self, f"{prefix}_ack", getattr(self, f"{prefix}_ack") + 1)
+        if tcp_flags & 0x20:  # URG
+            setattr(self, f"{prefix}_urg", getattr(self, f"{prefix}_urg") + 1)
+        if tcp_flags & 0x40:  # ECE
+            setattr(self, f"{prefix}_ece", getattr(self, f"{prefix}_ece") + 1)
+
     def update(
         self,
         pkt_time: float,
@@ -130,83 +151,39 @@ class BidirectionalFlowRecord:
         if direction == "fwd":
             self.fwd_pkt_count += 1
             self.fwd_bytes += payload_len
-
-            # Packet length stats
             self.fwd_pkt_len_stat.update(payload_len)
             self.all_pkt_len_stat.update(payload_len)
 
-            # IAT (inter-arrival time)
             if self.last_fwd_time is not None:
                 iat = pkt_time - self.last_fwd_time
                 self.fwd_iat_stat.update(iat)
                 self.fwd_iat_total += iat
             self.last_fwd_time = pkt_time
 
-            # Header length
             self.fwd_header_len += header_len
 
-            # Data packet count
             if payload_len > 0:
                 self.act_data_pkt_fwd += 1
 
-            # Min segment size (min fwd header length)
             if header_len > 0 and (self.min_seg_size_fwd == 0 or header_len < self.min_seg_size_fwd):
                 self.min_seg_size_fwd = header_len
-
-            # TCP flags
-            if tcp_flags & 0x01:  # FIN
-                self.fwd_fin += 1
-            if tcp_flags & 0x02:  # SYN
-                self.fwd_syn += 1
-                # Capture initial window size from SYN packet
-                if self.init_win_fwd == -1 and tcp_window >= 0:
-                    self.init_win_fwd = tcp_window
-            if tcp_flags & 0x04:  # RST
-                self.fwd_rst += 1
-            if tcp_flags & 0x08:  # PSH
-                self.fwd_psh += 1
-            if tcp_flags & 0x10:  # ACK
-                self.fwd_ack += 1
-            if tcp_flags & 0x20:  # URG
-                self.fwd_urg += 1
-            if tcp_flags & 0x40:  # ECE
-                self.fwd_ece += 1
 
         else:  # backward
             self.bwd_pkt_count += 1
             self.bwd_bytes += payload_len
-
-            # Packet length stats
             self.bwd_pkt_len_stat.update(payload_len)
             self.all_pkt_len_stat.update(payload_len)
 
-            # IAT
             if self.last_bwd_time is not None:
                 iat = pkt_time - self.last_bwd_time
                 self.bwd_iat_stat.update(iat)
                 self.bwd_iat_total += iat
             self.last_bwd_time = pkt_time
 
-            # Header length
             self.bwd_header_len += header_len
 
-            # TCP flags
-            if tcp_flags & 0x01:  # FIN
-                self.bwd_fin += 1
-            if tcp_flags & 0x02:  # SYN
-                self.bwd_syn += 1
-                if self.init_win_bwd == -1 and tcp_window >= 0:
-                    self.init_win_bwd = tcp_window
-            if tcp_flags & 0x04:  # RST
-                self.bwd_rst += 1
-            if tcp_flags & 0x08:  # PSH
-                self.bwd_psh += 1
-            if tcp_flags & 0x10:  # ACK
-                self.bwd_ack += 1
-            if tcp_flags & 0x20:  # URG
-                self.bwd_urg += 1
-            if tcp_flags & 0x40:  # ECE
-                self.bwd_ece += 1
+        # Update TCP flags (unified for both directions)
+        self._update_flags(direction, tcp_flags, tcp_window)
 
         # Update overall flow IAT
         if self.last_pkt_time is not None:

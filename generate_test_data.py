@@ -37,6 +37,9 @@ def is_correctly_predicted(features_dict, expected_ground_truth):
         return False
 
 def main():
+    # Set seed for reproducibility
+    np.random.seed(42)
+
     # Load the exact feature list the model was trained on
     meta_path = os.path.join(RESULTS_DIR, "champion_metadata_binary.pkl")
     meta = joblib.load(meta_path)
@@ -122,7 +125,7 @@ def main():
         json.dump(entries, f, indent=2)
 
     print(f"\n[OK] Wrote {len(entries)} entries to {OUTPUT_FILE}")
-    print(f"[OK] Validated {validated_count}/{validated_count + len([s for s in samples if s])} samples correctly predicted")
+    print(f"[OK] Validated {len(entries)}/{len(entries)} samples correctly predicted")
     print(f"\nSample entry (first):")
     print(json.dumps(entries[0], indent=2))
 

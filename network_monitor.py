@@ -16,8 +16,9 @@ Detected threat patterns:
 
 from scapy.all import sniff, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, DNSQR
 from datetime import datetime
-from collections import defaultdict, deque
-from threading import Thread, Lock
+from collections import defaultdict, deque, OrderedDict
+from typing import Tuple
+from threading import Lock
 import time
 import logging
 
@@ -41,10 +42,17 @@ RST_THRESHOLD = 50
 class AlertEngine:
     """Simple rule-based alerting on flow features."""
 
-    def __init__(self, max_alerts: int = 200):
+    def __init__(self, max_alerts: int = 200, max_seen: int = 10000):
         self._alerts: deque = deque(maxlen=max_alerts)
         self._lock = Lock()
-        self._seen: set = set()  # deduplicate alerts per flow_key
+        self._seen: OrderedDict = OrderedDict()  # deduplicate alerts per flow_key, LRU eviction
+        self._max_seen = max_seen
+
+    def _add_seen(self, key: str) -> None:
+        """Track a seen alert key with LRU eviction (remove oldest if full)."""
+        if len(self._seen) >= self._max_seen:
+            self._seen.popitem(last=False)
+        self._seen[key] = True
 
     def evaluate_flow(self, flow_summary: dict, ml_result: dict = None) -> None:
         """Check a single flow summary against alert rules.
@@ -73,7 +81,7 @@ class AlertEngine:
                 reason.append(f"ML detected port scan ({ml_confidence:.0%} confidence)")
             description = " + ".join(reason) if reason else "Possible port scan"
             self._add("port_scan", src, description)
-            self._seen.add(alert_key)
+            self._add_seen(alert_key)
 
         # Rule 2: Brute force attack — combine heuristics + ML
         rst = flow_summary.get("rst_count", 0)
@@ -91,7 +99,7 @@ class AlertEngine:
                 reason.append(f"ML detected brute force ({ml_confidence:.0%} confidence)")
             description = " + ".join(reason) if reason else "Possible brute force attack"
             self._add("brute_force", src, description)
-            self._seen.add(alert_key)
+            self._add_seen(alert_key)
 
         # Rule 3: DoS/DDoS attack — combine heuristics + ML
         total_bytes = flow_summary.get("total_bytes", 0)
@@ -103,7 +111,7 @@ class AlertEngine:
         if is_dos_ml and alert_key not in self._seen:
             self._add("dos_ddos", src,
                        f"ML detected DoS/DDoS ({ml_confidence:.0%} confidence)")
-            self._seen.add(alert_key)
+            self._add_seen(alert_key)
 
         # Rule 4: Data exfiltration (heuristic-based)
         alert_key = f"exfil:{fk}"
@@ -111,11 +119,7 @@ class AlertEngine:
             mb = round(total_bytes / (1024 * 1024), 1)
             self._add("data_exfiltration", src,
                        f"Flow transferred {mb} MB — possible data exfiltration")
-            self._seen.add(alert_key)
-
-        # Trim seen set so it doesn't grow forever
-        if len(self._seen) > 10_000:
-            self._seen.clear()
+            self._add_seen(alert_key)
 
     def add_ml_alert(self, flow_summary: dict, ml_result: dict) -> None:
         """Fire an alert for ML-detected threat."""
@@ -131,7 +135,7 @@ class AlertEngine:
             alert_type = f"ml_{safe_class}"
             description = f"ML detected {ml_class} (confidence: {confidence:.1%})"
             self._add(alert_type, src_ip, description)
-            self._seen.add(alert_key)
+            self._add_seen(alert_key)
 
     def _add(self, alert_type: str, source: str, description: str) -> None:
         with self._lock:
@@ -250,59 +254,58 @@ class SecurityMetricsCollector:
                 self._expire_and_alert(now)
                 self._last_expiry = now
 
+    def _parse_tcp(self, packet, ip_header_len: int, src_ip: str, dst_port: int, pkt_len: int) -> Tuple[str, int, int, int, int]:
+        """Parse TCP layer and return (proto, src_port, dst_port, header_len, tcp_window)."""
+        layer = packet[TCP]
+        tcp_flags = int(layer.flags)
+        self._count_flags(tcp_flags, src_ip, dst_port)
+        self.protocol_stats["TCP"] += 1
+        self.protocol_bytes["TCP"] += pkt_len
+        self.dst_ports[layer.dport] += 1
+        header_len = ip_header_len + layer.dataofs * 4
+        return "TCP", layer.sport, layer.dport, header_len, int(layer.window)
+
+    def _parse_udp(self, packet, ip_header_len: int, pkt_len: int) -> Tuple[str, int, int, int, int]:
+        """Parse UDP layer (and DNS if present) and return (proto, src_port, dst_port, header_len, tcp_window)."""
+        layer = packet[UDP]
+        self.protocol_stats["UDP"] += 1
+        self.protocol_bytes["UDP"] += pkt_len
+        self.dst_ports[layer.dport] += 1
+        if packet.haslayer(DNS) and packet.haslayer(DNSQR) and packet[DNS].qr == 0:
+            qname = packet[DNSQR].qname.decode("utf-8", errors="ignore").rstrip(".")
+            self.dns_queries[qname] += 1
+            self.protocol_stats["DNS"] += 1
+        header_len = ip_header_len + 8
+        return "UDP", layer.sport, layer.dport, header_len, -1
+
+    def _parse_icmp(self, ip_header_len: int, pkt_len: int) -> Tuple[str, int, int, int, int]:
+        """Parse ICMP layer and return (proto, src_port, dst_port, header_len, tcp_window)."""
+        self.protocol_stats["ICMP"] += 1
+        self.protocol_bytes["ICMP"] += pkt_len
+        return "ICMP", 0, 0, ip_header_len, -1
+
     def _process_packet_layer(self, src_ip: str, dst_ip: str, packet, pkt_len: int, now: float, ip_header_len: int) -> None:
         """Common logic for processing IPv4 and IPv6 packets."""
         self.src_ips[src_ip] += 1
         self.dst_ips[dst_ip] += 1
         self.top_talkers_bytes[src_ip] += pkt_len
 
-        tcp_flags = 0
-
         if packet.haslayer(TCP):
-            layer = packet[TCP]
-            proto = "TCP"
-            src_port, dst_port = layer.sport, layer.dport
-            tcp_flags = int(layer.flags)
-            self._count_flags(tcp_flags, src_ip, dst_port)
-            self.protocol_stats["TCP"] += 1
-            self.protocol_bytes["TCP"] += pkt_len
-            self.dst_ports[dst_port] += 1
-            header_len = ip_header_len + layer.dataofs * 4
-            tcp_window_val = int(layer.window)
-
+            proto, src_port, dst_port, header_len, tcp_window = self._parse_tcp(packet, ip_header_len, src_ip, packet[TCP].dport, pkt_len)
+            tcp_flags = int(packet[TCP].flags)
         elif packet.haslayer(UDP):
-            layer = packet[UDP]
-            proto = "UDP"
-            src_port, dst_port = layer.sport, layer.dport
-            self.protocol_stats["UDP"] += 1
-            self.protocol_bytes["UDP"] += pkt_len
-            self.dst_ports[dst_port] += 1
-            header_len = ip_header_len + 8
-            tcp_window_val = -1
-
-            # DNS sub-protocol
-            if packet.haslayer(DNS) and packet.haslayer(DNSQR):
-                if packet[DNS].qr == 0:
-                    qname = packet[DNSQR].qname.decode("utf-8", errors="ignore").rstrip(".")
-                    self.dns_queries[qname] += 1
-                    self.protocol_stats["DNS"] += 1
-
+            proto, src_port, dst_port, header_len, tcp_window = self._parse_udp(packet, ip_header_len, pkt_len)
+            tcp_flags = 0
         elif packet.haslayer(ICMP):
-            proto = "ICMP"
-            src_port, dst_port = 0, 0
-            self.protocol_stats["ICMP"] += 1
-            self.protocol_bytes["ICMP"] += pkt_len
-            header_len = ip_header_len
-            tcp_window_val = -1
+            proto, src_port, dst_port, header_len, tcp_window = self._parse_icmp(ip_header_len, pkt_len)
+            tcp_flags = 0
         else:
-            proto = "OTHER"
-            src_port, dst_port = 0, 0
+            proto, src_port, dst_port, header_len, tcp_window = "OTHER", 0, 0, ip_header_len, -1
+            tcp_flags = 0
             self.protocol_stats["OTHER"] += 1
             self.protocol_bytes["OTHER"] += pkt_len
-            header_len = ip_header_len
-            tcp_window_val = -1
 
-        # Calculate payload length (len() directly on Scapy layer, no need to bytes() it)
+        # Calculate payload length
         payload_len = len(packet.payload.payload) if packet.haslayer(TCP) or packet.haslayer(UDP) else 0
 
         # Register in flow table
@@ -317,7 +320,7 @@ class SecurityMetricsCollector:
             payload_len=payload_len,
             tcp_flags=tcp_flags,
             header_len=header_len,
-            tcp_window=tcp_window_val,
+            tcp_window=tcp_window,
         )
 
     def _process_ip(self, packet, pkt_len: int, now: float) -> None:
@@ -365,18 +368,25 @@ class SecurityMetricsCollector:
                 flow["ml_class"] = None
                 flow["ml_confidence"] = None
         except Exception as e:
-            logger.error(f"ML prediction failed: {e}")
+            logger.error(f"ML prediction failed: {e}", exc_info=True)
             flow["ml_class"] = None
             flow["ml_confidence"] = None
 
     def _expire_and_alert(self, now: float) -> None:
         """Expire old flows, run alert rules (rule-based + ML), and persist to the database."""
         expired_pairs = self.flow_table.expire_old_flows(now)
-        if expired_pairs:
-            summaries = [rec.to_summary() for rec, _age in expired_pairs]
+        if not expired_pairs:
+            return
+
+        summaries = [rec.to_summary() for rec, _age in expired_pairs]
+
+        # Run ML inference outside the lock to avoid blocking packet capture
+        for s in summaries:
+            self._run_ml_on_flow(s)
+
+        # Run alert rules under the lock to safely access alert_engine
+        with self.lock:
             for s in summaries:
-                # ML-based prediction (run first so alert rules can use ML results)
-                self._run_ml_on_flow(s)
                 ml_result = {"class": s.get("ml_class"), "confidence": s.get("ml_confidence")} if s.get("ml_class") else None
 
                 # Rule-based + ML-aware alerts
