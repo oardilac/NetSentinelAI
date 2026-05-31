@@ -13,7 +13,10 @@ import json
 import sys
 import os
 import io
+import time
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from typing import Optional
 
 # Force UTF-8 output on Windows
@@ -34,10 +37,27 @@ WARN_THRESHOLD = 90
 FEATURES_PREVIEW_COUNT = 5
 PROGRESS_BAR_WIDTH = 40
 
+# Create a session with connection pooling and automatic retries
+def create_session() -> requests.Session:
+    session = requests.Session()
+    retry_strategy = Retry(
+        total=3,
+        backoff_factor=0.3,
+        status_forcelist=[500, 502, 503, 504],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
+# Global session for connection reuse
+_session = create_session()
+
 
 def check_dashboard() -> bool:
     try:
-        resp = requests.get(f"{DASHBOARD_URL}/api/status", timeout=HTTP_TIMEOUT_SHORT)
+        resp = _session.get(f"{DASHBOARD_URL}/api/status", timeout=HTTP_TIMEOUT_SHORT)
         if resp.status_code == 200:
             print(f"✓ Dashboard running at {DASHBOARD_URL}")
             return True
@@ -75,7 +95,7 @@ def send_and_display(features: dict, index: int, attack_type: str) -> Optional[d
         print(f"      ... and {len(features) - FEATURES_PREVIEW_COUNT} more")
 
     try:
-        resp = requests.post(
+        resp = _session.post(
             f"{DASHBOARD_URL}/api/predict",
             json={"features": features},
             timeout=HTTP_TIMEOUT_LONG,
@@ -115,7 +135,7 @@ def main():
 
     # Reset ML stats for clean demo slate
     try:
-        requests.post(f"{DASHBOARD_URL}/api/reset-ml-stats", timeout=HTTP_TIMEOUT_SHORT)
+        _session.post(f"{DASHBOARD_URL}/api/reset-ml-stats", timeout=HTTP_TIMEOUT_SHORT)
         print("[OK] ML stats reset")
     except Exception as e:
         print(f"[WARN] Could not reset ML stats: {e}")
@@ -160,6 +180,8 @@ def main():
         by_type[attack_type]["total"] += 1
         if match:
             by_type[attack_type]["correct"] += 1
+
+        time.sleep(0.1)
 
     # Summary
     print(f"\n\n{'='*70}")

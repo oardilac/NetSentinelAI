@@ -169,7 +169,6 @@ def predict():
         "class": str,
         "confidence": float,
         "probabilities": {class: prob, ...},
-        "flow_id": int (if saved to DB),
         "error": str (if any)
     }
     """
@@ -181,52 +180,54 @@ def predict():
         features = ml_engine.normalize_feature_payload(payload)
         result = ml_engine.predict_flow(features)
 
-        # Update in-memory ML stats so the pie chart reflects /api/predict results
-        sniffer = network_monitor.get_sniffer()
-        predicted_class = result.get("class", "Normal")
-        with sniffer.metrics.lock:
-            sniffer.metrics.ml_class_counts[predicted_class] += 1
+        # Defer database writes to background (non-critical path)
+        def _async_save():
+            try:
+                sniffer = network_monitor.get_sniffer()
+                predicted_class = result.get("class", "Normal")
+                with sniffer.metrics.lock:
+                    sniffer.metrics.ml_class_counts[predicted_class] += 1
 
-        # Save predicted flow to database for UI visibility
-        db = network_monitor.get_db()
+                db = network_monitor.get_db()
+                protocol = payload.get("protocol", "TCP")
+                synthetic_flow = {
+                    "src_ip": payload.get("src_ip", "0.0.0.0"),
+                    "dst_ip": payload.get("dst_ip", "0.0.0.0"),
+                    "src_port": payload.get("src_port", 0),
+                    "dst_port": payload.get("dst_port", 0),
+                    "protocol": protocol,
+                    "flow_duration": 0,
+                    "iat_mean": 0,
+                    "iat_variance": 0,
+                    "total_bytes": 0,
+                    "avg_bytes_per_pkt": 0,
+                    "packet_count": 0,
+                    "syn_count": 0,
+                    "ack_count": 0,
+                    "fin_count": 0,
+                    "rst_count": 0,
+                    "proto_tcp": 1 if protocol == "TCP" else 0,
+                    "proto_udp": 1 if protocol == "UDP" else 0,
+                    "proto_icmp": 1 if protocol == "ICMP" else 0,
+                    "proto_other": 1 if protocol not in ("TCP", "UDP", "ICMP") else 0,
+                    "ml_class": result.get("class"),
+                    "ml_confidence": result.get("confidence", 0.0),
+                }
 
-        protocol = payload.get("protocol", "TCP")
-        synthetic_flow = {
-            "src_ip": payload.get("src_ip", "0.0.0.0"),
-            "dst_ip": payload.get("dst_ip", "0.0.0.0"),
-            "src_port": payload.get("src_port", 0),
-            "dst_port": payload.get("dst_port", 0),
-            "protocol": protocol,
-            "flow_duration": 0,
-            "iat_mean": 0,
-            "iat_variance": 0,
-            "total_bytes": 0,
-            "avg_bytes_per_pkt": 0,
-            "packet_count": 0,
-            "syn_count": 0,
-            "ack_count": 0,
-            "fin_count": 0,
-            "rst_count": 0,
-            "proto_tcp": 1 if protocol == "TCP" else 0,
-            "proto_udp": 1 if protocol == "UDP" else 0,
-            "proto_icmp": 1 if protocol == "ICMP" else 0,
-            "proto_other": 1 if protocol not in ("TCP", "UDP", "ICMP") else 0,
-            "ml_class": result.get("class"),
-            "ml_confidence": result.get("confidence", 0.0),
-        }
+                db.save_flows([synthetic_flow], session_id=sniffer.metrics.session_id)
 
-        db.save_flows([synthetic_flow], session_id=sniffer.metrics.session_id)
+                if result.get("class") != "Normal":
+                    alert_data = {
+                        "timestamp": datetime.datetime.now().isoformat(),
+                        "type": f"ml_{result.get('class', 'unknown').lower().replace(' ', '_')}",
+                        "source": synthetic_flow["src_ip"],
+                        "description": f"ML detected {result.get('class')} (confidence: {result.get('confidence', 0):.1%})",
+                    }
+                    db.save_alerts([alert_data], session_id=sniffer.metrics.session_id)
+            except Exception as e:
+                print(f"[WARN] Async save failed: {e}")
 
-        # Generate alert if attack detected
-        if result.get("class") != "Normal":
-            alert_data = {
-                "timestamp": datetime.datetime.now().isoformat(),
-                "type": f"ml_{result.get('class', 'unknown').lower().replace(' ', '_')}",
-                "source": synthetic_flow["src_ip"],
-                "description": f"ML detected {result.get('class')} (confidence: {result.get('confidence', 0):.1%})",
-            }
-            db.save_alerts([alert_data], session_id=sniffer.metrics.session_id)
-
+        Thread(target=_async_save, daemon=True).start()
         return jsonify(result)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

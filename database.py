@@ -22,10 +22,12 @@ Design notes
 from __future__ import annotations
 
 import os
+import queue
 import sqlite3
 import threading
+import time
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 # ──────────────────────────────────────────────
@@ -49,7 +51,11 @@ class SentinelDB:
     def __init__(self, db_path: str = _DEFAULT_DB_PATH):
         self.db_path = db_path
         self._local = threading.local()  # per-thread connection cache
+        self._write_queue: queue.Queue = queue.Queue()
+        self._writer_stop = threading.Event()
         self._init_schema()
+        self._writer_thread = threading.Thread(target=self._writer_worker, daemon=True)
+        self._writer_thread.start()
         print(f"[DB] Database ready: {self.db_path}")
 
     # ── connection management ──
@@ -59,8 +65,6 @@ class SentinelDB:
         conn = getattr(self._local, "conn", None)
         if conn is None:
             conn = sqlite3.connect(self.db_path, timeout=10)
-            conn.execute("PRAGMA journal_mode=WAL")
-            conn.execute("PRAGMA synchronous=NORMAL")
             conn.execute("PRAGMA busy_timeout=5000")
             conn.row_factory = sqlite3.Row
             self._local.conn = conn
@@ -75,6 +79,91 @@ class SentinelDB:
             except Exception:
                 pass
             self._local.conn = None
+
+    def _writer_worker(self) -> None:
+        """Background thread that dequeues and writes to the database."""
+        while not self._writer_stop.is_set():
+            try:
+                item = self._write_queue.get(timeout=0.5)
+                if item is None:
+                    break
+                op_type, data = item
+                if op_type == "flows":
+                    self._sync_save_flows(data[0], data[1])
+                elif op_type == "alerts":
+                    self._sync_save_alerts(data[0], data[1])
+            except queue.Empty:
+                continue
+            except Exception as e:
+                print(f"[DB] Writer thread error: {e}")
+
+    def _sync_save_flows(self, flows: List[Dict], session_id: Optional[int]) -> None:
+        """Synchronous flow save (called from writer thread)."""
+        if not flows:
+            return
+        conn = self._get_conn()
+        now = datetime.now().isoformat()
+        rows = []
+        for f in flows:
+            rows.append((
+                session_id,
+                now,
+                f.get("src_ip", ""),
+                f.get("dst_ip", ""),
+                f.get("src_port", 0),
+                f.get("dst_port", 0),
+                f.get("protocol", ""),
+                f.get("flow_duration", 0),
+                f.get("iat_mean", 0),
+                f.get("iat_variance", 0),
+                f.get("total_bytes", 0),
+                f.get("avg_bytes_per_pkt", 0),
+                f.get("packet_count", 0),
+                f.get("syn_count", 0),
+                f.get("ack_count", 0),
+                f.get("fin_count", 0),
+                f.get("rst_count", 0),
+                f.get("proto_tcp", 0),
+                f.get("proto_udp", 0),
+                f.get("proto_icmp", 0),
+                f.get("proto_other", 0),
+                f.get("ml_class"),
+                f.get("ml_confidence"),
+            ))
+        conn.executemany(
+            """INSERT INTO flows (
+                session_id, captured_at,
+                src_ip, dst_ip, src_port, dst_port, protocol,
+                flow_duration, iat_mean, iat_variance,
+                total_bytes, avg_bytes_per_pkt, packet_count,
+                syn_count, ack_count, fin_count, rst_count,
+                proto_tcp, proto_udp, proto_icmp, proto_other,
+                ml_class, ml_confidence
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            rows,
+        )
+        conn.commit()
+
+    def _sync_save_alerts(self, alerts: List[Dict], session_id: Optional[int]) -> None:
+        """Synchronous alert save (called from writer thread)."""
+        if not alerts:
+            return
+        conn = self._get_conn()
+        rows = []
+        for a in alerts:
+            rows.append((
+                session_id,
+                a.get("timestamp", datetime.now().isoformat()),
+                a.get("type", "unknown"),
+                a.get("source", ""),
+                a.get("description", ""),
+            ))
+        conn.executemany(
+            """INSERT INTO alerts (session_id, timestamp, alert_type, source, description)
+               VALUES (?,?,?,?,?)""",
+            rows,
+        )
+        conn.commit()
 
     # ── schema ──
 
@@ -141,6 +230,9 @@ class SentinelDB:
             CREATE INDEX IF NOT EXISTS idx_alerts_type     ON alerts(alert_type);
         """)
         conn.commit()
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.commit()
 
     # ── sessions ──
 
@@ -185,52 +277,11 @@ class SentinelDB:
     # ── flows ──
 
     def save_flows(self, flows: List[Dict], session_id: Optional[int] = None) -> int:
-        """Batch-insert flow summaries. Returns number of rows inserted."""
+        """Enqueue flow summaries to be written by the background thread."""
         if not flows:
             return 0
-        conn = self._get_conn()
-        now = datetime.now().isoformat()
-        rows = []
-        for f in flows:
-            rows.append((
-                session_id,
-                now,
-                f.get("src_ip", ""),
-                f.get("dst_ip", ""),
-                f.get("src_port", 0),
-                f.get("dst_port", 0),
-                f.get("protocol", ""),
-                f.get("flow_duration", 0),
-                f.get("iat_mean", 0),
-                f.get("iat_variance", 0),
-                f.get("total_bytes", 0),
-                f.get("avg_bytes_per_pkt", 0),
-                f.get("packet_count", 0),
-                f.get("syn_count", 0),
-                f.get("ack_count", 0),
-                f.get("fin_count", 0),
-                f.get("rst_count", 0),
-                f.get("proto_tcp", 0),
-                f.get("proto_udp", 0),
-                f.get("proto_icmp", 0),
-                f.get("proto_other", 0),
-                f.get("ml_class"),
-                f.get("ml_confidence"),
-            ))
-        conn.executemany(
-            """INSERT INTO flows (
-                session_id, captured_at,
-                src_ip, dst_ip, src_port, dst_port, protocol,
-                flow_duration, iat_mean, iat_variance,
-                total_bytes, avg_bytes_per_pkt, packet_count,
-                syn_count, ack_count, fin_count, rst_count,
-                proto_tcp, proto_udp, proto_icmp, proto_other,
-                ml_class, ml_confidence
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-            rows,
-        )
-        conn.commit()
-        return len(rows)
+        self._write_queue.put(("flows", (flows, session_id)))
+        return len(flows)
 
     def get_flows(
         self,
@@ -274,26 +325,11 @@ class SentinelDB:
     # ── alerts ──
 
     def save_alerts(self, alerts: List[Dict], session_id: Optional[int] = None) -> int:
-        """Batch-insert alerts. Returns number of rows inserted."""
+        """Enqueue alerts to be written by the background thread."""
         if not alerts:
             return 0
-        conn = self._get_conn()
-        rows = []
-        for a in alerts:
-            rows.append((
-                session_id,
-                a.get("timestamp", datetime.now().isoformat()),
-                a.get("type", "unknown"),
-                a.get("source", ""),
-                a.get("description", ""),
-            ))
-        conn.executemany(
-            """INSERT INTO alerts (session_id, timestamp, alert_type, source, description)
-               VALUES (?,?,?,?,?)""",
-            rows,
-        )
-        conn.commit()
-        return len(rows)
+        self._write_queue.put(("alerts", (alerts, session_id)))
+        return len(alerts)
 
     def get_alerts(
         self,
