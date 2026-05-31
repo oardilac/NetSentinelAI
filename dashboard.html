@@ -271,9 +271,13 @@
     </div>
 
     <!-- ML Threat Distribution -->
-    <div class="grid">
+    <div class="grid grid-2">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">🤖 Threat Classification (ML)</h3></div>
+            <div class="card-header"><h3 class="card-title">🛡️ Normal vs Maligno</h3></div>
+            <div class="chart-container"><canvas id="binaryChart"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">🤖 Tipos de Ataque</h3></div>
             <div class="chart-container"><canvas id="threatChart"></canvas></div>
         </div>
     </div>
@@ -483,7 +487,7 @@
 
 <script>
     /* ── Charts ── */
-    let trafficChart, protocolChart, threatChart, updateInterval;
+    let trafficChart, protocolChart, threatChart, binaryChart, updateInterval;
 
     // CIC-IDS2017 attack classes (11 total: Normal + 10 attacks from label encoder)
     const ML_CLASSES = ['Normal', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk',
@@ -523,6 +527,20 @@
         data: { labels: [], datasets: [{
             data: [],
             backgroundColor: ['#00ffc8','#9d4edd','#ff006e','#fb5607','#3a86ff','#06ffa5'],
+            borderWidth: 0
+        }]},
+        options: { responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{ position:'bottom', labels:{padding:14, font:{size:11}} } } }
+    });
+
+    const BINARY_CLASSES = ['Normal', 'Maligno'];
+    const BINARY_COLORS = ['#3a86ff', '#ff006e'];
+
+    binaryChart = new Chart(document.getElementById('binaryChart').getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: BINARY_CLASSES, datasets: [{
+            data: [0, 0],
+            backgroundColor: BINARY_COLORS,
             borderWidth: 0
         }]},
         options: { responsive:true, maintainAspectRatio:false,
@@ -587,7 +605,9 @@
             updateOverview(d.overview);
             updateTrafficChart(d.traffic_timeline);
             updateProtocolChart(d.protocols);
-            updateThreatChart(d.ml_stats || {});
+            const mlStats = d.ml_stats || {};
+            updateBinaryChart(mlStats);
+            updateThreatChart(mlStats);
             let flows = d.active_flows || [];
             updateFlowTable(flows);
             updateFlagCards(d.tcp_flags || {});
@@ -635,15 +655,6 @@
 
         // Re-render table with updated predictions
         updateFlowTable(flows);
-
-        // Update threat chart with frontend-calculated stats
-        const stats = {};
-        ML_CLASSES.forEach(cls => stats[cls] = 0);
-        flows.forEach(f => {
-            const cls = f.ml_class || 'Normal';
-            stats[cls] = (stats[cls] || 0) + 1;
-        });
-        updateThreatChart(stats);
     }
 
     /* ── Updaters ── */
@@ -677,9 +688,21 @@
         protocolChart.update('none');
     }
 
+    function updateBinaryChart(ml) {
+        const normalCount = ml['Normal'] || 0;
+        const attackCount = Object.entries(ml)
+            .filter(([k]) => k !== 'Normal')
+            .reduce((sum, [, v]) => sum + v, 0);
+        binaryChart.data.datasets[0].data = [normalCount, attackCount];
+        binaryChart.update('none');
+    }
+
     function updateThreatChart(ml) {
-        const data = ML_CLASSES.map(c => ml[c] || 0);
-        threatChart.data.datasets[0].data = data;
+        const ATTACK_CLASSES = ML_CLASSES.filter(c => c !== 'Normal');
+        const ATTACK_COLORS = ML_COLORS.slice(1);
+        threatChart.data.labels = ATTACK_CLASSES;
+        threatChart.data.datasets[0].data = ATTACK_CLASSES.map(c => ml[c] || 0);
+        threatChart.data.datasets[0].backgroundColor = ATTACK_COLORS;
         threatChart.update('none');
     }
 

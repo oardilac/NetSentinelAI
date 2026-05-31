@@ -506,7 +506,7 @@ class NetworkSniffer:
     def __init__(self, interface=None, db: SentinelDB = None):
         self.interface = interface
         self.db = db or SentinelDB()
-        self.metrics = SecurityMetricsCollector(db=self.db)
+        self.metrics = SecurityMetricsCollector(db=self.db, flow_timeout=600.0)
         self.running = False
         self._async_sniffer = None
 
