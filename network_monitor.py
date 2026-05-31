@@ -385,16 +385,17 @@ class SecurityMetricsCollector:
     def _expire_and_alert(self, now: float) -> None:
         """Expire old flows, run alert rules (rule-based + ML), and persist to the database."""
         expired_pairs = self.flow_table.expire_old_flows(now)
-        if not expired_pairs:
-            return
 
-        summaries = [rec.to_summary() for rec, _age in expired_pairs]
+        summaries = []
+        if expired_pairs:
+            summaries = [rec.to_summary() for rec, _age in expired_pairs]
 
-        # Run ML inference outside the lock to avoid blocking packet capture
-        for s in summaries:
-            self._run_ml_on_flow(s)
+            # Run ML inference outside the lock to avoid blocking packet capture
+            for s in summaries:
+                self._run_ml_on_flow(s)
 
         # Run alert rules under the lock to safely access alert_engine
+        # Always evaluate port scans (even if no flows expired) to catch scans in progress
         with self.lock:
             for s in summaries:
                 ml_result = {"class": s.get("ml_class"), "confidence": s.get("ml_confidence")} if s.get("ml_class") else None
@@ -407,11 +408,13 @@ class SecurityMetricsCollector:
                     self.alert_engine.add_ml_alert(s, ml_result)
 
             # Evaluate port scans: check source IPs that probed many distinct ports
+            # This runs every ~10 seconds regardless of whether flows expired, so scans are detected in real-time
             self.alert_engine.evaluate_port_scans(self.port_scan_detector, threshold=10)
 
             # Persist expired flows to SQLite
-            saved = self.db.save_flows(summaries, session_id=self.session_id)
-            self._flows_saved += saved
+            if expired_pairs:
+                saved = self.db.save_flows(summaries, session_id=self.session_id)
+                self._flows_saved += saved
 
     # ── metrics API ──
 
