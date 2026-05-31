@@ -124,7 +124,7 @@ def main():
     if not samples:
         sys.exit(1)
 
-    total = correct = 0
+    total = correct = skipped = 0
     by_type: dict = {}
 
     for idx, sample in enumerate(samples):
@@ -133,11 +133,13 @@ def main():
         ground_truth = sample.get("ground_truth", "UNKNOWN")
 
         if not features:
+            skipped += 1
             continue
 
         result = send_and_display(features, idx, attack_type)
 
         if result is None:
+            skipped += 1
             continue
 
         # Normalize to binary decision
@@ -170,6 +172,8 @@ def main():
 
     accuracy = correct / total * 100
     print(f"\nOverall accuracy : {accuracy:.1f}%  ({correct}/{total})")
+    if skipped > 0:
+        print(f"Samples skipped  : {skipped} (missing features or request failure)")
     print(f"\n{'Attack Type':<25} {'Correct':<10} {'Total':<10} {'Accuracy'}")
     print("-" * 60)
     for atype in sorted(by_type):

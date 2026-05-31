@@ -15,7 +15,7 @@ Real-time network traffic analyzer that groups packets into **flows** by 5-tuple
       │  packet-by-packet    │  IncrementalStat      │  sentinel_data.db
       │  callback            │  (Welford's alg.)     │  sessions / flows / alerts
       ▼                      ▼                       ▼
-  network_monitor.py    flow_extractor.py      database.py
+  network_monitor.py    live_feature_extractor.py      database.py
                         + inc_stat.py
 ```
 
@@ -24,11 +24,31 @@ Real-time network traffic analyzer that groups packets into **flows** by 5-tuple
 | File | Purpose |
 |---|---|
 | `inc_stat.py` | Welford-based incremental mean / variance / std calculator |
-| `flow_extractor.py` | `FlowRecord` dataclass + `FlowTable` (LRU, thread-safe, bounded) |
+| `live_feature_extractor.py` | `FlowRecord` dataclass + `FlowTable` (LRU, thread-safe, bounded) |
 | `database.py` | SQLite persistence — sessions, flows (all 14 features), alerts |
 | `network_monitor.py` | Scapy sniffer, packet parser, alert engine, DB integration |
 | `dashboard_server.py` | Flask REST API + graceful shutdown + history endpoints |
 | `dashboard.html` | Dashboard with live flow table, charts, alerts, **and DB history viewer** |
+
+### ML Pipeline
+
+| File | Purpose |
+|---|---|
+| `feature_schema.py` | CIC-IDS2017 feature column definitions (15 SHAP-selected features) + alignment helper for train/serve consistency |
+| `ml_engine.py` | Binary attack classifier (benign vs. attack detection) |
+| `inference_pipeline.py` | Two-stage inference: binary classifier → multi-class attack type detector with confidence thresholds and feature validation |
+| `training_config.py` | Configuration for ML training pipeline (data paths, hyperparameters, resampling strategies) |
+| `generate_test_data.py` | Generates synthetic test data from all 11 attack types for model validation |
+| `send_attacks_to_dashboard.py` | Demo tool: loads and sends attack flow samples to the dashboard for real-time ML prediction visualization |
+
+### Model Training Pipeline
+
+| File | Purpose |
+|---|---|
+| `01_prep.py` | Data preparation: loads CIC-IDS2017 raw data, removes duplicates, applies stratified train/val/test split |
+| `02_train.py` | Model training: trains binary classifier and multi-class attack detector with hyperparameter tuning |
+| `03_gridsearch.py` | Hyperparameter optimization via GridSearchCV with resampling strategies |
+| `04_eval.py` | Model evaluation: computes metrics (accuracy, F1, confusion matrix, SHAP importance) |
 
 ---
 
@@ -151,6 +171,13 @@ All statistics computed **incrementally** via Welford's algorithm — no raw pac
 | `GET /api/start` | Start packet sniffer |
 | `GET /api/stop` | Stop sniffer + flush data to DB |
 | `GET /api/status` | Check if sniffer is running |
+
+### ML Inference
+
+| Endpoint | Description |
+|---|---|
+| `POST /api/predict` | Run two-stage ML prediction on a flow: binary (benign vs. attack) + multi-class attack type if attack detected. Request body: flow feature dict. Returns: decision, probabilities, attack type (if applicable) |
+| `GET /api/reset-ml-stats` | Reset ML inference counters (benign/attack/per-type counts). Used for dashboard stats reset between capture sessions |
 
 ### History (from SQLite)
 

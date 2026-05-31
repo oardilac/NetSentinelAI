@@ -212,11 +212,9 @@ __marimo__/
 test/
 
 logs/
-myvenv/
 venv/
 # Custom Project Files
 myvenv/
-logs/
 .engine_status
 
 
@@ -244,3 +242,4 @@ Grupo7_NetSentinel_E2.pdf
 .idea/
 *.swp
 *.swo
+online_test_data.json
