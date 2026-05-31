@@ -566,13 +566,17 @@
 
     async function stopMonitoring() {
         try {
-            await fetch('/api/stop');
+            const res = await fetch('/api/stop');
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
             document.getElementById('btnStart').disabled = false;
             document.getElementById('btnStop').disabled = true;
             document.getElementById('statusDot').classList.remove('active');
             document.getElementById('statusText').textContent = 'System Idle';
             clearInterval(updateInterval);
-        } catch(e) { console.error('Stop error:', e); }
+        } catch(e) {
+            console.error('Stop error:', e);
+            alert(`Error al detener: ${e.message}`);
+        }
     }
 
     /* ── Metrics update loop ── */
