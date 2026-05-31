@@ -255,6 +255,7 @@ def start_monitoring():
     if sniffer_thread is not None and sniffer_thread.is_alive():
         return jsonify({"status": "already_running", "message": "Monitoring is already active"})
 
+    network_monitor._sniffer = None
     sniffer = network_monitor.get_sniffer()
     sniffer_thread = Thread(target=sniffer.start_sniffing, daemon=True)
     sniffer_thread.start()
@@ -265,8 +266,11 @@ def start_monitoring():
 @app.route("/api/stop")
 def stop_monitoring():
     """Stop sniffer and flush current data to database."""
+    global sniffer_thread
     sniffer = network_monitor.get_sniffer()
     sniffer.shutdown()
+    network_monitor._sniffer = None
+    sniffer_thread = None
     return jsonify({"status": "stopped", "message": "Monitoring stopped — data saved to database"})
 
 

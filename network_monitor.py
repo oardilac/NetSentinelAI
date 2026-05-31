@@ -14,7 +14,7 @@ Detected threat patterns:
   - Protocol anomalies  (unusual flag combinations)
 """
 
-from scapy.all import sniff, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, DNSQR
+from scapy.all import sniff, AsyncSniffer, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, DNSQR
 from datetime import datetime
 from collections import defaultdict, deque, OrderedDict
 from typing import Tuple
@@ -508,6 +508,7 @@ class NetworkSniffer:
         self.db = db or SentinelDB()
         self.metrics = SecurityMetricsCollector(db=self.db)
         self.running = False
+        self._async_sniffer = None
 
     def start_sniffing(self):
         self.running = True
@@ -530,12 +531,13 @@ class NetworkSniffer:
                 iface = None
         print(f"[+] Starting capture on interface: {iface or 'default'}")
         try:
-            sniff(
+            self._async_sniffer = AsyncSniffer(
                 iface=iface,
                 prn=self.metrics.process_packet,
                 store=False,
-                stop_filter=lambda _: not self.running,
             )
+            self._async_sniffer.start()
+            self._async_sniffer.join()
         except Exception as e:
             print(f"[ERROR] Capture error: {e}")
             logger.error(f"Capture error details: {e}")
@@ -544,6 +546,8 @@ class NetworkSniffer:
     def shutdown(self):
         """Stop sniffing and flush all data to the database."""
         self.running = False
+        if self._async_sniffer and self._async_sniffer.running:
+            self._async_sniffer.stop()
         print("[*] Flushing data to database before shutdown...")
         try:
             self.metrics.flush_to_db()
