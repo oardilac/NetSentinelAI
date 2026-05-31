@@ -101,11 +101,12 @@ class InferencePipeline:
         scaler = joblib.load(scaler_file)
         logger.debug(f"  {task}: loaded scaler from {scaler_file}")
 
-        # Load feature columns from Results/
-        feature_cols_file = os.path.join(self.results_dir, f"ranked_features_list_{task}.pkl")
-        if not os.path.exists(feature_cols_file):
-            raise FileNotFoundError(f"Feature columns file not found: {feature_cols_file}")
-        feature_columns = joblib.load(feature_cols_file)
+        # Load feature columns from champion_metadata (the exact features used for model/scaler training)
+        metadata_file = os.path.join(self.results_dir, f"champion_metadata_{task}.pkl")
+        if not os.path.exists(metadata_file):
+            raise FileNotFoundError(f"Champion metadata file not found: {metadata_file}")
+        metadata = joblib.load(metadata_file)
+        feature_columns = metadata["features_used"]
         logger.debug(f"  {task}: loaded {len(feature_columns)} feature columns")
 
         # Load label encoder (only for multi)

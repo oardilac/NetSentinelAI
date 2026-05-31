@@ -182,9 +182,13 @@ def predict():
         features = ml_engine.normalize_feature_payload(payload)
         result = ml_engine.predict_flow(features)
 
+        # Update in-memory ML stats so the pie chart reflects /api/predict results
+        sniffer = network_monitor.get_sniffer()
+        predicted_class = result.get("class", "Normal")
+        sniffer.metrics.ml_class_counts[predicted_class] += 1
+
         # Save predicted flow to database for UI visibility
         db = network_monitor.get_db()
-        sniffer = network_monitor.get_sniffer()
 
         protocol = payload.get("protocol", "TCP")
         synthetic_flow = {
@@ -235,6 +239,16 @@ def predict():
 # ──────────────────────────────────────────────
 # Sniffer controls
 # ──────────────────────────────────────────────
+
+@app.route("/api/debug/ml_counts")
+def debug_ml_counts():
+    """Debug endpoint to see current ml_class_counts state."""
+    sniffer = network_monitor.get_sniffer()
+    return jsonify({
+        "ml_class_counts": dict(sniffer.metrics.ml_class_counts),
+        "session_id": sniffer.metrics.session_id,
+    })
+
 
 @app.route("/api/start")
 def start_monitoring():
@@ -332,6 +346,14 @@ def history_clear():
     db = network_monitor.get_db()
     db.clear_all()
     return jsonify({"status": "cleared", "message": "All historical data deleted"})
+
+
+@app.route("/api/reset-ml-stats", methods=["POST"])
+def reset_ml_stats():
+    """Reset in-memory ML classification counters (for demo / clean-slate runs)."""
+    sniffer = network_monitor.get_sniffer()
+    sniffer.metrics.ml_class_counts.clear()
+    return jsonify({"status": "reset", "message": "ML stats cleared"})
 
 
 # ──────────────────────────────────────────────

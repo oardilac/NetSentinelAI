@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Send attack samples to dashboard and validate predictions.
 
@@ -11,8 +12,13 @@ Workflow:
 import json
 import sys
 import os
+import io
 import requests
 from typing import Optional
+
+# Force UTF-8 output on Windows
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 DASHBOARD_URL = "http://localhost:5050"
 
@@ -106,6 +112,13 @@ def main():
 
     if not check_dashboard():
         sys.exit(1)
+
+    # Reset ML stats for clean demo slate
+    try:
+        requests.post(f"{DASHBOARD_URL}/api/reset-ml-stats", timeout=HTTP_TIMEOUT_SHORT)
+        print("[OK] ML stats reset")
+    except Exception as e:
+        print(f"[WARN] Could not reset ML stats: {e}")
 
     samples = load_attacks()
     if not samples:
