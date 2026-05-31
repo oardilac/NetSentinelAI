@@ -509,6 +509,7 @@ class NetworkSniffer:
         self.metrics = SecurityMetricsCollector(db=self.db, flow_timeout=600.0)
         self.running = False
         self._async_sniffer = None
+        self._shutdown_complete = threading.Event()
 
     def start_sniffing(self):
         self.running = True
@@ -542,12 +543,16 @@ class NetworkSniffer:
             print(f"[ERROR] Capture error: {e}")
             logger.error(f"Capture error details: {e}")
             self.running = False
+        finally:
+            self._shutdown_complete.set()
 
     def shutdown(self):
         """Stop sniffing and flush all data to the database."""
         self.running = False
         if self._async_sniffer and self._async_sniffer.running:
             self._async_sniffer.stop()
+        # Wait for start_sniffing thread to fully terminate (max 5 seconds)
+        self._shutdown_complete.wait(timeout=5.0)
         print("[*] Flushing data to database before shutdown...")
         try:
             self.metrics.flush_to_db()
