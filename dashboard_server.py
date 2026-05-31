@@ -190,15 +190,16 @@ def predict():
             flow_key = tuple(flow_key)
 
         if flow_key and hasattr(sniffer.metrics, "flow_table"):
-            flow = sniffer.metrics.flow_table.flows.get(flow_key)
-            if flow:
-                flow.ml_class = predicted_class
-                flow.ml_confidence = predicted_confidence
+            with sniffer.metrics.flow_table._lock:
+                flow = sniffer.metrics.flow_table.flows.get(flow_key)
+                if flow:
+                    flow.ml_class = predicted_class
+                    flow.ml_confidence = predicted_confidence
 
-                # Trigger alert immediately if attack detected
-                if predicted_class != "Normal":
-                    flow_summary = flow.to_summary()
-                    sniffer.metrics.alert_engine.add_ml_alert(flow_summary, result)
+                    # Trigger alert immediately if attack detected
+                    if predicted_class != "Normal":
+                        flow_summary = flow.to_summary()
+                        sniffer.metrics.alert_engine.add_ml_alert(flow_summary, result)
 
         # Defer database writes to background (non-critical path)
         def _async_save():

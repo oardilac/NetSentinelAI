@@ -173,6 +173,7 @@
         }
         /* CIC-IDS2017 attack class colors */
         .ml-Normal { background:rgba(0,255,200,.15); color:var(--accent-cyan); }
+        .ml-ML_Error { background:rgba(255,71,87,.15); color:#ff4757; border:1px solid #ff4757; }
         .ml-Bot { background:rgba(255,0,110,.15); color:var(--accent-red); }
         .ml-DDoS { background:rgba(251,86,7,.15); color:var(--accent-orange); }
         .ml-DoS_GoldenEye { background:rgba(255,190,11,.15); color:#d4af37; }
@@ -211,7 +212,7 @@
 <body>
 <div class="container">
     <header>
-        <h1>Sentinel AI &#9889;</h1>
+        <h1>Sentinel AI</h1>
         <p class="subtitle">Flow-Based Real-Time Network Security Monitor</p>
     </header>
 
@@ -256,12 +257,12 @@
     <!-- Charts -->
     <div class="grid grid-2">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">&#128200; Real-Time Traffic</h3></div>
+            <div class="card-header"><h3 class="card-title">Real-Time Traffic</h3></div>
             <div class="chart-container"><canvas id="trafficChart"></canvas></div>
         </div>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">&#9888;&#65039; Security Alerts</h3>
+                <h3 class="card-title">Security Alerts</h3>
                 <span class="card-badge" id="alertsCount">0</span>
             </div>
             <div id="alertsContainer">
@@ -273,11 +274,11 @@
     <!-- ML Threat Distribution -->
     <div class="grid grid-2">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">🛡️ Normal vs Maligno</h3></div>
+            <div class="card-header"><h3 class="card-title">Normal vs Maligno</h3></div>
             <div class="chart-container"><canvas id="binaryChart"></canvas></div>
         </div>
         <div class="card">
-            <div class="card-header"><h3 class="card-title">🤖 Tipos de Ataque</h3></div>
+            <div class="card-header"><h3 class="card-title">Tipos de Ataque</h3></div>
             <div class="chart-container"><canvas id="threatChart"></canvas></div>
         </div>
     </div>
@@ -285,12 +286,12 @@
     <!-- Protocol & Port Scans -->
     <div class="grid grid-2">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">&#128272; Protocol Distribution</h3></div>
+            <div class="card-header"><h3 class="card-title">Protocol Distribution</h3></div>
             <div class="chart-container"><canvas id="protocolChart"></canvas></div>
         </div>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">&#128269; Potential Port Scans</h3>
+                <h3 class="card-title">Potential Port Scans</h3>
                 <span class="card-badge" id="scanCount">0</span>
             </div>
             <ul class="metric-list" id="portScans">
@@ -302,7 +303,7 @@
     <!-- ═══════ FLOW TABLE ═══════ -->
     <div class="card" style="grid-column:1/-1">
         <div class="card-header">
-            <h3 class="card-title">&#128256; Active Flows &amp; Feature Vectors</h3>
+            <h3 class="card-title">Active Flows &amp; Feature Vectors</h3>
             <span class="card-badge" id="flowCount">0</span>
         </div>
 
@@ -353,7 +354,7 @@
     <div class="grid grid-2">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">&#127760; Top Source IPs</h3>
+                <h3 class="card-title">Top Source IPs</h3>
                 <span class="card-badge" id="topSourcesCount">0</span>
             </div>
             <ul class="metric-list" id="topSources">
@@ -362,7 +363,7 @@
         </div>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">&#127919; Top Destination Ports</h3>
+                <h3 class="card-title">Top Destination Ports</h3>
                 <span class="card-badge" id="topPortsCount">0</span>
             </div>
             <ul class="metric-list" id="topPorts">
@@ -375,7 +376,7 @@
     <div class="grid">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">&#127757; Top DNS Queries</h3>
+                <h3 class="card-title">Top DNS Queries</h3>
                 <span class="card-badge" id="dnsCount">0</span>
             </div>
             <ul class="metric-list" id="topDNS">
@@ -387,7 +388,7 @@
     <!-- ═══════ DATABASE / HISTORY ═══════ -->
     <div class="card" style="margin-bottom:20px">
         <div class="card-header">
-            <h3 class="card-title">&#128451; Database History</h3>
+            <h3 class="card-title">Database History</h3>
             <div style="display:flex;gap:8px;align-items:center">
                 <span class="card-badge" id="dbSessionBadge">Session —</span>
                 <button onclick="loadHistory()" style="padding:6px 14px;font-size:.72rem">Refresh History</button>
@@ -644,9 +645,14 @@
                 if (!pred.ok) continue;
                 const result = await pred.json();
 
-                // Update flow with prediction
-                f.ml_class = result.class;
-                f.ml_confidence = result.confidence;
+                // Update flow with prediction — distinguish ML errors from real predictions
+                if (result.is_ml_failure) {
+                    f.ml_class = 'ML Error';
+                    f.ml_confidence = 0.0;
+                } else {
+                    f.ml_class = result.class;
+                    f.ml_confidence = result.confidence;
+                }
 
             } catch(e) {
                 console.error(`Predict error for ${f.src_ip}:${f.src_port}:`, e);
