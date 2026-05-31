@@ -193,8 +193,10 @@ def predict():
             with sniffer.metrics.flow_table._lock:
                 flow = sniffer.metrics.flow_table.flows.get(flow_key)
                 if flow:
-                    flow.ml_class = predicted_class
-                    flow.ml_confidence = predicted_confidence
+                    # Only persist classification if it's an attack — "Normal" is re-evaluated every cycle
+                    if predicted_class != "Normal":
+                        flow.ml_class = predicted_class
+                        flow.ml_confidence = predicted_confidence
 
                     # Trigger alert immediately if attack detected
                     if predicted_class != "Normal":

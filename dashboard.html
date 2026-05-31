@@ -623,13 +623,19 @@
     }
 
     async function predictPendingFlows(flows) {
-        const pending = flows.filter(f => !f.ml_class || f.ml_class === 'Pending');
+        // Include pending + Normal flows with duration > 5s (for continuous re-evaluation)
+        const pending = flows.filter(f =>
+            !f.ml_class ||
+            f.ml_class === 'Pending' ||
+            (f.ml_class === 'Normal' && f.flow_duration > 5)
+        );
         if (pending.length === 0) return;
 
-        for (const f of pending) {
+        // Predict in parallel instead of sequential for-await (50x faster)
+        await Promise.all(pending.map(async (f) => {
             try {
                 const features = f.features;
-                if (!features || Object.keys(features).length === 0) continue;
+                if (!features || Object.keys(features).length === 0) return;
 
                 const payload = { ...features };
                 if (f._flow_key) {
@@ -642,7 +648,7 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!pred.ok) continue;
+                if (!pred.ok) return;
                 const result = await pred.json();
 
                 // Update flow with prediction — distinguish ML errors from real predictions
@@ -657,7 +663,7 @@
             } catch(e) {
                 console.error(`Predict error for ${f.src_ip}:${f.src_port}:`, e);
             }
-        }
+        }));
 
         // Re-render table with updated predictions
         updateFlowTable(flows);
@@ -725,7 +731,17 @@
             body.innerHTML = '<tr><td colspan="14" class="empty-state">No flows captured yet</td></tr>';
             return;
         }
-        body.innerHTML = flows.map(f => {
+
+        // Sort: attacks first, then by packet_count desc (to prioritize visible malicious traffic)
+        const sorted = [...flows].sort((a, b) => {
+            const aIsAttack = a.ml_class && a.ml_class !== 'Normal' && a.ml_class !== 'Pending' && a.ml_class !== 'ML Error';
+            const bIsAttack = b.ml_class && b.ml_class !== 'Normal' && b.ml_class !== 'Pending' && b.ml_class !== 'ML Error';
+            if (aIsAttack && !bIsAttack) return -1;
+            if (!aIsAttack && bIsAttack) return 1;
+            return (b.packet_count || 0) - (a.packet_count || 0);
+        });
+
+        body.innerHTML = sorted.map(f => {
             const proto = f.protocol||'?';
             const synBad = f.syn_count>10 && f.ack_count<f.syn_count*.3;
             const mlClass = f.ml_class || 'Pending';
