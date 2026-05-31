@@ -145,7 +145,9 @@ class InferencePipeline:
 
     def _predict_binary(self, binary_x_scaled: np.ndarray) -> tuple:
         """Run binary classification. Returns (binary_proba, early_return_dict or None)."""
-        binary_proba = self.binary["model"].predict_proba(binary_x_scaled)[0]
+        # Convert scaled array back to DataFrame with feature names to avoid LGBMClassifier warning
+        binary_x_df = pd.DataFrame(binary_x_scaled, columns=self.binary["feature_columns"])
+        binary_proba = self.binary["model"].predict_proba(binary_x_df)[0]
         logger.debug(f"Binary proba: BENIGN={binary_proba[0]:.4f}, ATTACK={binary_proba[1]:.4f}")
 
         if binary_proba[1] < ATTACK_PROBABILITY_THRESHOLD:
@@ -164,8 +166,10 @@ class InferencePipeline:
         multi_x_clipped = self._clip_to_scaler_range(multi_x.values, self.multi["scaler"])
         multi_x_scaled = self.multi["scaler"].transform(multi_x_clipped)
 
-        multi_pred = self.multi["model"].predict(multi_x_scaled)[0]
-        multi_proba = self.multi["model"].predict_proba(multi_x_scaled)[0]
+        # Convert scaled array back to DataFrame with feature names to avoid LGBMClassifier warning
+        multi_x_df = pd.DataFrame(multi_x_scaled, columns=self.multi["feature_columns"])
+        multi_pred = self.multi["model"].predict(multi_x_df)[0]
+        multi_proba = self.multi["model"].predict_proba(multi_x_df)[0]
         attack_label = self.multi["label_encoder"].inverse_transform([multi_pred])[0]
 
         multi_probs_dict = {cls: float(p) for cls, p in zip(self.multi["classes"], multi_proba)}
