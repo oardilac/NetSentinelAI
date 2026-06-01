@@ -1385,8 +1385,7 @@ async function updateMetrics() {
 
 async function predictPendingFlows(flows) {
   const pending = flows.filter(f =>
-    !f.ml_class || f.ml_class==='Pending' ||
-    (f.ml_class==='Normal' && f.flow_duration>5)
+    !f.ml_class || f.ml_class==='Pending'
   );
   if(!pending.length) return;
   await Promise.all(pending.map(async f => {
@@ -1730,7 +1729,7 @@ function renderEventTable(flows) {
   }
   body.innerHTML = filtered.slice(0,100).map(f=>{
     const proto = f.protocol||'?';
-    const mlClass = f.ml_class||'Normal';
+    const mlClass = f.ml_class||'Pending';
     const isAnomaly = mlClass!=='Normal'&&mlClass!=='Pending';
     const time = new Date().toLocaleTimeString('es-ES');
     const flags = [];

@@ -45,6 +45,11 @@ CORS(app)
 sniffer_thread = None
 _shutdown_done = Event()
 
+# MODULE-LEVEL DEBUG: Log that this file was loaded
+with open('MODULE_LOADED.log', 'w') as f:
+    f.write("dashboard_server.py module LOADED successfully\n")
+    f.flush()
+
 
 # ──────────────────────────────────────────────
 # Graceful shutdown
@@ -172,38 +177,87 @@ def predict():
         "error": str (if any)
     }
     """
+    import os
+    logfile = os.path.join(os.path.dirname(__file__), 'predict_debug.log')
+    with open(logfile, 'w') as f:
+        f.write("predict() CALLED AT ENTRY POINT\n")
+        f.flush()
+
     try:
         payload = request.get_json()
+        with open(logfile, 'a') as f:
+            f.write(f"Got payload with {len(payload) if payload else 0} keys\n")
+            f.flush()
         if not payload:
             return jsonify({"error": "Empty request body"}), 400
 
         features = ml_engine.normalize_feature_payload(payload)
         result = ml_engine.predict_flow(features)
 
-        # Update live flow object if flow_key is provided
+        # Inject synthetic flow into live flow table and update ML prediction results
         sniffer = network_monitor.get_sniffer()
         predicted_class = result.get("class", "Normal")
         predicted_confidence = result.get("confidence", 0.0)
-        flow_key = payload.get("_flow_key")
 
-        if flow_key and hasattr(sniffer, "flow_table"):
-            import ast
-            parsed_key = flow_key
-            if isinstance(flow_key, str):
-                try:
-                    parsed_key = ast.literal_eval(flow_key)
-                except (ValueError, SyntaxError):
-                    parsed_key = None
+        # Create synthetic flow record for dashboard display
+        # (logfile already defined at function start)
+        with open(logfile, 'a') as log:
+            log.write(f"[PREDICT] sniffer={sniffer is not None}, has_metrics={hasattr(sniffer, 'metrics') if sniffer else 'N/A'}, class={predicted_class}\n")
+            log.flush()
 
-            flow = sniffer.flow_table.flows.get(parsed_key) if parsed_key else None
-            if flow:
-                flow.ml_class = predicted_class
-                flow.ml_confidence = predicted_confidence
+        if sniffer and hasattr(sniffer, "metrics") and hasattr(sniffer.metrics, "flow_table"):
+            with open(logfile, 'a') as log:
+                log.write(f"[INJECT] Starting injection for {predicted_class}\n")
+                log.flush()
+            import uuid
+            import time as time_module
+            from live_feature_extractor import BidirectionalFlowRecord
+
+            src_ip = payload.get("src_ip", "0.0.0.0")
+            dst_ip = payload.get("dst_ip", "0.0.0.0")
+            src_port = payload.get("src_port", 0)
+            dst_port = payload.get("dst_port", 0)
+            protocol = payload.get("protocol", "TCP").lower()
+
+            # Convert protocol name to code (TCP=6, UDP=17, ICMP=1)
+            proto_map = {"tcp": 6, "udp": 17, "icmp": 1}
+            proto_code = proto_map.get(protocol, 0)
+
+            # Flow key: (src_ip, dst_ip, src_port, dst_port, protocol_code)
+            flow_key = (src_ip, dst_ip, src_port, dst_port, proto_code)
+
+            # Create synthetic flow record
+            current_time = time_module.time()
+            synthetic_flow = BidirectionalFlowRecord(
+                key=flow_key,
+                dst_port=dst_port,
+                start_time=current_time,
+                last_seen=current_time,
+                ml_class=predicted_class,
+                ml_confidence=predicted_confidence,
+            )
+
+            # Inject into flow table
+            try:
+                print(f"[DEBUG] Attempting to inject synthetic flow: {flow_key}")
+                print(f"[DEBUG] Flow table size before: {len(sniffer.metrics.flow_table.flows)}")
+
+                with sniffer.metrics.flow_table._lock:
+                    # Mark as synthetic so it renders first in UI
+                    synthetic_flow._synthetic = True
+                    sniffer.metrics.flow_table.flows[flow_key] = synthetic_flow
+
+                print(f"[DEBUG] Flow table size after: {len(sniffer.metrics.flow_table.flows)}")
+                print(f"[DEBUG] Synthetic flow injected successfully")
 
                 # Trigger alert immediately if attack detected
-                if predicted_class != "Normal":
-                    flow_summary = flow.to_summary()
-                    sniffer.alert_engine.add_ml_alert(flow_summary, result)
+                if predicted_class != "Normal" and hasattr(sniffer.metrics, "alert_engine"):
+                    flow_summary = synthetic_flow.to_summary()
+                    sniffer.metrics.alert_engine.add_ml_alert(flow_summary, result)
+            except Exception as e:
+                logger.warning(f"Failed to inject synthetic flow: {e}")
+                import traceback
+                traceback.print_exc()
 
         # Defer database writes to background (non-critical path)
         def _async_save():
@@ -255,6 +309,12 @@ def predict():
         return jsonify(result)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        import traceback
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        traceback.print_exc()
+        logger.error(f"[PREDICT] Unhandled error: {error_msg}\n{traceback.format_exc()}")
+        return jsonify({"error": error_msg, "type": type(e).__name__}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

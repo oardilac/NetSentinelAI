@@ -504,8 +504,7 @@ class SecurityMetricsCollector:
                 "alerts": self.alert_engine.get_alerts(30),
                 "active_flows": sorted(
                     active_flows,
-                    key=lambda f: f.get("total_bytes", 0),
-                    reverse=True,
+                    key=lambda f: (not f.get("_synthetic", False), -f.get("total_bytes", 0)),
                 )[:50],
                 "expired_flows": self.flow_table.get_expired_flows(30),
                 "timestamp": datetime.now().isoformat(),

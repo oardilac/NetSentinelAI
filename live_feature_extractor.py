@@ -250,7 +250,6 @@ class BidirectionalFlowRecord:
         else:
             features["Down/Up Ratio"] = 0.0
 
-        logger.debug(f"[GET_FEATURE_VECTOR] Generated 16 features")
 
         return features
 
@@ -291,6 +290,7 @@ class BidirectionalFlowRecord:
             "features": fv,
             "ml_class": self.ml_class,
             "ml_confidence": self.ml_confidence,
+            "_synthetic": getattr(self, "_synthetic", False),
         }
 
 
