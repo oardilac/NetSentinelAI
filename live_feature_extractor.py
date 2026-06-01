@@ -5,7 +5,7 @@ Processes network packets and extracts CIC-IDS2017 features per flow:
 - Forward/backward packet and byte counts
 - Forward/backward packet length statistics (max, min, mean, std)
 - Inter-arrival time (IAT) statistics per direction
-- TCP flag counts per direction
+- TCP flag counts per direction (including ACK Flag Count)
 - Port-based features (one-hot encoding)
 - Active/Idle time statistics (computed but not emitted — not in SHAP top-10 feature set)
 
@@ -13,7 +13,8 @@ Key design:
 - Bidirectional flow lookup: forward_key vs reverse_key
 - IncrementalStat (Welford) for online statistics
 - Destination port from first forward packet
-- get_feature_vector() returns only the SHAP-selected features loaded from feature_columns.json
+- ALWAYS computes and emits 16 core features (including ACK Flag Count)
+- Inference pipeline selects model-specific subset: binary (15 without ACK) or multi (15 with ACK)
 """
 
 import logging
@@ -197,15 +198,18 @@ class BidirectionalFlowRecord:
 
     def get_feature_vector(self) -> Dict[str, float]:
         """
-        Extract CIC-IDS2017 features and return the SHAP-selected subset.
+        Extract and return 16 core CIC-IDS2017 features (including ACK Flag Count).
 
-        Computes all measurable features then filters to the subset defined by
-        FEATURE_COLUMNS (loaded from feature_columns.json at import time).
-        Active/idle features are tracked internally but not emitted because they
-        are not part of the current SHAP top-10 feature set.
+        ALWAYS computes all 16 features; inference pipeline (align_features) selects the
+        model-specific subset:
+        - Binary model: 15 features without ACK Flag Count (uses URG Flag Count)
+        - Multi model: 15 features with ACK Flag Count (replaces URG Flag Count)
+
+        Other CIC-IDS2017 features are computed internally but filtered out because
+        they are not part of the core SHAP feature set.
 
         Returns:
-            dict with feature names (CIC-IDS2017 names) and float values
+            dict with 16 feature names (CIC-IDS2017 names) and float values
         """
         features = OrderedDict()
 

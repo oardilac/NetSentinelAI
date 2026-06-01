@@ -52,12 +52,39 @@ class InferencePipeline:
             f"({len(self.multi['feature_columns'])} features)"
         )
 
-        # Validate feature consistency between live extractor and trained models
-        from feature_schema import FEATURE_COLUMNS
-        if set(FEATURE_COLUMNS) != set(self.binary["feature_columns"]):
+        # Validate feature consistency: binary and multi must use correct feature subsets
+        from feature_schema import FEATURE_COLUMNS_BINARY, FEATURE_COLUMNS_MULTI
+
+        # Binary model must use FEATURE_COLUMNS_BINARY (15 features without ACK Flag Count)
+        if set(self.binary["feature_columns"]) != set(FEATURE_COLUMNS_BINARY):
             raise RuntimeError(
-                f"Feature mismatch between live extractor (FEATURE_COLUMNS) and binary model. "
-                f"Live extractor: {set(FEATURE_COLUMNS)}, Binary model: {set(self.binary['feature_columns'])}"
+                f"Binary model feature mismatch. Expected 15 features without ACK Flag Count. "
+                f"Expected: {FEATURE_COLUMNS_BINARY}, Got: {self.binary['feature_columns']}"
+            )
+
+        # Validate: binary must NOT have ACK Flag Count
+        if "ACK Flag Count" in self.binary["feature_columns"]:
+            raise RuntimeError(
+                "Binary model must NOT include 'ACK Flag Count'. "
+                "Binary should use 15 features including URG Flag Count."
+            )
+
+        # Multi model must use FEATURE_COLUMNS_MULTI (15 features with ACK Flag Count)
+        if set(self.multi["feature_columns"]) != set(FEATURE_COLUMNS_MULTI):
+            raise RuntimeError(
+                f"Multi model feature mismatch. Expected 15 features with ACK Flag Count. "
+                f"Expected: {FEATURE_COLUMNS_MULTI}, Got: {self.multi['feature_columns']}"
+            )
+
+        # Validate: multi must HAVE ACK Flag Count but NOT URG Flag Count
+        if "ACK Flag Count" not in self.multi["feature_columns"]:
+            raise RuntimeError(
+                "Multi model must include 'ACK Flag Count' in features."
+            )
+        if "URG Flag Count" in self.multi["feature_columns"]:
+            raise RuntimeError(
+                "Multi model must NOT include 'URG Flag Count'. "
+                "Multi should use 15 features including ACK Flag Count (which replaces URG)."
             )
 
     def _clip_to_scaler_range(self, X_array: np.ndarray, scaler, n_iqr: float = 10.0) -> np.ndarray:

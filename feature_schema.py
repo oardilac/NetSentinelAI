@@ -9,10 +9,9 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# Top-15 features selected by SHAP from the 94 CIC-IDS2017 features
-# These are the features that survived SHAP feature importance ranking in the training pipeline
-# Used by live_feature_extractor.get_feature_vector() to select which features to emit to models
-FEATURE_COLUMNS = [
+# Top-16 features extracted by live_feature_extractor for all flows
+# Always extracted and emitted; models select their subset below
+ALL_FEATURES_16 = [
     "Bwd Packet Length Min",
     "Bwd Packet Length Max",
     "Fwd Packet Length Max",
@@ -24,17 +23,65 @@ FEATURE_COLUMNS = [
     "Flow Bytes/s",
     "Flow Packets/s",
     "Flow Duration",
+    "ACK Flag Count",  # 16th feature, always computed
+    "PSH Flag Count",
+    "Fwd PSH Flags",
+    "Down/Up Ratio",
     "URG Flag Count",
+]
+
+# Binary model: 15 features WITHOUT ACK Flag Count (keeps URG Flag Count)
+# Trained on 15 features; does not expect ACK Flag Count in input
+FEATURE_COLUMNS_BINARY = [
+    "Bwd Packet Length Min",
+    "Bwd Packet Length Max",
+    "Fwd Packet Length Max",
+    "Fwd Packet Length Min",
+    "Total Length of Fwd Packets",
+    "Total Length of Bwd Packets",
+    "Total Fwd Packets",
+    "Total Backward Packets",
+    "Flow Bytes/s",
+    "Flow Packets/s",
+    "Flow Duration",
+    "URG Flag Count",  # Kept for binary
     "PSH Flag Count",
     "Fwd PSH Flags",
     "Down/Up Ratio",
 ]
+
+# Multi model: 15 features WITH ACK Flag Count (replaces URG Flag Count)
+# Trained on 15 features; expects ACK Flag Count, NOT URG Flag Count
+FEATURE_COLUMNS_MULTI = [
+    "Bwd Packet Length Min",
+    "Bwd Packet Length Max",
+    "Fwd Packet Length Max",
+    "Fwd Packet Length Min",
+    "Total Length of Fwd Packets",
+    "Total Length of Bwd Packets",
+    "Total Fwd Packets",
+    "Total Backward Packets",
+    "Flow Bytes/s",
+    "Flow Packets/s",
+    "Flow Duration",
+    "ACK Flag Count",  # Included for multi (replaces URG)
+    "PSH Flag Count",
+    "Fwd PSH Flags",
+    "Down/Up Ratio",
+]
+
+# Backward compatibility: FEATURE_COLUMNS defaults to all 16 for live extractor
+# (live extractor computes all 16, inference pipeline selects per-model subset)
+FEATURE_COLUMNS = ALL_FEATURES_16
 
 
 
 def align_features(feature_dict: dict, feature_columns: list) -> pd.DataFrame:
     """
     Align feature dictionary to exact column order and names expected by model.
+
+    Used by inference_pipeline to convert the 16-feature vector from live_feature_extractor
+    into the model-specific subset (15 features for binary or multi).
 
     Steps:
     1. Create DataFrame from dict
@@ -43,8 +90,8 @@ def align_features(feature_dict: dict, feature_columns: list) -> pd.DataFrame:
     4. Replace inf/-inf with NaN, then fill NaN with 0
 
     Args:
-        feature_dict: dict with feature names and values
-        feature_columns: list of expected column names in order
+        feature_dict: dict with all 16 core features from live_feature_extractor
+        feature_columns: list of expected column names in order (15 for binary, 15 for multi)
 
     Returns:
         pd.DataFrame with shape (1, len(feature_columns))
