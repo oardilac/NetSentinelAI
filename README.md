@@ -46,7 +46,7 @@ Real-time network traffic analyzer that groups packets into **flows** by 5-tuple
 | File | Purpose |
 |---|---|
 | `01_prep.py` | Data preparation: loads CIC-IDS2017 raw data, removes duplicates, applies stratified train/val/test split |
-| `02_train.py` | Model training: trains binary classifier and multi-class attack detector with hyperparameter tuning |
+| `02_shap.py` | SHAP feature importance analysis: computes feature importance scores and selects top 15 features for the model |
 | `03_gridsearch.py` | Hyperparameter optimization via GridSearchCV with resampling strategies |
 | `04_eval.py` | Model evaluation: computes metrics (accuracy, F1, confusion matrix, SHAP importance) |
 
@@ -168,8 +168,8 @@ All statistics computed **incrementally** via Welford's algorithm — no raw pac
 | `GET /api/metrics` | Full snapshot: overview, flows, alerts, charts |
 | `GET /api/flows` | Active flows with feature vectors |
 | `GET /api/features` | Raw ML-ready feature vectors (JSON array) |
-| `GET /api/start` | Start packet sniffer |
-| `GET /api/stop` | Stop sniffer + flush data to DB |
+| `POST /api/start` | Start packet sniffer |
+| `POST /api/stop` | Stop sniffer + flush data to DB |
 | `GET /api/status` | Check if sniffer is running |
 
 ### ML Inference
@@ -187,7 +187,7 @@ All statistics computed **incrementally** via Welford's algorithm — no raw pac
 | `GET /api/history/sessions` | Past capture sessions |
 | `GET /api/history/flows` | Stored flows (filterable: `session_id`, `protocol`, `src_ip`, `limit`, `offset`) |
 | `GET /api/history/alerts` | Stored alerts (filterable: `session_id`, `limit`) |
-| `POST /api/history/clear` | Delete all historical data |
+| `POST /api/history/clear` | Delete all historical data (requires JSON body: `{"confirm": true}`) |
 
 ---
 
@@ -208,7 +208,9 @@ Alerts are de-duplicated per flow, persisted to DB, and visible in both the live
 ### Windows
 
 1. Install Python 3.10+ and [Npcap](https://npcap.com/) (check "WinPcap API-compatible Mode").
-2. Right-click `start.bat` → **Run as administrator**.
+2. Open two PowerShell windows **as administrator**:
+   - Window 1: `python dashboard_server.py`
+   - Window 2: `python network_monitor.py`
 3. Open `http://localhost:5050` and click **Start Monitoring**.
 4. Press `Ctrl+C` or click **Stop** — all data is auto-saved to `sentinel_data.db`.
 

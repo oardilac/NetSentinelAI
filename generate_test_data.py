@@ -52,14 +52,13 @@ def main():
 
     # Union of all features needed by both models
     all_features = sorted(binary_features | multi_features)
-    feature_columns = all_features
 
     print(f"[OK] Loaded features from both models:")
     print(f"  Binary model: {len(binary_features)} features")
     print(f"  Multi-class model: {len(multi_features)} features")
     print(f"  Union (total needed): {len(all_features)} features")
-    print(f"\n[OK] All features to export ({len(feature_columns)}):")
-    for i, feat in enumerate(feature_columns, 1):
+    print(f"\n[OK] All features to export ({len(all_features)}):")
+    for i, feat in enumerate(all_features, 1):
         print(f"  {i:2d}. {feat}")
 
     # Load test data
@@ -72,7 +71,7 @@ def main():
     print(f"\n[OK] Loaded test data: {len(X_test)} samples, {len(X_test.columns)} raw features")
 
     # Select only the model's 15 features
-    X_test_selected = X_test[feature_columns].copy()
+    X_test_selected = X_test[all_features].copy()
 
     # Combine with labels
     df = X_test_selected.copy()
@@ -88,17 +87,15 @@ def main():
 
     # Sample a balanced set, with validation: up to 50 candidates per class to ensure 3 correct per attack type
     samples = []
-    validated_count = 0
 
     # Sample benign (try up to 50, keep up to 5 that predict correctly)
     benign_indices = df[df["attack_type"] == "BENIGN"].index.tolist()
     candidate_benign = np.random.choice(benign_indices, size=min(50, len(benign_indices)), replace=False)
     for idx in candidate_benign:
         row = df.loc[idx]
-        features_dict = {feat: float(row[feat]) for feat in feature_columns}
+        features_dict = {feat: float(row[feat]) for feat in all_features}
         if is_correctly_predicted(features_dict, "BENIGN"):
             samples.append(idx)
-            validated_count += 1
             if len(samples) >= 5:
                 break
 
@@ -109,10 +106,9 @@ def main():
         correct_count = 0
         for idx in candidate_attacks:
             row = df.loc[idx]
-            features_dict = {feat: float(row[feat]) for feat in feature_columns}
+            features_dict = {feat: float(row[feat]) for feat in all_features}
             if is_correctly_predicted(features_dict, "ATTACK"):
                 samples.append(idx)
-                validated_count += 1
                 correct_count += 1
                 if correct_count >= 3:
                     break
@@ -125,7 +121,7 @@ def main():
     # Build JSON entries
     entries = []
     for idx, row in df_sampled.iterrows():
-        features_dict = {feat: float(row[feat]) for feat in feature_columns}
+        features_dict = {feat: float(row[feat]) for feat in all_features}
         entry = {
             "attack_type": row["attack_type"],
             "features": features_dict,
@@ -138,7 +134,7 @@ def main():
         json.dump(entries, f, indent=2)
 
     print(f"\n[OK] Wrote {len(entries)} entries to {OUTPUT_FILE}")
-    print(f"[OK] Validated {len(entries)}/{len(entries)} samples correctly predicted")
+    print(f"[OK] All {len(entries)} samples correctly predicted by the model")
     print(f"\nSample entry (first):")
     print(json.dumps(entries[0], indent=2))
 

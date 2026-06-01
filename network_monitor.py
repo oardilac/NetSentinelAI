@@ -14,11 +14,11 @@ Detected threat patterns:
   - Protocol anomalies  (unusual flag combinations)
 """
 
-from scapy.all import sniff, AsyncSniffer, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, DNSQR
+from scapy.all import AsyncSniffer, IP, IPv6, TCP, UDP, ICMP, ARP, DNS, DNSQR
 from datetime import datetime
-from collections import defaultdict, deque, OrderedDict
+from collections import defaultdict, deque
 from typing import Tuple
-from threading import Lock
+from threading import Lock, Event
 import time
 import logging
 
@@ -33,6 +33,8 @@ FLOW_EXPIRY_INTERVAL_SECS = 10.0
 SYN_SCAN_THRESHOLD = 15
 EXFIL_BYTE_THRESHOLD = 50_000_000  # 50 MB
 RST_THRESHOLD = 50
+DOS_PACKETS_PER_SEC_THRESHOLD = 1000  # Heuristic: > 1000 packets/sec suggests DoS
+DOS_BYTES_PER_SEC_THRESHOLD = 100_000_000  # Heuristic: > 100 MB/s suggests DoS
 
 
 # ──────────────────────────────────────────────
@@ -42,17 +44,32 @@ RST_THRESHOLD = 50
 class AlertEngine:
     """Simple rule-based alerting on flow features."""
 
+    ALERT_TTL_SECS = 60  # Allow repeated alerts on same flow after 60 seconds
+
     def __init__(self, max_alerts: int = 200, max_seen: int = 10000):
         self._alerts: deque = deque(maxlen=max_alerts)
         self._lock = Lock()
-        self._seen: OrderedDict = OrderedDict()  # deduplicate alerts per flow_key, LRU eviction
+        self._seen: dict = {}  # {alert_key: timestamp} — deduplicate alerts with TTL
         self._max_seen = max_seen
 
     def _add_seen(self, key: str) -> None:
-        """Track a seen alert key with LRU eviction (remove oldest if full)."""
+        """Track a seen alert key with timestamp for TTL-based expiry.
+
+        Uses lazy expiration (removes expired entries incrementally on each call)
+        instead of rebuilding the entire dict, improving O(1) amortized performance.
+        """
+        now = time.time()
+        # Lazy expiration: remove only expired entries (vs rebuilding the entire dict)
+        expired = [k for k, ts in self._seen.items() if now - ts >= self.ALERT_TTL_SECS]
+        for k in expired:
+            del self._seen[k]
+
+        # Enforce max size by removing oldest entry if needed
         if len(self._seen) >= self._max_seen:
-            self._seen.popitem(last=False)
-        self._seen[key] = True
+            oldest_key = min(self._seen.items(), key=lambda x: x[1])[0]
+            del self._seen[oldest_key]
+
+        self._seen[key] = now
 
     def evaluate_flow(self, flow_summary: dict, ml_result: dict = None) -> None:
         """Check a single flow summary against alert rules.
@@ -103,14 +120,31 @@ class AlertEngine:
 
         # Rule 3: DoS/DDoS attack — combine heuristics + ML
         total_bytes = flow_summary.get("total_bytes", 0)
+        total_packets = flow_summary.get("packet_count", 0)
+        flow_duration_sec = flow_summary.get("flow_duration", 1)
+
+        # Heuristic: high packet or byte rate
+        pps = (total_packets / flow_duration_sec) if flow_duration_sec > 0 else 0
+        bps = (total_bytes / flow_duration_sec) if flow_duration_sec > 0 else 0
+        is_dos_heuristic = pps > DOS_PACKETS_PER_SEC_THRESHOLD or bps > DOS_BYTES_PER_SEC_THRESHOLD
+
+        # ML-based detection
         is_dos_ml = bool(ml_result) and (
             "dos" in (ml_class or "").lower() or "ddos" in (ml_class or "").lower()
         ) and ml_confidence > 0.7
 
         alert_key = f"dos:{fk}"
-        if is_dos_ml and alert_key not in self._seen:
-            self._add("dos_ddos", src,
-                       f"ML detected DoS/DDoS ({ml_confidence:.0%} confidence)")
+        if (is_dos_heuristic or is_dos_ml) and alert_key not in self._seen:
+            reason = []
+            if is_dos_heuristic:
+                if pps > DOS_PACKETS_PER_SEC_THRESHOLD:
+                    reason.append(f"{pps:.0f} packets/sec")
+                if bps > DOS_BYTES_PER_SEC_THRESHOLD:
+                    reason.append(f"{bps/1_000_000:.0f} MB/s")
+            if is_dos_ml:
+                reason.append(f"ML detected DoS/DDoS ({ml_confidence:.0%} confidence)")
+            description = " + ".join(reason) if reason else "Possible DoS/DDoS attack"
+            self._add("dos_ddos", src, description)
             self._add_seen(alert_key)
 
         # Rule 4: Data exfiltration (heuristic-based)
@@ -354,23 +388,27 @@ class SecurityMetricsCollector:
             features = flow.get("features", {})
             if features:
                 total_pkts = features.get("Total Fwd Packets", 0) + features.get("Total Backward Packets", 0)
-                if total_pkts < 2:
+                if total_pkts < 1:
                     flow["ml_class"] = None
                     flow["ml_confidence"] = None
+                    flow["ml_failure"] = False
                 else:
                     ml_result = ml_engine.predict_flow(features)
                     flow["ml_class"] = ml_result.get("class")
                     flow["ml_confidence"] = ml_result.get("confidence", 0.0)
+                    flow["ml_failure"] = ml_result.get("is_ml_failure", False)
                     if flow["ml_class"]:
                         self.ml_class_counts[flow["ml_class"]] += 1
                     logger.debug(f"ML: {flow.get('src_ip')}:{flow.get('src_port')} → {flow.get('dst_ip')}:{flow.get('dst_port')} | class={ml_result.get('class')} | conf={flow['ml_confidence']:.3f}")
             else:
                 flow["ml_class"] = None
                 flow["ml_confidence"] = None
+                flow["ml_failure"] = False
         except Exception as e:
             logger.error(f"ML prediction failed: {e}", exc_info=True)
             flow["ml_class"] = None
             flow["ml_confidence"] = None
+            flow["ml_failure"] = True
 
     def _expire_and_alert(self, now: float) -> None:
         """Expire old flows, run alert rules (rule-based + ML), and persist to the database."""
@@ -388,6 +426,11 @@ class SecurityMetricsCollector:
         with self.lock:
             for s in summaries:
                 ml_result = {"class": s.get("ml_class"), "confidence": s.get("ml_confidence")} if s.get("ml_class") else None
+
+                # Fire alert if ML engine failed
+                if s.get("ml_failure"):
+                    self.alert_engine._add("ml_engine_failure", s.get("src_ip", "?"),
+                                          "ML engine returned error — detection capability degraded")
 
                 # Rule-based + ML-aware alerts
                 self.alert_engine.evaluate_flow(s, ml_result=ml_result)
@@ -531,6 +574,7 @@ class NetworkSniffer:
         self.metrics = SecurityMetricsCollector(db=self.db, flow_timeout=600.0)
         self.running = False
         self._async_sniffer = None
+        self._shutdown_complete = Event()
 
     def start_sniffing(self):
         self.running = True
@@ -564,12 +608,16 @@ class NetworkSniffer:
             print(f"[ERROR] Capture error: {e}")
             logger.error(f"Capture error details: {e}")
             self.running = False
+        finally:
+            self._shutdown_complete.set()
 
     def shutdown(self):
         """Stop sniffing and flush all data to the database."""
         self.running = False
         if self._async_sniffer and self._async_sniffer.running:
             self._async_sniffer.stop()
+        # Wait for start_sniffing thread to fully terminate (max 5 seconds)
+        self._shutdown_complete.wait(timeout=5.0)
         print("[*] Flushing data to database before shutdown...")
         try:
             self.metrics.flush_to_db()

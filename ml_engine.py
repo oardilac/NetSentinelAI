@@ -62,12 +62,13 @@ def predict_flow(feature_dict: dict) -> dict:
             "probabilities": probabilities,
         }
     except Exception as e:
-        logger.error(f"ML prediction failed: {e}", exc_info=True)
+        logger.critical(f"ML PREDICTION FAILURE — Detection engine is degraded: {e}", exc_info=True)
         return {
             "class": "Normal",
             "confidence": 0.0,
             "probabilities": {},
             "error": str(e),
+            "is_ml_failure": True,
         }
 
 

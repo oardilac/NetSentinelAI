@@ -10,7 +10,6 @@ import joblib
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from collections import Counter
 
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder, RobustScaler
@@ -33,6 +32,7 @@ from training_config import (
     RESULTS_DIR,
     PLOTS_DIR,
     build_resampling_strategies,
+    build_ml_pipeline,
 )
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ def run_grid_search(task_type: str):
     
     models_spec = {
         'LightGBM': {
-            'clf': lgb.LGBMClassifier(random_state=RANDOM_STATE, n_jobs=-1, verbose=-1),
+            'clf': lgb.LGBMClassifier(random_state=RANDOM_STATE, n_jobs=1, verbose=-1),
             'grid': {
                 'clf__n_estimators': [100, 200, 300],
                 'clf__learning_rate': [0.01, 0.05, 0.1],
@@ -78,7 +78,7 @@ def run_grid_search(task_type: str):
             }
         },
         'XGBoost': {
-            'clf': XGBClassifier(random_state=RANDOM_STATE, n_jobs=-1, eval_metric='logloss'),
+            'clf': XGBClassifier(random_state=RANDOM_STATE, n_jobs=1, eval_metric='logloss'),
             'grid': {
                 'clf__n_estimators': [100, 200, 300],
                 'clf__max_depth': [5, 7, 10],
@@ -86,7 +86,7 @@ def run_grid_search(task_type: str):
             }
         },
         'RandomForest': {
-            'clf': RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=-1),
+            'clf': RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=1),
             'grid': {
                 'clf__n_estimators': [150, 300],
                 'clf__max_depth': [15, 25, None],
@@ -94,6 +94,10 @@ def run_grid_search(task_type: str):
             }
         }
     }
+    # NOTE: Estimators use n_jobs=1 to prevent CPU oversubscription when GridSearchCV
+    # itself uses n_jobs=-1 (parallel CV folds). This ensures CPU resources are efficiently
+    # distributed: GridSearchCV parallelizes across CV folds, while each estimator
+    # trains sequentially.
 
     cv_results = []
     best_models_metadata = {}
@@ -102,17 +106,18 @@ def run_grid_search(task_type: str):
     for name, spec in models_spec.items():
         print(f"  -> Evaluando arquitectura: {name}...")
 
-        steps = [('scaler', RobustScaler())]
+        pipeline = build_ml_pipeline(spec['clf'], task_type=task_type)
 
-        if task_type == "binary":
-            steps.append(('under', RandomUnderSampler(sampling_strategy="majority", random_state=RANDOM_STATE)))
-        else:
+        # For multi-task, add resampling strategies dynamically
+        if task_type == "multi":
             under_strat, over_strat = build_resampling_strategies(y_train)
-            if under_strat: steps.append(('under', RandomUnderSampler(sampling_strategy=under_strat, random_state=RANDOM_STATE)))
-            if over_strat: steps.append(('smote', SMOTE(sampling_strategy=over_strat, k_neighbors=SMOTE_K_NEIGHBORS, random_state=RANDOM_STATE)))
-            
-        steps.append(('clf', spec['clf']))
-        pipeline = ImbPipeline(steps=steps)
+            steps = list(pipeline.steps)
+            if under_strat:
+                steps.insert(1, ('under', RandomUnderSampler(sampling_strategy=under_strat, random_state=RANDOM_STATE)))
+            if over_strat:
+                idx = 2 if under_strat else 1
+                steps.insert(idx, ('smote', SMOTE(sampling_strategy=over_strat, k_neighbors=SMOTE_K_NEIGHBORS, random_state=RANDOM_STATE)))
+            pipeline = ImbPipeline(steps=steps)
         
         grid = GridSearchCV(pipeline, spec['grid'], cv=cv, scoring=CV_SCORING, n_jobs=-1)
         grid.fit(X_train_filtered, y_train)
@@ -127,7 +132,8 @@ def run_grid_search(task_type: str):
             'best_params': grid.best_params_,
             'best_score': grid.best_score_,
             'features_used': selected_cols,
-            'n_features': n_feats
+            'n_features': n_feats,
+            'model_class_name': name
         }
 
     champion_name = max(best_models_metadata, key=lambda k: best_models_metadata[k]['best_score'])

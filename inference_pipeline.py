@@ -207,7 +207,7 @@ class InferencePipeline:
             "binary_prediction": 1,
             "binary_probability": float(binary_proba[1]),
             "multi_prediction": int(multi_pred),
-            "multi_probability": float(max(multi_proba)),
+            "multi_probability": float(multi_proba[int(multi_pred)]),
             "multi_probabilities": multi_probs_dict,
         }
 
