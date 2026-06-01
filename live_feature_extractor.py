@@ -24,7 +24,7 @@ from collections import OrderedDict
 from threading import Lock
 
 from inc_stat import IncrementalStat
-from feature_schema import FEATURE_COLUMNS
+from feature_schema import FEATURE_COLUMNS, ALL_FEATURES_16
 
 _MICROSECONDS = 1_000_000.0
 MIN_FLOW_DURATION_SECS = 0.001
@@ -200,16 +200,14 @@ class BidirectionalFlowRecord:
         """
         Extract and return 16 core CIC-IDS2017 features (including ACK Flag Count).
 
-        ALWAYS computes all 16 features; inference pipeline (align_features) selects the
-        model-specific subset:
+        ALWAYS computes exactly 16 features optimized for ML models:
         - Binary model: 15 features without ACK Flag Count (uses URG Flag Count)
         - Multi model: 15 features with ACK Flag Count (replaces URG Flag Count)
 
-        Other CIC-IDS2017 features are computed internally but filtered out because
-        they are not part of the core SHAP feature set.
+        Inference pipeline (align_features) selects the model-specific subset per requirements.
 
         Returns:
-            dict with 16 feature names (CIC-IDS2017 names) and float values
+            OrderedDict with exactly 16 feature names (CIC-IDS2017 names) and float values
         """
         features = OrderedDict()
 
@@ -218,85 +216,33 @@ class BidirectionalFlowRecord:
 
         # ── Basic Flow Statistics
         features["Flow Duration"] = flow_duration_us
-
         features["Total Fwd Packets"] = float(self.fwd_pkt_count)
         features["Total Backward Packets"] = float(self.bwd_pkt_count)
-
         features["Total Length of Fwd Packets"] = float(self.fwd_bytes)
         features["Total Length of Bwd Packets"] = float(self.bwd_bytes)
 
-        # ── Fwd Packet Length Statistics
+        # ── Fwd Packet Length Statistics (only Max and Min needed)
         fwd_pkt_stats = self.fwd_pkt_len_stat
         features["Fwd Packet Length Max"] = float(fwd_pkt_stats.max_val) if fwd_pkt_stats.count > 0 else 0.0
         features["Fwd Packet Length Min"] = float(fwd_pkt_stats.min_val) if fwd_pkt_stats.count > 0 else 0.0
-        features["Fwd Packet Length Mean"] = float(fwd_pkt_stats.mean) if fwd_pkt_stats.count > 0 else 0.0
-        features["Fwd Packet Length Std"] = float(fwd_pkt_stats.std) if fwd_pkt_stats.count > 0 else 0.0
 
-        # ── Bwd Packet Length Statistics
+        # ── Bwd Packet Length Statistics (only Max and Min needed)
         bwd_pkt_stats = self.bwd_pkt_len_stat
         features["Bwd Packet Length Max"] = float(bwd_pkt_stats.max_val) if bwd_pkt_stats.count > 0 else 0.0
         features["Bwd Packet Length Min"] = float(bwd_pkt_stats.min_val) if bwd_pkt_stats.count > 0 else 0.0
-        features["Bwd Packet Length Mean"] = float(bwd_pkt_stats.mean) if bwd_pkt_stats.count > 0 else 0.0
-        features["Bwd Packet Length Std"] = float(bwd_pkt_stats.std) if bwd_pkt_stats.count > 0 else 0.0
 
         # ── Flow Rate Features (use minimum duration to avoid extreme rates for zero-duration flows)
         _eff_dur = max((self.last_seen - self.start_time), MIN_FLOW_DURATION_SECS)
-        features["Flow Bytes/s"]   = float(self.fwd_bytes + self.bwd_bytes) / _eff_dur
+        features["Flow Bytes/s"] = float(self.fwd_bytes + self.bwd_bytes) / _eff_dur
         features["Flow Packets/s"] = float(self.fwd_pkt_count + self.bwd_pkt_count) / _eff_dur
 
-        # ── IAT (Flow level) — convert to microseconds to match CIC-IDS2017 training data
-        flow_iat_stats = self.flow_iat_stat
-        features["Flow IAT Mean"] = float(flow_iat_stats.mean) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Std"] = float(flow_iat_stats.std) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Max"] = float(flow_iat_stats.max_val) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
-        features["Flow IAT Min"] = float(flow_iat_stats.min_val) * _MICROSECONDS if flow_iat_stats.count > 0 else 0.0
-
-        # ── IAT (Fwd) — convert to microseconds
-        fwd_iat_stats = self.fwd_iat_stat
-        features["Fwd IAT Total"] = float(self.fwd_iat_total) * _MICROSECONDS
-        features["Fwd IAT Mean"] = float(fwd_iat_stats.mean) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Std"] = float(fwd_iat_stats.std) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Max"] = float(fwd_iat_stats.max_val) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
-        features["Fwd IAT Min"] = float(fwd_iat_stats.min_val) * _MICROSECONDS if fwd_iat_stats.count > 0 else 0.0
-
-        # ── IAT (Bwd) — convert to microseconds
-        bwd_iat_stats = self.bwd_iat_stat
-        features["Bwd IAT Total"] = float(self.bwd_iat_total) * _MICROSECONDS
-        features["Bwd IAT Mean"] = float(bwd_iat_stats.mean) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Std"] = float(bwd_iat_stats.std) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Max"] = float(bwd_iat_stats.max_val) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
-        features["Bwd IAT Min"] = float(bwd_iat_stats.min_val) * _MICROSECONDS if bwd_iat_stats.count > 0 else 0.0
-
-        # ── TCP Flags (Fwd/Bwd)
-        features["Fwd PSH Flags"] = float(self.fwd_psh)
-        features["Bwd PSH Flags"] = float(self.bwd_psh)
-        features["Fwd URG Flags"] = float(self.fwd_urg)
-        features["Bwd URG Flags"] = float(self.bwd_urg)
-
-        # ── Header Lengths
-        features["Fwd Header Length"] = float(self.fwd_header_len)
-        features["Bwd Header Length"] = float(self.bwd_header_len)
-
-        # ── Packet rates per direction (use same _eff_dur from flow rate section above)
-        features["Fwd Packets/s"] = float(self.fwd_pkt_count) / _eff_dur
-        features["Bwd Packets/s"] = float(self.bwd_pkt_count) / _eff_dur
-
-        # ── Overall Packet Length Statistics
-        all_pkt_stats = self.all_pkt_len_stat
-        features["Min Packet Length"] = float(all_pkt_stats.min_val) if all_pkt_stats.count > 0 else 0.0
-        features["Max Packet Length"] = float(all_pkt_stats.max_val) if all_pkt_stats.count > 0 else 0.0
-        features["Packet Length Mean"] = float(all_pkt_stats.mean) if all_pkt_stats.count > 0 else 0.0
-        features["Packet Length Std"] = float(all_pkt_stats.std) if all_pkt_stats.count > 0 else 0.0
-        features["Packet Length Variance"] = float(all_pkt_stats.variance) if all_pkt_stats.count > 0 else 0.0
-
-        # ── TCP Flag Counts (total fwd + bwd)
-        features["FIN Flag Count"] = float(self.fwd_fin + self.bwd_fin)
-        features["SYN Flag Count"] = float(self.fwd_syn + self.bwd_syn)
-        features["RST Flag Count"] = float(self.fwd_rst + self.bwd_rst)
+        # ── TCP Flag Counts (total fwd + bwd, only the 3 flags needed)
         features["PSH Flag Count"] = float(self.fwd_psh + self.bwd_psh)
         features["ACK Flag Count"] = float(self.fwd_ack + self.bwd_ack)
         features["URG Flag Count"] = float(self.fwd_urg + self.bwd_urg)
-        features["ECE Flag Count"] = float(self.fwd_ece + self.bwd_ece)
+
+        # ── Directional PSH Flag
+        features["Fwd PSH Flags"] = float(self.fwd_psh)
 
         # ── Down/Up Ratio (bwd_bytes / fwd_bytes, or 0 if no fwd)
         if self.fwd_bytes > 0:
@@ -304,46 +250,9 @@ class BidirectionalFlowRecord:
         else:
             features["Down/Up Ratio"] = 0.0
 
-        # ── Average Packet Sizes
-        total_pkts = self.fwd_pkt_count + self.bwd_pkt_count
-        total_bytes = self.fwd_bytes + self.bwd_bytes
-        if total_pkts > 0:
-            features["Average Packet Size"] = float(total_bytes) / float(total_pkts)
-        else:
-            features["Average Packet Size"] = 0.0
+        logger.debug(f"[GET_FEATURE_VECTOR] Generated 16 features")
 
-        if self.fwd_pkt_count > 0:
-            features["Avg Fwd Segment Size"] = float(self.fwd_bytes) / float(self.fwd_pkt_count)
-        else:
-            features["Avg Fwd Segment Size"] = 0.0
-
-        if self.bwd_pkt_count > 0:
-            features["Avg Bwd Segment Size"] = float(self.bwd_bytes) / float(self.bwd_pkt_count)
-        else:
-            features["Avg Bwd Segment Size"] = 0.0
-
-        # ── Fwd Header Length.1 (CICFlowMeter bug: same as Fwd Header Length)
-        features["Fwd Header Length.1"] = features["Fwd Header Length"]
-
-        # ── Subflow Features (= total flow features, no segmentation)
-        features["Subflow Fwd Packets"] = float(self.fwd_pkt_count)
-        features["Subflow Fwd Bytes"] = float(self.fwd_bytes)
-        features["Subflow Bwd Packets"] = float(self.bwd_pkt_count)
-        features["Subflow Bwd Bytes"] = float(self.bwd_bytes)
-
-        # ── TCP Init Windows
-        features["Init_Win_bytes_forward"] = float(self.init_win_fwd) if self.init_win_fwd >= 0 else 0.0
-        features["Init_Win_bytes_backward"] = float(self.init_win_bwd) if self.init_win_bwd >= 0 else 0.0
-
-        # ── Data packet count
-        features["act_data_pkt_fwd"] = float(self.act_data_pkt_fwd)
-
-        # ── Min segment size
-        features["min_seg_size_forward"] = float(self.min_seg_size_fwd) if self.min_seg_size_fwd > 0 else 0.0
-
-        logger.debug(f"[GET_FEATURE_VECTOR] Generated {len(features)} features, selecting {len(FEATURE_COLUMNS)} core features")
-
-        return {k: features.get(k, 0.0) for k in FEATURE_COLUMNS}
+        return features
 
     def to_summary(self) -> dict:
         """Return a dashboard-friendly summary dict.

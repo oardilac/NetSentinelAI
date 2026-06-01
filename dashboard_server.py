@@ -187,7 +187,15 @@ def predict():
         flow_key = payload.get("_flow_key")
 
         if flow_key and hasattr(sniffer, "flow_table"):
-            flow = sniffer.flow_table.flows.get(flow_key)
+            import ast
+            parsed_key = flow_key
+            if isinstance(flow_key, str):
+                try:
+                    parsed_key = ast.literal_eval(flow_key)
+                except (ValueError, SyntaxError):
+                    parsed_key = None
+
+            flow = sniffer.flow_table.flows.get(parsed_key) if parsed_key else None
             if flow:
                 flow.ml_class = predicted_class
                 flow.ml_confidence = predicted_confidence
@@ -265,7 +273,7 @@ def debug_ml_counts():
     })
 
 
-@app.route("/api/start")
+@app.route("/api/start", methods=["POST"])
 def start_monitoring():
     global sniffer_thread
 
@@ -280,7 +288,7 @@ def start_monitoring():
     return jsonify({"status": "started", "message": "Monitoring started"})
 
 
-@app.route("/api/stop")
+@app.route("/api/stop", methods=["POST"])
 def stop_monitoring():
     """Stop sniffer and flush current data to database."""
     global sniffer_thread

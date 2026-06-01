@@ -411,6 +411,28 @@ class SecurityMetricsCollector:
 
             active_flows = self.flow_table.get_active_flows()
 
+            # Run ML on active flows to ensure ml_class is set for real-time display
+            for flow in active_flows:
+                # Skip if already classified or insufficient packets
+                if flow.get("ml_class") is None:
+                    features = flow.get("features", {})
+                    if features:
+                        total_pkts = features.get("Total Fwd Packets", 0) + features.get("Total Backward Packets", 0)
+                        if total_pkts >= 2:
+                            try:
+                                self._run_ml_on_flow(flow)
+                                # Also write back to the live BidirectionalFlowRecord
+                                flow_key = flow.get("_flow_key")
+                                if flow_key and hasattr(self, "flow_table"):
+                                    live_flow = self.flow_table.flows.get(flow_key)
+                                    if live_flow:
+                                        live_flow.ml_class = flow.get("ml_class")
+                                        live_flow.ml_confidence = flow.get("ml_confidence")
+                                        logger.debug(f"Updated flow {flow_key} with ml_class={flow.get('ml_class')}")
+                            except Exception as e:
+                                logger.error(f"ML classification failed in get_metrics: {e}", exc_info=True)
+
+
             return {
                 "overview": {
                     "total_packets": self.total_packets,
