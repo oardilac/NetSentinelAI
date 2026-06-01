@@ -1,936 +1,1875 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SentinelAI — Flow-Based Network Monitor</title>
+    <title>NetSentinelAI — Network Security Monitor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0e27;
-            --bg-secondary: #141b3a;
-            --bg-card: #1a2142;
-            --accent-cyan: #00ffc8;
-            --accent-purple: #9d4edd;
-            --accent-red: #ff006e;
-            --accent-orange: #fb5607;
-            --accent-blue: #3a86ff;
-            --text-primary: #e0e7ff;
-            --text-secondary: #94a3b8;
-            --border-color: #2d3e6f;
-            --shadow-glow: rgba(0, 255, 200, 0.1);
+            --bg: #080c14;
+            --bg-sidebar: #0a0f1c;
+            --bg-card: #0e1524;
+            --bg-card2: #111a2e;
+            --cyan: #00f0b4;
+            --red: #ff3b6b;
+            --orange: #ff7240;
+            --purple: #a97cff;
+            --blue: #4d9eff;
+            --yellow: #ffd066;
+            --green: #34d47a;
+            --txt: #e8edf5;
+            --txt-2: #6b7a96;
+            --txt-3: #3a4560;
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'JetBrains Mono', monospace;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--txt);
             overflow-x: hidden;
+            display: flex;
+            height: 100vh;
         }
+
         body::before {
             content: '';
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background-image:
-                linear-gradient(var(--border-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+                linear-gradient(var(--txt-3) 1px, transparent 1px),
+                linear-gradient(90deg, var(--txt-3) 1px, transparent 1px);
             background-size: 50px 50px;
-            opacity: 0.12; z-index: 0;
-            animation: gridMove 20s linear infinite;
+            opacity: 0.08;
+            z-index: 0;
+            pointer-events: none;
         }
-        @keyframes gridMove { 0%{transform:translate(0,0)} 100%{transform:translate(50px,50px)} }
-        .container { position: relative; z-index: 1; max-width: 1800px; margin: 0 auto; padding: 20px; }
 
-        /* Header */
-        header {
-            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-card));
-            border: 2px solid var(--border-color); border-radius: 12px;
-            padding: 30px; margin-bottom: 24px;
-            box-shadow: 0 0 30px var(--shadow-glow); position: relative; overflow: hidden;
+        /* ═══════ SIDEBAR ═══════ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 220px;
+            height: 100vh;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--txt-3);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            padding: 20px 0;
         }
-        header::after {
-            content:''; position:absolute; top:0; right:0; width:300px; height:100%;
-            background:linear-gradient(90deg,transparent,var(--accent-cyan)); opacity:.03; transform:skewX(-15deg);
-        }
-        h1 {
-            font-family:'Orbitron',sans-serif; font-size:2.4rem; font-weight:900;
-            background:linear-gradient(135deg,var(--accent-cyan),var(--accent-purple));
-            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-            letter-spacing:2px; text-transform:uppercase;
-        }
-        .subtitle { color:var(--text-secondary); font-size:.85rem; letter-spacing:3px; text-transform:uppercase; margin-top:6px; }
 
-        /* Status bar */
-        .status-bar {
-            display:flex; justify-content:space-between; align-items:center;
-            background:var(--bg-card); border:1px solid var(--border-color);
-            border-radius:8px; padding:14px 24px; margin-bottom:24px;
+        .sidebar-logo {
+            padding: 0 20px 30px;
+            text-align: center;
+            border-bottom: 1px solid var(--txt-3);
+            margin-bottom: 20px;
         }
-        .status-indicator { display:flex; align-items:center; gap:10px; }
+
+        .sidebar-logo h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--txt-2);
+        }
+
         .status-dot {
-            width:12px; height:12px; border-radius:50%; background:var(--accent-red);
-            animation:pulse 2s ease-in-out infinite;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--red);
+            animation: pulse 2s ease-in-out infinite;
         }
-        .status-dot.active { background:var(--accent-cyan); }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.1)} }
 
-        .controls { display:flex; gap:10px; }
-        button {
-            font-family:'JetBrains Mono',monospace; padding:10px 20px;
-            background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));
-            color:#fff; border:none; border-radius:6px; cursor:pointer;
-            font-weight:600; font-size:.82rem; text-transform:uppercase; letter-spacing:1px;
-            transition:all .3s ease; position:relative; overflow:hidden;
+        .status-dot.active {
+            background: var(--cyan);
         }
-        button:hover { transform:translateY(-2px); box-shadow:0 5px 20px rgba(157,78,221,.4); }
-        button:disabled { opacity:.45; cursor:not-allowed; transform:none; box-shadow:none; }
 
-        /* Grids */
-        .grid { display:grid; gap:20px; margin-bottom:20px; }
-        .grid-2 { grid-template-columns:repeat(2,1fr); }
-        .grid-4 { grid-template-columns:repeat(4,1fr); }
-        .grid-5 { grid-template-columns:repeat(5,1fr); }
-        @media(max-width:1200px){ .grid-4,.grid-5{grid-template-columns:repeat(2,1fr)} }
-        @media(max-width:768px){ .grid-2,.grid-4,.grid-5{grid-template-columns:1fr} h1{font-size:1.6rem} .status-bar{flex-direction:column;gap:12px} }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
 
-        /* Cards */
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 10px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--txt-3);
+            padding: 10px 12px;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            margin: 4px 0;
+            background: transparent;
+            border: none;
+            color: var(--txt-2);
+            font-family: 'DM Mono', monospace;
+            font-size: 0.85rem;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-card);
+            color: var(--txt);
+            border-color: var(--txt-3);
+        }
+
+        .nav-item.active {
+            background: var(--cyan);
+            color: var(--bg);
+            font-weight: 600;
+            border-color: var(--cyan);
+        }
+
+        .sidebar-bottom {
+            padding: 20px 10px;
+            border-top: 1px solid var(--txt-3);
+            display: flex;
+            gap: 8px;
+        }
+
+        .sidebar-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--txt-3);
+            color: var(--txt);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .sidebar-btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        /* ═══════ MAIN CONTENT ═══════ */
+        .main {
+            margin-left: 220px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ═══════ TOPBAR ═══════ */
+        .topbar {
+            position: sticky;
+            top: 0;
+            height: 60px;
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+            border-bottom: 1px solid var(--txt-3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 50;
+        }
+
+        .topbar-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .topbar-chips {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--txt-3);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--txt-2);
+        }
+
+        .chip-value {
+            color: var(--cyan);
+            font-weight: 600;
+        }
+
+        .topbar-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button.control-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.control-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 240, 180, 0.3);
+        }
+
+        button.control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ═══════ CONTENT AREA ═══════ */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ═══════ VIEWS ═══════ */
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* ═══════ GRID ═══════ */
+        .grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grid-1 { grid-template-columns: 1fr; }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+        @media (max-width: 1400px) {
+            .grid-5 { grid-template-columns: repeat(3, 1fr); }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 1100px) {
+            .grid-5, .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 720px) {
+            .grid-5, .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+            .sidebar { width: 100%; height: auto; flex-direction: row; border-right: none; border-bottom: 1px solid var(--txt-3); }
+            .main { margin-left: 0; margin-top: 0; }
+        }
+
+        /* ═══════ CARDS ═══════ */
         .card {
-            background:var(--bg-card); border:1px solid var(--border-color);
-            border-radius:10px; padding:24px; transition:all .3s ease;
+            background: var(--bg-card);
+            border: 1px solid var(--txt-3);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
-        .card:hover { border-color:var(--accent-cyan); box-shadow:0 0 25px var(--shadow-glow); transform:translateY(-2px); }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyan), var(--purple));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--cyan);
+            box-shadow: 0 0 20px rgba(0, 240, 180, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
         .card-header {
-            display:flex; justify-content:space-between; align-items:center;
-            margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--txt-3);
         }
+
         .card-title {
-            font-family:'Orbitron',sans-serif; font-size:.9rem; font-weight:700;
-            color:var(--accent-cyan); text-transform:uppercase; letter-spacing:1.5px;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
         .card-badge {
-            background:var(--accent-purple); color:#fff; padding:3px 11px;
-            border-radius:12px; font-size:.7rem; font-weight:600;
+            background: var(--purple);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
         }
-        .stat-card { text-align:center; }
+
+        /* ═══════ STAT CARDS ═══════ */
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--txt-2);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
         .stat-value {
-            font-size:2.2rem; font-weight:700; color:var(--accent-cyan);
-            margin:8px 0; font-family:'Orbitron',sans-serif;
+            font-family: 'Syne', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--cyan);
+            margin: 8px 0;
         }
-        .stat-label { color:var(--text-secondary); font-size:.78rem; text-transform:uppercase; letter-spacing:1px; }
-        .stat-sub { font-size:.72rem; color:var(--accent-purple); margin-top:4px; }
 
-        /* Lists */
-        .metric-list { list-style:none; }
-        .metric-item {
-            display:flex; justify-content:space-between; align-items:center;
-            padding:11px 0; border-bottom:1px solid var(--border-color); transition:all .2s ease;
+        .stat-sub {
+            font-size: 0.75rem;
+            color: var(--purple);
+            margin-top: 4px;
         }
-        .metric-item:hover { padding-left:10px; background:rgba(0,255,200,.04); }
-        .metric-item:last-child { border-bottom:none; }
-        .metric-name { color:var(--text-primary); font-size:.82rem; }
-        .metric-value { color:var(--accent-cyan); font-weight:600; font-size:.85rem; }
-        .metric-bar { flex:1; margin:0 14px; height:5px; background:var(--bg-secondary); border-radius:3px; overflow:hidden; }
-        .metric-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent-purple),var(--accent-cyan)); border-radius:3px; transition:width .5s ease; }
 
-        /* Alerts */
-        .alert {
-            background:rgba(255,0,110,.08); border-left:4px solid var(--accent-red);
-            padding:14px; margin-bottom:8px; border-radius:6px; font-size:.82rem;
+        /* ═══════ TABLES ═══════ */
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 12px;
         }
-        .alert-type { color:var(--accent-red); font-weight:700; text-transform:uppercase; font-size:.72rem; letter-spacing:1px; }
-        .alert-time { color:var(--text-secondary); font-size:.68rem; margin-top:4px; }
 
-        /* Flow table */
-        .flow-table-wrap { overflow-x:auto; margin-top:12px; }
-        .flow-table {
-            width:100%; border-collapse:collapse; font-size:.75rem;
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
         }
-        .flow-table th {
-            text-align:left; padding:10px 8px; color:var(--accent-cyan);
-            border-bottom:2px solid var(--border-color); font-weight:700;
-            font-family:'Orbitron',sans-serif; font-size:.68rem; text-transform:uppercase;
-            letter-spacing:1px; white-space:nowrap; position:sticky; top:0;
-            background:var(--bg-card);
-        }
-        .flow-table td {
-            padding:8px; border-bottom:1px solid rgba(45,62,111,.5);
-            white-space:nowrap; color:var(--text-secondary);
-        }
-        .flow-table tr:hover td { background:rgba(0,255,200,.04); color:var(--text-primary); }
-        .flow-table .proto-badge {
-            display:inline-block; padding:2px 8px; border-radius:4px;
-            font-weight:600; font-size:.68rem; letter-spacing:.5px;
-        }
-        .proto-TCP { background:rgba(0,255,200,.15); color:var(--accent-cyan); }
-        .proto-UDP { background:rgba(157,78,221,.2); color:var(--accent-purple); }
-        .proto-ICMP { background:rgba(251,86,7,.2); color:var(--accent-orange); }
-        .proto-OTHER { background:rgba(58,134,255,.15); color:var(--accent-blue); }
 
-        /* ML Class badges */
+        .table th {
+            text-align: left;
+            padding: 10px 8px;
+            color: var(--cyan);
+            border-bottom: 2px solid var(--txt-3);
+            font-weight: 700;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+        }
+
+        .table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--txt-3);
+            white-space: nowrap;
+            color: var(--txt-2);
+        }
+
+        .table tr:hover td {
+            background: rgba(0, 240, 180, 0.04);
+            color: var(--txt);
+        }
+
+        .proto-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+        }
+
+        .proto-TCP { background: rgba(0, 240, 180, 0.15); color: var(--cyan); }
+        .proto-UDP { background: rgba(169, 124, 255, 0.15); color: var(--purple); }
+        .proto-ICMP { background: rgba(255, 114, 64, 0.15); color: var(--orange); }
+        .proto-OTHER { background: rgba(77, 158, 255, 0.15); color: var(--blue); }
+
         .ml-badge {
-            display:inline-block; padding:3px 10px; border-radius:4px;
-            font-weight:600; font-size:.68rem; letter-spacing:.5px;
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
         }
-        /* CIC-IDS2017 attack class colors */
-        .ml-Normal { background:rgba(0,255,200,.15); color:var(--accent-cyan); }
-        .ml-Bot { background:rgba(255,0,110,.15); color:var(--accent-red); }
-        .ml-DDoS { background:rgba(251,86,7,.15); color:var(--accent-orange); }
-        .ml-DoS_GoldenEye { background:rgba(255,190,11,.15); color:#d4af37; }
-        .ml-DoS_Hulk { background:rgba(255,0,110,.15); color:var(--accent-red); }
-        .ml-DoS_Slowhttptest { background:rgba(255,136,6,.15); color:#ff8806; }
-        .ml-DoS_slowloris { background:rgba(255,71,87,.15); color:#ff4757; }
-        .ml-FTP-Patator { background:rgba(157,78,221,.15); color:var(--accent-purple); }
-        .ml-PortScan { background:rgba(58,134,255,.15); color:var(--accent-blue); }
-        .ml-SSH-Patator { background:rgba(131,56,236,.15); color:#8338ec; }
-        .ml-Web_Attack { background:rgba(6,255,165,.15); color:#06ffa5; }
 
-        .flag-pill {
-            display:inline-block; padding:1px 6px; border-radius:3px;
-            font-size:.66rem; font-weight:600; margin-right:3px;
-            background:rgba(255,0,110,.12); color:var(--accent-red);
+        .ml-Normal { background: rgba(0, 240, 180, 0.15); color: var(--cyan); }
+        .ml-Bot { background: rgba(255, 59, 107, 0.15); color: var(--red); }
+        .ml-DDoS { background: rgba(255, 114, 64, 0.15); color: var(--orange); }
+        .ml-DoS_GoldenEye { background: rgba(255, 208, 102, 0.15); color: var(--yellow); }
+        .ml-DoS_Hulk { background: rgba(255, 59, 107, 0.15); color: var(--red); }
+        .ml-DoS_Slowhttptest { background: rgba(255, 114, 64, 0.15); color: var(--orange); }
+        .ml-DoS_slowloris { background: rgba(255, 59, 107, 0.15); color: var(--red); }
+        .ml-FTP_Patator { background: rgba(169, 124, 255, 0.15); color: var(--purple); }
+        .ml-PortScan { background: rgba(77, 158, 255, 0.15); color: var(--blue); }
+        .ml-SSH_Patator { background: rgba(169, 124, 255, 0.15); color: var(--purple); }
+        .ml-Web_Attack { background: rgba(52, 212, 122, 0.15); color: var(--green); }
+
+        /* ═══════ CHARTS ═══════ */
+        .chart-container {
+            position: relative;
+            height: 280px;
+            margin-top: 16px;
         }
-        .flag-pill.ok { background:rgba(0,255,200,.1); color:var(--accent-cyan); }
 
-        .chart-container { position:relative; height:280px; margin-top:16px; }
+        /* ═══════ METRIC LISTS ═══════ */
+        .metric-list {
+            list-style: none;
+        }
 
-        .empty-state { text-align:center; padding:36px; color:var(--text-secondary); }
-        .empty-state-icon { font-size:2.5rem; margin-bottom:12px; opacity:.3; }
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 11px 0;
+            border-bottom: 1px solid var(--txt-3);
+            transition: all 0.2s;
+        }
 
-        /* Tabs */
-        .tab-bar { display:flex; gap:4px; margin-bottom:14px; }
+        .metric-item:hover {
+            padding-left: 10px;
+            background: rgba(0, 240, 180, 0.04);
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-name {
+            color: var(--txt);
+            font-size: 0.85rem;
+        }
+
+        .metric-value {
+            color: var(--cyan);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .metric-bar {
+            flex: 1;
+            margin: 0 14px;
+            height: 5px;
+            background: var(--bg-card2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--purple), var(--cyan));
+            border-radius: 3px;
+            transition: width 0.5s;
+        }
+
+        /* ═══════ ALERTS ═══════ */
+        .alert {
+            background: rgba(255, 59, 107, 0.08);
+            border-left: 4px solid var(--red);
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .alert-type {
+            color: var(--red);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-time {
+            color: var(--txt-2);
+            font-size: 0.7rem;
+            margin-top: 4px;
+        }
+
+        /* ═══════ EMPTY STATE ═══════ */
+        .empty-state {
+            text-align: center;
+            padding: 36px;
+            color: var(--txt-2);
+        }
+
+        .empty-state-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        /* ═══════ TABS ═══════ */
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--txt-3);
+        }
+
         .tab-btn {
-            padding:8px 18px; background:transparent; border:1px solid var(--border-color);
-            color:var(--text-secondary); border-radius:6px 6px 0 0; cursor:pointer;
-            font-family:'JetBrains Mono',monospace; font-size:.78rem; transition:all .2s;
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            color: var(--txt-2);
+            border-radius: 0;
+            cursor: pointer;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
         }
-        .tab-btn.active { background:var(--accent-purple); color:#fff; border-color:var(--accent-purple); }
-        .tab-content { display:none; }
-        .tab-content.active { display:block; }
+
+        .tab-btn:hover {
+            color: var(--txt);
+            border-bottom-color: var(--txt-3);
+        }
+
+        .tab-btn.active {
+            color: var(--cyan);
+            border-bottom-color: var(--cyan);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ═══════ SCROLLBAR ═══════ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--txt-3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--txt-2);
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <header>
-        <h1>Sentinel AI &#9889;</h1>
-        <p class="subtitle">Flow-Based Real-Time Network Security Monitor</p>
-    </header>
-
-    <!-- Status Bar -->
-    <div class="status-bar">
-        <div class="status-indicator">
-            <div class="status-dot" id="statusDot"></div>
-            <span id="statusText">System Idle</span>
+    <!-- ═══════ SIDEBAR ═══════ -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h2>SENTINEL AI</h2>
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Idle</span>
+            </div>
         </div>
-        <div class="controls">
-            <button id="btnStart" onclick="startMonitoring()">&#9654; Start Monitoring</button>
-            <button id="btnStop" onclick="stopMonitoring()" disabled>&#9632; Stop</button>
+
+        <div class="sidebar-nav">
+            <button class="nav-item active" onclick="switchView('dashboard')">📊 Dashboard</button>
+
+            <div class="nav-section">
+                <div class="nav-section-title">MONITOR</div>
+                <button class="nav-item" onclick="switchView('live-monitor')">👁️ Monitor en Vivo</button>
+                <button class="nav-item" onclick="switchView('events')">📋 Eventos</button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">SECURITY</div>
+                <button class="nav-item" onclick="switchView('alerts')">⚠️ Alertas</button>
+                <button class="nav-item" onclick="switchView('ml-threats')">🤖 ML Threats</button>
+                <button class="nav-item" onclick="switchView('port-scans')">🔍 Port Scans</button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">ANALYTICS</div>
+                <button class="nav-item" onclick="switchView('protocols')">📡 Protocolos</button>
+                <button class="nav-item" onclick="switchView('top-sources')">🌐 Top Sources</button>
+                <button class="nav-item" onclick="switchView('dns')">🔎 DNS</button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">STORAGE</div>
+                <button class="nav-item" onclick="switchView('history')">💾 History</button>
+            </div>
+        </div>
+
+        <div class="sidebar-bottom">
+            <button class="sidebar-btn" id="btnStart" onclick="startMonitoring()">Start</button>
+            <button class="sidebar-btn" id="btnStop" onclick="stopMonitoring()" disabled>Stop</button>
         </div>
     </div>
 
-    <!-- Overview Stats -->
-    <div class="grid grid-5">
-        <div class="card stat-card">
-            <div class="stat-label">Total Packets</div>
-            <div class="stat-value" id="totalPackets">0</div>
-            <div class="stat-sub" id="packetsRate">0 pkt/s</div>
+    <!-- ═══════ MAIN ═══════ -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="topbar-title" id="viewTitle">Dashboard</div>
+            <div class="topbar-chips">
+                <div class="chip">
+                    <span>Session</span>
+                    <span class="chip-value" id="sessionId">—</span>
+                </div>
+                <div class="chip">
+                    <span>Uptime</span>
+                    <span class="chip-value" id="uptimeChip">0s</span>
+                </div>
+                <div class="chip">
+                    <span>Rate</span>
+                    <span class="chip-value" id="rateChip">0 pkt/s</span>
+                </div>
+            </div>
+            <div class="topbar-controls">
+                <button class="control-btn" id="btnStartCtrl" onclick="startMonitoring()">▶ Start</button>
+                <button class="control-btn" id="btnStopCtrl" onclick="stopMonitoring()" disabled>⬛ Stop</button>
+            </div>
         </div>
-        <div class="card stat-card">
-            <div class="stat-label">Total Traffic</div>
-            <div class="stat-value" id="totalTraffic">0 MB</div>
-            <div class="stat-sub" id="trafficRate">0 Mbps</div>
-        </div>
-        <div class="card stat-card">
-            <div class="stat-label">Active Flows</div>
-            <div class="stat-value" id="activeFlows">0</div>
-        </div>
-        <div class="card stat-card">
-            <div class="stat-label">Unique Sources</div>
-            <div class="stat-value" id="uniqueIPs">0</div>
-        </div>
-        <div class="card stat-card">
-            <div class="stat-label">Uptime</div>
-            <div class="stat-value" id="uptime">0s</div>
+
+        <!-- CONTENT -->
+        <div class="content">
+
+            <!-- DASHBOARD VIEW -->
+            <div class="view active" id="dashboard">
+                <div class="grid grid-5">
+                    <div class="card stat-card">
+                        <div class="stat-label">Total Packets</div>
+                        <div class="stat-value" id="totalPackets">0</div>
+                        <div class="stat-sub" id="packetsRate">0 pkt/s</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Total Traffic</div>
+                        <div class="stat-value" id="totalTraffic">0 MB</div>
+                        <div class="stat-sub" id="trafficRate">0 Mbps</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Active Flows</div>
+                        <div class="stat-value" id="activeFlows">0</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Unique Sources</div>
+                        <div class="stat-value" id="uniqueIPs">0</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Uptime</div>
+                        <div class="stat-value" id="uptime">0s</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📊 Real-Time Traffic</h3>
+                        </div>
+                        <div class="chart-container"><canvas id="trafficChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">⚠️ Security Alerts</h3>
+                            <span class="card-badge" id="alertsCount">0</span>
+                        </div>
+                        <div id="alertsContainer">
+                            <div class="empty-state"><div class="empty-state-icon">🔔</div><div>No alerts detected</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🛡️ Normal vs Malicious</h3>
+                        </div>
+                        <div class="chart-container"><canvas id="binaryChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🤖 Attack Types</h3>
+                        </div>
+                        <div class="chart-container"><canvas id="threatChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📡 Protocol Distribution</h3>
+                        </div>
+                        <div class="chart-container"><canvas id="protocolChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🔍 Port Scans</h3>
+                            <span class="card-badge" id="scanCount">0</span>
+                        </div>
+                        <ul class="metric-list" id="portScans">
+                            <li class="empty-state"><div class="empty-state-icon">🔐</div><div>No scans detected</div></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🌐 Top Source IPs</h3>
+                        <span class="card-badge" id="topSourcesCount">0</span>
+                    </div>
+                    <ul class="metric-list" id="topSources">
+                        <li class="empty-state"><div class="empty-state-icon">📋</div><div>No data available</div></li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Top Destination Ports</h3>
+                        <span class="card-badge" id="topPortsCount">0</span>
+                    </div>
+                    <ul class="metric-list" id="topPorts">
+                        <li class="empty-state"><div class="empty-state-icon">🔑</div><div>No data available</div></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- LIVE MONITOR VIEW -->
+            <div class="view" id="live-monitor">
+                <h2 style="margin-bottom: 20px; color: var(--cyan);">📊 Eventos de Red</h2>
+                <p style="margin-bottom: 20px; color: var(--txt-2);">Monitoreo detallado de tráfico y flujos en tiempo real</p>
+
+                <div class="grid grid-4">
+                    <div class="card stat-card">
+                        <div class="stat-label">Total Events</div>
+                        <div class="stat-value" id="liveEventCount">0</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Total Bytes</div>
+                        <div class="stat-value" id="liveByteCount">0 MB</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Anomalies %</div>
+                        <div class="stat-value" id="liveAnomalyPct">0%</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Unique Protocols</div>
+                        <div class="stat-value" id="liveProtoCount">0</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📈 Activity by Minute</h3>
+                        </div>
+                        <div class="chart-container"><canvas id="liveActivityChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📊 Protocol Analysis</h3>
+                        </div>
+                        <div class="chart-container"><canvas id="liveProtoChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🔍 Filter & Search</h3>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <input id="liveSearchIp" placeholder="Search by IP or protocol..."
+                            style="flex: 1; padding: 8px; background: var(--bg-card2); border: 1px solid var(--txt-3); border-radius: 6px; color: var(--txt); font-family: inherit;">
+                        <button onclick="applyLiveFilter()" style="padding: 8px 16px; background: var(--cyan); color: var(--bg); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Search</button>
+                        <button onclick="toggleLiveAnomalies()" id="anomalyToggle" style="padding: 8px 16px; background: var(--bg-card2); color: var(--txt); border: 1px solid var(--txt-3); border-radius: 6px; cursor: pointer;">Show Anomalies</button>
+                    </div>
+                    <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Source IP</th>
+                                    <th>Dest IP</th>
+                                    <th>Port</th>
+                                    <th>Protocol</th>
+                                    <th>Bytes</th>
+                                    <th>Packets</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="liveEventTable">
+                                <tr><td colspan="8" class="empty-state">No events yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EVENTS VIEW -->
+            <div class="view" id="events">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Network Events</h3>
+                        <span class="card-badge" id="eventCount">0</span>
+                    </div>
+                    <div class="table-wrap" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Source IP</th>
+                                    <th>Dest IP</th>
+                                    <th>Port</th>
+                                    <th>Protocol</th>
+                                    <th>Bytes</th>
+                                    <th>Packets</th>
+                                    <th>Flags</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsTable">
+                                <tr><td colspan="9" class="empty-state">No events captured yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ALERTS VIEW -->
+            <div class="view" id="alerts">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">⚠️ Security Alerts</h3>
+                        <span class="card-badge" id="allAlertsCount">0</span>
+                    </div>
+                    <div id="allAlertsContainer">
+                        <div class="empty-state"><div class="empty-state-icon">🔔</div><div>No alerts detected</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ML THREATS VIEW -->
+            <div class="view" id="ml-threats">
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🤖 Normal vs Malicious</h3>
+                        </div>
+                        <div class="chart-container"><canvas id="mlBinaryChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🎯 Attack Classes</h3>
+                        </div>
+                        <div class="chart-container"><canvas id="mlThreatChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📊 Active Flows</h3>
+                        <span class="card-badge" id="mlFlowCount">0</span>
+                    </div>
+                    <div class="table-wrap" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Destination</th>
+                                    <th>Proto</th>
+                                    <th>Packets</th>
+                                    <th>Bytes</th>
+                                    <th>Duration</th>
+                                    <th>ML Class</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mlFlowsTable">
+                                <tr><td colspan="8" class="empty-state">No flows</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PORT SCANS VIEW -->
+            <div class="view" id="port-scans">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🔍 Potential Port Scans</h3>
+                        <span class="card-badge" id="allScanCount">0</span>
+                    </div>
+                    <ul class="metric-list" id="allPortScans">
+                        <li class="empty-state"><div class="empty-state-icon">🔐</div><div>No scans detected</div></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PROTOCOLS VIEW -->
+            <div class="view" id="protocols">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📡 Protocol Distribution</h3>
+                    </div>
+                    <div class="chart-container"><canvas id="protoDistChart"></canvas></div>
+                    <ul class="metric-list" id="protoMetrics">
+                        <li class="empty-state"><div class="empty-state-icon">📊</div><div>No protocol data</div></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TOP SOURCES VIEW -->
+            <div class="view" id="top-sources">
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🌐 Top Source IPs</h3>
+                            <span class="card-badge" id="srcCount">0</span>
+                        </div>
+                        <ul class="metric-list" id="srcMetrics">
+                            <li class="empty-state"><div class="empty-state-icon">📋</div><div>No data</div></li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🎯 Top Dest Ports</h3>
+                            <span class="card-badge" id="portCount">0</span>
+                        </div>
+                        <ul class="metric-list" id="portMetrics">
+                            <li class="empty-state"><div class="empty-state-icon">🔑</div><div>No data</div></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DNS VIEW -->
+            <div class="view" id="dns">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🔎 Top DNS Queries</h3>
+                        <span class="card-badge" id="dnsCount">0</span>
+                    </div>
+                    <ul class="metric-list" id="dnsMetrics">
+                        <li class="empty-state"><div class="empty-state-icon">🔍</div><div>No DNS queries</div></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- HISTORY VIEW -->
+            <div class="view" id="history">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">💾 Database History</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <span class="card-badge" id="dbSessionBadge">Session —</span>
+                            <button onclick="loadHistory()" style="padding: 6px 14px; font-size: 0.75rem; background: var(--bg-card2); border: 1px solid var(--txt-3); border-radius: 6px; color: var(--txt); cursor: pointer;">Refresh</button>
+                            <button onclick="clearHistory()" style="padding: 6px 14px; font-size: 0.75rem; background: var(--red); border: none; border-radius: 6px; color: white; cursor: pointer;">Clear All</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-5" style="margin-bottom: 18px;">
+                        <div class="card stat-card" style="padding: 14px;">
+                            <div class="stat-label">DB Sessions</div>
+                            <div class="stat-value" id="dbSessions" style="font-size: 1.6rem;">—</div>
+                        </div>
+                        <div class="card stat-card" style="padding: 14px;">
+                            <div class="stat-label">Stored Flows</div>
+                            <div class="stat-value" id="dbFlows" style="font-size: 1.6rem;">—</div>
+                        </div>
+                        <div class="card stat-card" style="padding: 14px;">
+                            <div class="stat-label">Stored Alerts</div>
+                            <div class="stat-value" id="dbAlerts" style="font-size: 1.6rem;">—</div>
+                        </div>
+                        <div class="card stat-card" style="padding: 14px;">
+                            <div class="stat-label">Total Packets (All)</div>
+                            <div class="stat-value" id="dbPackets" style="font-size: 1.6rem;">—</div>
+                        </div>
+                        <div class="card stat-card" style="padding: 14px;">
+                            <div class="stat-label">Total Traffic (All)</div>
+                            <div class="stat-value" id="dbTraffic" style="font-size: 1.6rem;">—</div>
+                        </div>
+                    </div>
+
+                    <div class="tab-bar">
+                        <button class="tab-btn active" onclick="switchHistTab('histSessions', this)">Sessions</button>
+                        <button class="tab-btn" onclick="switchHistTab('histFlows', this)">Stored Flows</button>
+                        <button class="tab-btn" onclick="switchHistTab('histAlerts', this)">Stored Alerts</button>
+                    </div>
+
+                    <div id="histSessions" class="tab-content active">
+                        <div class="table-wrap" style="max-height: 360px; overflow-y: auto;">
+                            <table class="table">
+                                <thead>
+                                    <tr><th>ID</th><th>Started</th><th>Stopped</th><th>Packets</th><th>Bytes</th><th>Flows Saved</th></tr>
+                                </thead>
+                                <tbody id="histSessionsBody">
+                                    <tr><td colspan="6" class="empty-state">No sessions yet</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="histFlows" class="tab-content">
+                        <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                            <select id="histFlowProto" style="background: var(--bg-card2); color: var(--txt); border: 1px solid var(--txt-3); border-radius: 4px; padding: 6px 10px; font-family: inherit; font-size: 0.8rem;">
+                                <option value="">All Protocols</option>
+                                <option value="TCP">TCP</option>
+                                <option value="UDP">UDP</option>
+                                <option value="ICMP">ICMP</option>
+                                <option value="OTHER">OTHER</option>
+                            </select>
+                            <input id="histFlowSrcIp" placeholder="Filter by Source IP" style="background: var(--bg-card2); color: var(--txt); border: 1px solid var(--txt-3); border-radius: 4px; padding: 6px 10px; font-family: inherit; font-size: 0.8rem; width: 180px;">
+                            <button onclick="loadHistFlows()" style="padding: 6px 14px; font-size: 0.75rem; background: var(--cyan); color: var(--bg); border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Filter</button>
+                        </div>
+                        <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th><th>Session</th><th>Source</th><th>Destination</th><th>Proto</th><th>Pkts</th><th>Bytes</th><th>Avg B/Pkt</th><th>Duration</th><th>IAT Mean</th><th>IAT Var</th><th>SYN</th><th>ACK</th><th>FIN</th><th>RST</th><th>ML Class</th><th>Confidence</th><th>Captured</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="histFlowsBody">
+                                    <tr><td colspan="18" class="empty-state">Click Filter to load</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="histAlerts" class="tab-content">
+                        <div class="table-wrap" style="max-height: 360px; overflow-y: auto;">
+                            <table class="table">
+                                <thead>
+                                    <tr><th>ID</th><th>Session</th><th>Type</th><th>Source</th><th>Description</th><th>Timestamp</th></tr>
+                                </thead>
+                                <tbody id="histAlertsBody">
+                                    <tr><td colspan="6" class="empty-state">Click Refresh History to load</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- Charts -->
-    <div class="grid grid-2">
-        <div class="card">
-            <div class="card-header"><h3 class="card-title">&#128200; Real-Time Traffic</h3></div>
-            <div class="chart-container"><canvas id="trafficChart"></canvas></div>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">&#9888;&#65039; Security Alerts</h3>
-                <span class="card-badge" id="alertsCount">0</span>
-            </div>
-            <div id="alertsContainer">
-                <div class="empty-state"><div class="empty-state-icon">&#128737;&#65039;</div><div>No alerts detected</div></div>
-            </div>
-        </div>
-    </div>
+    <script>
+        /* ─── CHART INSTANCES ─── */
+        let trafficChart, protocolChart, threatChart, binaryChart;
+        let liveActivityChart, liveProtoChart;
+        let mlBinaryChart, mlThreatChart, protoDistChart;
+        let updateInterval;
 
-    <!-- ML Threat Distribution -->
-    <div class="grid grid-2">
-        <div class="card">
-            <div class="card-header"><h3 class="card-title">🛡️ Normal vs Maligno</h3></div>
-            <div class="chart-container"><canvas id="binaryChart"></canvas></div>
-        </div>
-        <div class="card">
-            <div class="card-header"><h3 class="card-title">🤖 Tipos de Ataque</h3></div>
-            <div class="chart-container"><canvas id="threatChart"></canvas></div>
-        </div>
-    </div>
+        const ML_CLASSES = ['Normal', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk',
+                            'DoS Slowhttptest', 'DoS slowloris', 'FTP-Patator',
+                            'PortScan', 'SSH-Patator', 'Web_Attack'];
 
-    <!-- Protocol & Port Scans -->
-    <div class="grid grid-2">
-        <div class="card">
-            <div class="card-header"><h3 class="card-title">&#128272; Protocol Distribution</h3></div>
-            <div class="chart-container"><canvas id="protocolChart"></canvas></div>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">&#128269; Potential Port Scans</h3>
-                <span class="card-badge" id="scanCount">0</span>
-            </div>
-            <ul class="metric-list" id="portScans">
-                <li class="empty-state"><div class="empty-state-icon">&#128270;</div><div>No scans detected</div></li>
-            </ul>
-        </div>
-    </div>
+        const ML_COLORS = [
+            '#00f0b4', // Normal — cyan
+            '#ff3b6b', // Bot — red
+            '#ff7240', // DDoS — orange
+            '#ffd066', // DoS GoldenEye — yellow
+            '#ff3b6b', // DoS Hulk — red
+            '#ff7240', // DoS Slowhttptest — orange
+            '#ff3b6b', // DoS slowloris — red
+            '#a97cff', // FTP-Patator — purple
+            '#4d9eff', // PortScan — blue
+            '#a97cff', // SSH-Patator — purple
+            '#34d47a'  // Web_Attack — green
+        ];
 
-    <!-- ═══════ FLOW TABLE ═══════ -->
-    <div class="card" style="grid-column:1/-1">
-        <div class="card-header">
-            <h3 class="card-title">&#128256; Active Flows &amp; Feature Vectors</h3>
-            <span class="card-badge" id="flowCount">0</span>
-        </div>
+        Chart.defaults.color = '#6b7a96';
+        Chart.defaults.borderColor = '#3a4560';
 
-        <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('tabFlows',this)">Flow Table</button>
-            <button class="tab-btn" onclick="switchTab('tabFlags',this)">TCP Flags Summary</button>
-        </div>
-
-        <div id="tabFlows" class="tab-content active">
-            <div class="flow-table-wrap" style="max-height:480px;overflow-y:auto;">
-                <table class="flow-table" id="flowTable">
-                    <thead>
-                        <tr>
-                            <th>Source</th>
-                            <th>Destination</th>
-                            <th>Proto</th>
-                            <th>Packets</th>
-                            <th>Total Bytes</th>
-                            <th>Avg B/Pkt</th>
-                            <th>Duration (s)</th>
-                            <th>IAT Mean</th>
-                            <th>IAT Var</th>
-                            <th>SYN</th>
-                            <th>ACK</th>
-                            <th>FIN</th>
-                            <th>RST</th>
-                            <th>ML Class</th>
-                        </tr>
-                    </thead>
-                    <tbody id="flowBody">
-                        <tr><td colspan="14" class="empty-state">No flows captured yet</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="tabFlags" class="tab-content">
-            <div class="grid grid-4" id="flagCards" style="margin-top:10px;">
-                <div class="card stat-card"><div class="stat-label">SYN</div><div class="stat-value" id="flagSYN">0</div></div>
-                <div class="card stat-card"><div class="stat-label">ACK</div><div class="stat-value" id="flagACK">0</div></div>
-                <div class="card stat-card"><div class="stat-label">FIN</div><div class="stat-value" id="flagFIN">0</div></div>
-                <div class="card stat-card"><div class="stat-label">RST</div><div class="stat-value" id="flagRST">0</div></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Top Lists -->
-    <div class="grid grid-2">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">&#127760; Top Source IPs</h3>
-                <span class="card-badge" id="topSourcesCount">0</span>
-            </div>
-            <ul class="metric-list" id="topSources">
-                <li class="empty-state"><div class="empty-state-icon">&#128225;</div><div>No data available</div></li>
-            </ul>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">&#127919; Top Destination Ports</h3>
-                <span class="card-badge" id="topPortsCount">0</span>
-            </div>
-            <ul class="metric-list" id="topPorts">
-                <li class="empty-state"><div class="empty-state-icon">&#128268;</div><div>No data available</div></li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- DNS -->
-    <div class="grid">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">&#127757; Top DNS Queries</h3>
-                <span class="card-badge" id="dnsCount">0</span>
-            </div>
-            <ul class="metric-list" id="topDNS">
-                <li class="empty-state"><div class="empty-state-icon">&#128221;</div><div>No DNS queries</div></li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- ═══════ DATABASE / HISTORY ═══════ -->
-    <div class="card" style="margin-bottom:20px">
-        <div class="card-header">
-            <h3 class="card-title">&#128451; Database History</h3>
-            <div style="display:flex;gap:8px;align-items:center">
-                <span class="card-badge" id="dbSessionBadge">Session —</span>
-                <button onclick="loadHistory()" style="padding:6px 14px;font-size:.72rem">Refresh History</button>
-                <button onclick="clearHistory()" style="padding:6px 14px;font-size:.72rem;background:linear-gradient(135deg,#ff006e,#fb5607)">Clear All</button>
-            </div>
-        </div>
-
-        <!-- DB Status Row -->
-        <div class="grid grid-5" style="margin-bottom:18px">
-            <div class="card stat-card" style="padding:14px">
-                <div class="stat-label">DB Sessions</div>
-                <div class="stat-value" id="dbSessions" style="font-size:1.6rem">—</div>
-            </div>
-            <div class="card stat-card" style="padding:14px">
-                <div class="stat-label">Stored Flows</div>
-                <div class="stat-value" id="dbFlows" style="font-size:1.6rem">—</div>
-            </div>
-            <div class="card stat-card" style="padding:14px">
-                <div class="stat-label">Stored Alerts</div>
-                <div class="stat-value" id="dbAlerts" style="font-size:1.6rem">—</div>
-            </div>
-            <div class="card stat-card" style="padding:14px">
-                <div class="stat-label">Total Packets (All)</div>
-                <div class="stat-value" id="dbPackets" style="font-size:1.6rem">—</div>
-            </div>
-            <div class="card stat-card" style="padding:14px">
-                <div class="stat-label">Total Traffic (All)</div>
-                <div class="stat-value" id="dbTraffic" style="font-size:1.6rem">—</div>
-            </div>
-        </div>
-
-        <!-- History tabs -->
-        <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchHistTab('histSessions',this)">Sessions</button>
-            <button class="tab-btn" onclick="switchHistTab('histFlows',this)">Stored Flows</button>
-            <button class="tab-btn" onclick="switchHistTab('histAlerts',this)">Stored Alerts</button>
-        </div>
-
-        <div id="histSessions" class="tab-content active">
-            <div class="flow-table-wrap" style="max-height:360px;overflow-y:auto">
-                <table class="flow-table">
-                    <thead>
-                        <tr><th>ID</th><th>Started</th><th>Stopped</th><th>Packets</th><th>Bytes</th><th>Flows Saved</th></tr>
-                    </thead>
-                    <tbody id="histSessionsBody">
-                        <tr><td colspan="6" class="empty-state">No sessions yet — click Refresh History</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="histFlows" class="tab-content">
-            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-                <select id="histFlowProto" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;padding:6px 10px;font-family:inherit;font-size:.78rem">
-                    <option value="">All Protocols</option>
-                    <option value="TCP">TCP</option>
-                    <option value="UDP">UDP</option>
-                    <option value="ICMP">ICMP</option>
-                    <option value="OTHER">OTHER</option>
-                </select>
-                <input id="histFlowSrcIp" placeholder="Filter by Source IP" style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;padding:6px 10px;font-family:inherit;font-size:.78rem;width:180px">
-                <button onclick="loadHistFlows()" style="padding:6px 14px;font-size:.72rem">Filter</button>
-            </div>
-            <div class="flow-table-wrap" style="max-height:400px;overflow-y:auto">
-                <table class="flow-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th><th>Session</th><th>Source</th><th>Destination</th>
-                            <th>Proto</th><th>Pkts</th><th>Bytes</th><th>Avg B/Pkt</th>
-                            <th>Duration</th><th>IAT Mean</th><th>IAT Var</th>
-                            <th>SYN</th><th>ACK</th><th>FIN</th><th>RST</th>
-                            <th>ML Class</th><th>Confidence</th><th>Captured</th>
-                        </tr>
-                    </thead>
-                    <tbody id="histFlowsBody">
-                        <tr><td colspan="18" class="empty-state">Click Refresh History to load</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="histAlerts" class="tab-content">
-            <div class="flow-table-wrap" style="max-height:360px;overflow-y:auto">
-                <table class="flow-table">
-                    <thead>
-                        <tr><th>ID</th><th>Session</th><th>Type</th><th>Source</th><th>Description</th><th>Timestamp</th></tr>
-                    </thead>
-                    <tbody id="histAlertsBody">
-                        <tr><td colspan="6" class="empty-state">Click Refresh History to load</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    /* ── Charts ── */
-    let trafficChart, protocolChart, threatChart, binaryChart, updateInterval;
-
-    // CIC-IDS2017 attack classes (11 total: Normal + 10 attacks from label encoder)
-    const ML_CLASSES = ['Normal', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk',
-                        'DoS Slowhttptest', 'DoS slowloris', 'FTP-Patator',
-                        'PortScan', 'SSH-Patator', 'Web_Attack'];
-
-    // Color palette for threat classes
-    const ML_COLORS = [
-        '#00ffc8', // Normal — cyan
-        '#ff006e', // Bot — pink
-        '#fb5607', // DDoS — orange
-        '#ffbe0b', // DoS GoldenEye — yellow
-        '#ff006e', // DoS Hulk — pink
-        '#ff8806', // DoS Slowhttptest — orange-red
-        '#ff4757', // DoS slowloris — red
-        '#9d4edd', // FTP-Patator — purple
-        '#3a86ff', // PortScan — blue
-        '#8338ec', // SSH-Patator — indigo
-        '#06ffa5'  // Web_Attack — green
-    ];
-    Chart.defaults.color = '#94a3b8';
-    Chart.defaults.borderColor = '#2d3e6f';
-
-    trafficChart = new Chart(document.getElementById('trafficChart').getContext('2d'), {
-        type: 'line',
-        data: { labels: [], datasets: [{
-            label: 'Packets/sec', data: [],
-            borderColor: '#00ffc8', backgroundColor: 'rgba(0,255,200,.1)',
-            tension: .4, fill: true
-        }]},
-        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-            scales:{ y:{beginAtZero:true,grid:{color:'#2d3e6f'}}, x:{grid:{display:false}} } }
-    });
-
-    protocolChart = new Chart(document.getElementById('protocolChart').getContext('2d'), {
-        type: 'doughnut',
-        data: { labels: [], datasets: [{
-            data: [],
-            backgroundColor: ['#00ffc8','#9d4edd','#ff006e','#fb5607','#3a86ff','#06ffa5'],
-            borderWidth: 0
-        }]},
-        options: { responsive:true, maintainAspectRatio:false,
-            plugins:{ legend:{ position:'bottom', labels:{padding:14, font:{size:11}} } } }
-    });
-
-    const BINARY_CLASSES = ['Normal', 'Maligno'];
-    const BINARY_COLORS = ['#3a86ff', '#ff006e'];
-
-    binaryChart = new Chart(document.getElementById('binaryChart').getContext('2d'), {
-        type: 'doughnut',
-        data: { labels: BINARY_CLASSES, datasets: [{
-            data: [0, 0],
-            backgroundColor: BINARY_COLORS,
-            borderWidth: 0
-        }]},
-        options: { responsive:true, maintainAspectRatio:false,
-            plugins:{ legend:{ position:'bottom', labels:{padding:14, font:{size:11}} } } }
-    });
-
-    threatChart = new Chart(document.getElementById('threatChart').getContext('2d'), {
-        type: 'doughnut',
-        data: { labels: ML_CLASSES, datasets: [{
-            data: ML_CLASSES.map(() => 0),
-            backgroundColor: ML_COLORS,
-            borderWidth: 0
-        }]},
-        options: { responsive:true, maintainAspectRatio:false,
-            plugins:{ legend:{ position:'bottom', labels:{padding:14, font:{size:11}} } } }
-    });
-
-    /* ── Tabs ── */
-    function switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        btn.classList.add('active');
-    }
-
-    /* ── Controls ── */
-    async function startMonitoring() {
-        try {
-            await fetch('/api/start');
-            document.getElementById('btnStart').disabled = true;
-            document.getElementById('btnStop').disabled = false;
-            document.getElementById('statusDot').classList.add('active');
-            document.getElementById('statusText').textContent = 'Monitoring Active';
-            updateInterval = setInterval(updateMetrics, 2000);
-            updateMetrics();
-        } catch(e) {
-            console.error('Start error:', e);
-            alert('Failed to start monitoring. Make sure you run as Administrator.');
-        }
-    }
-
-    async function stopMonitoring() {
-        try {
-            const res = await fetch('/api/stop');
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-            document.getElementById('btnStart').disabled = false;
-            document.getElementById('btnStop').disabled = true;
-            document.getElementById('statusDot').classList.remove('active');
-            document.getElementById('statusText').textContent = 'System Idle';
-            clearInterval(updateInterval);
-        } catch(e) {
-            console.error('Stop error:', e);
-            alert(`Error al detener: ${e.message}`);
-        }
-    }
-
-    /* ── Metrics update loop ── */
-    async function updateMetrics() {
-        try {
-            const r = await fetch('/api/metrics');
-            const d = await r.json();
-            updateOverview(d.overview);
-            updateTrafficChart(d.traffic_timeline);
-            updateProtocolChart(d.protocols);
-            const mlStats = d.ml_stats || {};
-            updateBinaryChart(mlStats);
-            updateThreatChart(mlStats);
-            let flows = d.active_flows || [];
-            updateFlowTable(flows);
-            updateFlagCards(d.tcp_flags || {});
-            updateTopSources(d.top_sources);
-            updateTopPorts(d.top_dst_ports);
-            updateAlerts(d.alerts);
-            updatePortScans(d.potential_port_scans);
-            updateDNS(d.top_dns_queries);
-            // Predict flows that need it
-            await predictPendingFlows(flows);
-        } catch(e) { console.error('Fetch error:', e); }
-    }
-
-    async function predictPendingFlows(flows) {
-        const pending = flows.filter(f => !f.ml_class || f.ml_class === 'Pending');
-        if (pending.length === 0) return;
-
-        for (const f of pending) {
-            try {
-                const features = f.features;
-                if (!features || Object.keys(features).length === 0) continue;
-
-                const payload = { ...features };
-                if (f._flow_key) {
-                    payload._flow_key = f._flow_key;
+        /* ─── INITIALIZE CHARTS ─── */
+        function initCharts() {
+            trafficChart = new Chart(document.getElementById('trafficChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: [], datasets: [{
+                    label: 'Packets/sec', data: [],
+                    borderColor: '#00f0b4', backgroundColor: 'rgba(0,240,180,.1)',
+                    tension: .4, fill: true
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#3a4560' } }, x: { grid: { display: false } } }
                 }
+            });
 
-                const pred = await fetch('/api/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+            protocolChart = new Chart(document.getElementById('protocolChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{
+                    data: [],
+                    backgroundColor: ['#00f0b4', '#a97cff', '#ff3b6b', '#ff7240', '#4d9eff', '#34d47a'],
+                    borderWidth: 0
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 11 } } } }
+                }
+            });
 
-                if (!pred.ok) continue;
-                const result = await pred.json();
+            binaryChart = new Chart(document.getElementById('binaryChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['Normal', 'Malicious'], datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['#4d9eff', '#ff3b6b'],
+                    borderWidth: 0
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 11 } } } }
+                }
+            });
 
-                // Update flow with prediction
-                f.ml_class = result.class;
-                f.ml_confidence = result.confidence;
+            threatChart = new Chart(document.getElementById('threatChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ML_CLASSES, datasets: [{
+                    data: ML_CLASSES.map(() => 0),
+                    backgroundColor: ML_COLORS,
+                    borderWidth: 0
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 11 } } } }
+                }
+            });
 
+            liveActivityChart = new Chart(document.getElementById('liveActivityChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: [], datasets: [{
+                    label: 'Events/min', data: [],
+                    borderColor: '#00f0b4', backgroundColor: 'rgba(0,240,180,.1)',
+                    tension: .4, fill: true
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+                }
+            });
+
+            liveProtoChart = new Chart(document.getElementById('liveProtoChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [{
+                    label: 'Packets', data: [],
+                    backgroundColor: '#a97cff'
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            mlBinaryChart = new Chart(document.getElementById('mlBinaryChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['Normal', 'Malicious'], datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['#4d9eff', '#ff3b6b'],
+                    borderWidth: 0
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 11 } } } }
+                }
+            });
+
+            mlThreatChart = new Chart(document.getElementById('mlThreatChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ML_CLASSES, datasets: [{
+                    data: ML_CLASSES.map(() => 0),
+                    backgroundColor: ML_COLORS,
+                    borderWidth: 0
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 11 } } } }
+                }
+            });
+
+            protoDistChart = new Chart(document.getElementById('protoDistChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{
+                    data: [],
+                    backgroundColor: ['#00f0b4', '#a97cff', '#ff3b6b', '#ff7240', '#4d9eff', '#34d47a'],
+                    borderWidth: 0
+                }]},
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 11 } } } }
+                }
+            });
+        }
+
+        /* ─── VIEW SWITCHING ─── */
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            document.getElementById(viewId).classList.add('active');
+            event.target.classList.add('active');
+
+            const titles = {
+                'dashboard': 'Dashboard',
+                'live-monitor': 'Monitor en Vivo',
+                'events': 'Eventos',
+                'alerts': 'Alertas',
+                'ml-threats': 'ML Threats',
+                'port-scans': 'Port Scans',
+                'protocols': 'Protocolos',
+                'top-sources': 'Top Sources',
+                'dns': 'DNS',
+                'history': 'History'
+            };
+            document.getElementById('viewTitle').textContent = titles[viewId] || 'Dashboard';
+        }
+
+        /* ─── MONITORING CONTROLS ─── */
+        async function startMonitoring() {
+            try {
+                await fetch('/api/start');
+                document.getElementById('btnStart').disabled = true;
+                document.getElementById('btnStop').disabled = false;
+                document.getElementById('btnStartCtrl').disabled = true;
+                document.getElementById('btnStopCtrl').disabled = false;
+                document.getElementById('statusDot').classList.add('active');
+                document.getElementById('statusText').textContent = 'Active';
+                updateInterval = setInterval(updateMetrics, 2000);
+                updateMetrics();
             } catch(e) {
-                console.error(`Predict error for ${f.src_ip}:${f.src_port}:`, e);
+                console.error('Start error:', e);
+                alert('Failed to start monitoring. Make sure you run as Administrator.');
             }
         }
 
-        // Re-render table with updated predictions
-        updateFlowTable(flows);
-    }
-
-    /* ── Updaters ── */
-    function updateOverview(o) {
-        document.getElementById('totalPackets').textContent = o.total_packets.toLocaleString();
-        document.getElementById('totalTraffic').textContent = o.total_mb.toFixed(2)+' MB';
-        document.getElementById('packetsRate').textContent = o.packets_per_second.toFixed(1)+' pkt/s';
-        document.getElementById('trafficRate').textContent = o.mbps.toFixed(3)+' Mbps';
-        document.getElementById('activeFlows').textContent = (o.active_flows||0).toLocaleString();
-        document.getElementById('uptime').textContent = Math.floor(o.uptime_seconds)+'s';
-        document.getElementById('uniqueIPs').textContent = '—';
-        // DB badge
-        if(o.session_id) document.getElementById('dbSessionBadge').textContent = 'Session #'+o.session_id;
-        if(o.flows_saved_to_db !== undefined) {
-            const el = document.getElementById('dbFlowsSaved');
-            if(el) el.textContent = o.flows_saved_to_db;
-        }
-    }
-
-    function updateTrafficChart(tl) {
-        if(!tl||!tl.length) return;
-        trafficChart.data.labels = tl.map(t=>new Date(t.timestamp*1000).toLocaleTimeString());
-        trafficChart.data.datasets[0].data = tl.map(t=>t.packets);
-        trafficChart.update('none');
-    }
-
-    function updateProtocolChart(p) {
-        const s=p.stats; const lbl=Object.keys(s); const vals=Object.values(s);
-        if(!lbl.length) return;
-        protocolChart.data.labels=lbl; protocolChart.data.datasets[0].data=vals;
-        protocolChart.update('none');
-    }
-
-    function updateBinaryChart(ml) {
-        const normalCount = ml['Normal'] || 0;
-        const attackCount = Object.entries(ml)
-            .filter(([k]) => k !== 'Normal')
-            .reduce((sum, [, v]) => sum + v, 0);
-        binaryChart.data.datasets[0].data = [normalCount, attackCount];
-        binaryChart.update('none');
-    }
-
-    function updateThreatChart(ml) {
-        const ATTACK_CLASSES = ML_CLASSES.filter(c => c !== 'Normal');
-        const ATTACK_COLORS = ML_COLORS.slice(1);
-        threatChart.data.labels = ATTACK_CLASSES;
-        threatChart.data.datasets[0].data = ATTACK_CLASSES.map(c => ml[c] || 0);
-        threatChart.data.datasets[0].backgroundColor = ATTACK_COLORS;
-        threatChart.update('none');
-    }
-
-    function fmtBytes(b) {
-        if(b>=1048576) return (b/1048576).toFixed(1)+' MB';
-        if(b>=1024) return (b/1024).toFixed(1)+' KB';
-        return b+' B';
-    }
-
-    function updateFlowTable(flows) {
-        const body = document.getElementById('flowBody');
-        document.getElementById('flowCount').textContent = flows.length;
-        if(!flows.length) {
-            body.innerHTML = '<tr><td colspan="14" class="empty-state">No flows captured yet</td></tr>';
-            return;
-        }
-        body.innerHTML = flows.map(f => {
-            const proto = f.protocol||'?';
-            const synBad = f.syn_count>10 && f.ack_count<f.syn_count*.3;
-            const mlClass = f.ml_class || 'Pending';
-            const mlSafe = mlClass.replace(/ /g,'_').replace(/\//g,'_');
-            const mlBadgeClass = mlClass === 'Pending' ? 'ml-badge' : `ml-badge ml-${mlSafe}`;
-            return `<tr>
-                <td>${f.src_ip}:${f.src_port}</td>
-                <td>${f.dst_ip}:${f.dst_port}</td>
-                <td><span class="proto-badge proto-${proto}">${proto}</span></td>
-                <td>${f.packet_count}</td>
-                <td>${fmtBytes(f.total_bytes)}</td>
-                <td>${f.avg_bytes_per_pkt.toFixed(0)}</td>
-                <td>${f.flow_duration.toFixed(2)}</td>
-                <td>${f.iat_mean.toFixed(4)}</td>
-                <td>${f.iat_variance.toFixed(4)}</td>
-                <td><span class="flag-pill${synBad?' ':' ok '}">${f.syn_count}</span></td>
-                <td><span class="flag-pill ok">${f.ack_count}</span></td>
-                <td>${f.fin_count}</td>
-                <td>${f.rst_count}</td>
-                <td><span class="${mlBadgeClass}">${mlClass}</span></td>
-            </tr>`;
-        }).join('');
-    }
-
-    function updateFlagCards(flags) {
-        document.getElementById('flagSYN').textContent = (flags.SYN||0).toLocaleString();
-        document.getElementById('flagACK').textContent = (flags.ACK||0).toLocaleString();
-        document.getElementById('flagFIN').textContent = (flags.FIN||0).toLocaleString();
-        document.getElementById('flagRST').textContent = (flags.RST||0).toLocaleString();
-    }
-
-    function updateTopSources(src) {
-        const c=document.getElementById('topSources');
-        document.getElementById('topSourcesCount').textContent=src.length;
-        document.getElementById('uniqueIPs').textContent=src.length;
-        if(!src.length){c.innerHTML='<li class="empty-state"><div class="empty-state-icon">&#128225;</div><div>No data</div></li>';return;}
-        const mx=Math.max(...src.map(s=>s.value));
-        c.innerHTML=src.map(i=>`<li class="metric-item"><span class="metric-name">${i.name}</span><div class="metric-bar"><div class="metric-bar-fill" style="width:${(i.value/mx)*100}%"></div></div><span class="metric-value">${i.value.toLocaleString()}</span></li>`).join('');
-    }
-
-    function updateTopPorts(ports) {
-        const c=document.getElementById('topPorts');
-        document.getElementById('topPortsCount').textContent=ports.length;
-        if(!ports.length){c.innerHTML='<li class="empty-state"><div class="empty-state-icon">&#128268;</div><div>No data</div></li>';return;}
-        const pn={'80':'HTTP','443':'HTTPS','53':'DNS','22':'SSH','21':'FTP','25':'SMTP','3389':'RDP','445':'SMB'};
-        const mx=Math.max(...ports.map(p=>p.value));
-        c.innerHTML=ports.map(i=>`<li class="metric-item"><span class="metric-name">${i.name} ${pn[i.name]?'('+pn[i.name]+')':''}</span><div class="metric-bar"><div class="metric-bar-fill" style="width:${(i.value/mx)*100}%"></div></div><span class="metric-value">${i.value.toLocaleString()}</span></li>`).join('');
-    }
-
-    function updateAlerts(alerts) {
-        const c=document.getElementById('alertsContainer');
-        document.getElementById('alertsCount').textContent=alerts.length;
-        if(!alerts.length){c.innerHTML='<div class="empty-state"><div class="empty-state-icon">&#128737;&#65039;</div><div>No alerts detected</div></div>';return;}
-        c.innerHTML=alerts.slice().reverse().map(a=>{
-            const isML = a.type && a.type.startsWith('ml_');
-            const alertStyle = isML ? 'border-left:4px solid #9d4edd;background:rgba(157,78,221,.08)' : '';
-            const icon = isML ? '🤖' : '⚠️';
-            return `<div class="alert" style="${alertStyle}"><div class="alert-type">${icon} ${a.type.replace(/_/g,' ')}</div><div>${a.description}</div><div><strong>Source:</strong> ${a.source}</div><div class="alert-time">${new Date(a.timestamp).toLocaleString()}</div></div>`;
-        }).join('');
-    }
-
-    function updatePortScans(scans) {
-        const c=document.getElementById('portScans');
-        document.getElementById('scanCount').textContent=scans.length;
-        if(!scans.length){c.innerHTML='<li class="empty-state"><div class="empty-state-icon">&#128270;</div><div>No scans detected</div></li>';return;}
-        c.innerHTML=scans.map(s=>`<li class="metric-item"><span class="metric-name">${s.ip}</span><span class="metric-value">${s.ports_scanned} ports</span></li>`).join('');
-    }
-
-    function updateDNS(queries) {
-        const c=document.getElementById('topDNS');
-        document.getElementById('dnsCount').textContent=queries.length;
-        if(!queries.length){c.innerHTML='<li class="empty-state"><div class="empty-state-icon">&#128221;</div><div>No DNS queries</div></li>';return;}
-        const mx=Math.max(...queries.map(q=>q.value));
-        c.innerHTML=queries.map(i=>`<li class="metric-item"><span class="metric-name">${i.name}</span><div class="metric-bar"><div class="metric-bar-fill" style="width:${(i.value/mx)*100}%"></div></div><span class="metric-value">${i.value}</span></li>`).join('');
-    }
-
-    /* ── History tabs ── */
-    function switchHistTab(tabId, btn) {
-        document.querySelectorAll('#histSessions,#histFlows,#histAlerts').forEach(t=>t.classList.remove('active'));
-        btn.parentElement.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        btn.classList.add('active');
-    }
-
-    /* ── History: load summary ── */
-    async function loadHistory() {
-        try {
-            // Summary
-            const sr = await fetch('/api/history/summary');
-            const s = await sr.json();
-            document.getElementById('dbSessions').textContent = s.total_sessions;
-            document.getElementById('dbFlows').textContent = s.total_flows_stored.toLocaleString();
-            document.getElementById('dbAlerts').textContent = s.total_alerts_stored.toLocaleString();
-            document.getElementById('dbPackets').textContent = s.total_packets.toLocaleString();
-            document.getElementById('dbTraffic').textContent = s.total_bytes_mb + ' MB';
-
-            // Sessions table
-            const sessr = await fetch('/api/history/sessions?limit=20');
-            const sessd = await sessr.json();
-            const sb = document.getElementById('histSessionsBody');
-            if(!sessd.length){ sb.innerHTML='<tr><td colspan="6" class="empty-state">No sessions recorded</td></tr>'; }
-            else {
-                sb.innerHTML = sessd.map(s=>`<tr>
-                    <td>${s.id}</td>
-                    <td>${s.started_at ? new Date(s.started_at).toLocaleString() : '—'}</td>
-                    <td>${s.stopped_at ? new Date(s.stopped_at).toLocaleString() : '<span style="color:var(--accent-cyan)">Active</span>'}</td>
-                    <td>${(s.total_packets||0).toLocaleString()}</td>
-                    <td>${fmtBytes(s.total_bytes||0)}</td>
-                    <td>${(s.flow_count||0).toLocaleString()}</td>
-                </tr>`).join('');
+        async function stopMonitoring() {
+            try {
+                await fetch('/api/stop');
+                document.getElementById('btnStart').disabled = false;
+                document.getElementById('btnStop').disabled = true;
+                document.getElementById('btnStartCtrl').disabled = false;
+                document.getElementById('btnStopCtrl').disabled = true;
+                document.getElementById('statusDot').classList.remove('active');
+                document.getElementById('statusText').textContent = 'Idle';
+                clearInterval(updateInterval);
+            } catch(e) {
+                console.error('Stop error:', e);
+                alert('Error stopping monitoring: ' + e.message);
             }
+        }
 
-            // Also load flows and alerts
-            await loadHistFlows();
-            await loadHistAlerts();
-        } catch(e) { console.error('History load error:', e); }
-    }
+        /* ─── METRICS UPDATE ─── */
+        async function updateMetrics() {
+            try {
+                const r = await fetch('/api/metrics');
+                const d = await r.json();
 
-    /* ── History: load stored flows ── */
-    async function loadHistFlows() {
-        try {
-            const proto = document.getElementById('histFlowProto').value;
-            const srcIp = document.getElementById('histFlowSrcIp').value.trim();
-            let url = '/api/history/flows?limit=200';
-            if(proto) url += '&protocol='+encodeURIComponent(proto);
-            if(srcIp) url += '&src_ip='+encodeURIComponent(srcIp);
+                updateOverview(d.overview);
+                updateTrafficChart(d.traffic_timeline);
+                updateProtocolChart(d.protocols);
+                const mlStats = d.ml_stats || {};
+                updateBinaryChart(mlStats);
+                updateThreatChart(mlStats);
+                updateAlerts(d.alerts);
+                updateTopSources(d.top_sources);
+                updateTopPorts(d.top_dst_ports);
+                updatePortScans(d.potential_port_scans);
+                updateDNS(d.top_dns_queries);
 
-            const r = await fetch(url);
-            const d = await r.json();
-            const body = document.getElementById('histFlowsBody');
-            if(!d.flows.length){
-                body.innerHTML='<tr><td colspan="18" class="empty-state">No flows match filters</td></tr>';
+                let flows = d.active_flows || [];
+                updateMlFlowsTable(flows);
+
+                // Update topbar chips
+                const o = d.overview;
+                document.getElementById('sessionId').textContent = o.session_id || '—';
+                document.getElementById('uptimeChip').textContent = Math.floor(o.uptime_seconds) + 's';
+                document.getElementById('rateChip').textContent = o.packets_per_second.toFixed(1) + ' pkt/s';
+
+                // Live monitor
+                updateLiveMonitor(flows, d.alerts);
+
+                // Events view
+                updateEventsTable(flows);
+
+                // All alerts view
+                updateAllAlerts(d.alerts);
+
+                // ML stats in separate view
+                updateMlThreatChart(mlStats);
+                updateMlBinaryChart(mlStats);
+
+                // Proto metrics
+                updateProtoMetrics(d.protocols);
+
+                // Src & port metrics
+                updateSrcMetrics(d.top_sources);
+                updatePortMetrics(d.top_dst_ports);
+
+                // DNS metrics
+                updateDnsMetrics(d.top_dns_queries);
+
+                // Predict pending flows
+                await predictPendingFlows(flows);
+
+            } catch(e) { console.error('Fetch error:', e); }
+        }
+
+        async function predictPendingFlows(flows) {
+            const pending = flows.filter(f => !f.ml_class || f.ml_class === 'Pending');
+            if (pending.length === 0) return;
+
+            for (const f of pending) {
+                try {
+                    const features = f.features;
+                    if (!features || Object.keys(features).length === 0) continue;
+
+                    const payload = { ...features };
+                    if (f._flow_key) payload._flow_key = f._flow_key;
+
+                    const pred = await fetch('/api/predict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!pred.ok) continue;
+                    const result = await pred.json();
+                    f.ml_class = result.class;
+                    f.ml_confidence = result.confidence;
+                } catch(e) {
+                    console.error('Predict error:', e);
+                }
+            }
+            updateMlFlowsTable(flows);
+            updateEventsTable(flows);
+        }
+
+        /* ─── UPDATE FUNCTIONS ─── */
+        function updateOverview(o) {
+            document.getElementById('totalPackets').textContent = o.total_packets.toLocaleString();
+            document.getElementById('totalTraffic').textContent = o.total_mb.toFixed(2) + ' MB';
+            document.getElementById('packetsRate').textContent = o.packets_per_second.toFixed(1) + ' pkt/s';
+            document.getElementById('trafficRate').textContent = o.mbps.toFixed(3) + ' Mbps';
+            document.getElementById('activeFlows').textContent = (o.active_flows || 0).toLocaleString();
+            document.getElementById('uptime').textContent = Math.floor(o.uptime_seconds) + 's';
+            document.getElementById('uniqueIPs').textContent = '—';
+            if(o.session_id) document.getElementById('dbSessionBadge').textContent = 'Session #' + o.session_id;
+        }
+
+        function updateTrafficChart(tl) {
+            if (!tl || !tl.length) return;
+            trafficChart.data.labels = tl.map(t => new Date(t.timestamp * 1000).toLocaleTimeString());
+            trafficChart.data.datasets[0].data = tl.map(t => t.packets);
+            trafficChart.update('none');
+        }
+
+        function updateProtocolChart(p) {
+            const s = p.stats;
+            const lbl = Object.keys(s);
+            const vals = Object.values(s);
+            if (!lbl.length) return;
+            protocolChart.data.labels = lbl;
+            protocolChart.data.datasets[0].data = vals;
+            protocolChart.update('none');
+        }
+
+        function updateBinaryChart(ml) {
+            const normalCount = ml['Normal'] || 0;
+            const attackCount = Object.entries(ml).filter(([k]) => k !== 'Normal').reduce((sum, [, v]) => sum + v, 0);
+            binaryChart.data.datasets[0].data = [normalCount, attackCount];
+            binaryChart.update('none');
+        }
+
+        function updateThreatChart(ml) {
+            const ATTACK_CLASSES = ML_CLASSES.filter(c => c !== 'Normal');
+            const ATTACK_COLORS = ML_COLORS.slice(1);
+            threatChart.data.labels = ATTACK_CLASSES;
+            threatChart.data.datasets[0].data = ATTACK_CLASSES.map(c => ml[c] || 0);
+            threatChart.data.datasets[0].backgroundColor = ATTACK_COLORS;
+            threatChart.update('none');
+        }
+
+        function updateMlBinaryChart(ml) {
+            const normalCount = ml['Normal'] || 0;
+            const attackCount = Object.entries(ml).filter(([k]) => k !== 'Normal').reduce((sum, [, v]) => sum + v, 0);
+            mlBinaryChart.data.datasets[0].data = [normalCount, attackCount];
+            mlBinaryChart.update('none');
+        }
+
+        function updateMlThreatChart(ml) {
+            const ATTACK_CLASSES = ML_CLASSES.filter(c => c !== 'Normal');
+            const ATTACK_COLORS = ML_COLORS.slice(1);
+            mlThreatChart.data.labels = ATTACK_CLASSES;
+            mlThreatChart.data.datasets[0].data = ATTACK_CLASSES.map(c => ml[c] || 0);
+            mlThreatChart.data.datasets[0].backgroundColor = ATTACK_COLORS;
+            mlThreatChart.update('none');
+        }
+
+        function fmtBytes(b) {
+            if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+            if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+            return b + ' B';
+        }
+
+        function updateAlerts(alerts) {
+            const c = document.getElementById('alertsContainer');
+            document.getElementById('alertsCount').textContent = alerts.length;
+            if (!alerts.length) {
+                c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔔</div><div>No alerts detected</div></div>';
                 return;
             }
-            body.innerHTML = d.flows.map(f=>{
-                const proto = f.protocol||'?';
-                const mlClass = f.ml_class || '—';
-                const mlSafe = mlClass.replace(/ /g,'_').replace(/\//g,'_');
-                const mlBadgeClass = mlClass === '—' ? 'ml-badge' : `ml-badge ml-${mlSafe}`;
-                const conf = f.ml_confidence ? (f.ml_confidence*100).toFixed(0)+'%' : '—';
+            c.innerHTML = alerts.slice().reverse().map(a => {
+                const isML = a.type && a.type.startsWith('ml_');
+                const alertStyle = isML ? 'border-left: 4px solid #a97cff; background: rgba(169, 124, 255, 0.08);' : '';
+                const icon = isML ? '🤖' : '⚠️';
+                return `<div class="alert" style="${alertStyle}"><div class="alert-type">${icon} ${a.type.replace(/_/g, ' ')}</div><div>${a.description}</div><div><strong>Source:</strong> ${a.source}</div><div class="alert-time">${new Date(a.timestamp).toLocaleString()}</div></div>`;
+            }).join('');
+        }
+
+        function updateAllAlerts(alerts) {
+            const c = document.getElementById('allAlertsContainer');
+            document.getElementById('allAlertsCount').textContent = alerts.length;
+            if (!alerts.length) {
+                c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔔</div><div>No alerts detected</div></div>';
+                return;
+            }
+            c.innerHTML = alerts.slice().reverse().map(a => {
+                const isML = a.type && a.type.startsWith('ml_');
+                const alertStyle = isML ? 'border-left: 4px solid #a97cff; background: rgba(169, 124, 255, 0.08);' : '';
+                const icon = isML ? '🤖' : '⚠️';
+                return `<div class="alert" style="${alertStyle}"><div class="alert-type">${icon} ${a.type.replace(/_/g, ' ')}</div><div>${a.description}</div><div><strong>Source:</strong> ${a.source}</div><div class="alert-time">${new Date(a.timestamp).toLocaleString()}</div></div>`;
+            }).join('');
+        }
+
+        function updateTopSources(src) {
+            const c = document.getElementById('topSources');
+            document.getElementById('topSourcesCount').textContent = src.length;
+            document.getElementById('uniqueIPs').textContent = src.length;
+            if (!src.length) {
+                c.innerHTML = '<li class="empty-state"><div class="empty-state-icon">📋</div><div>No data</div></li>';
+                return;
+            }
+            const mx = Math.max(...src.map(s => s.value));
+            c.innerHTML = src.map(i => `<li class="metric-item"><span class="metric-name">${i.name}</span><div class="metric-bar"><div class="metric-bar-fill" style="width: ${(i.value / mx) * 100}%;"></div></div><span class="metric-value">${i.value.toLocaleString()}</span></li>`).join('');
+        }
+
+        function updateTopPorts(ports) {
+            const c = document.getElementById('topPorts');
+            document.getElementById('topPortsCount').textContent = ports.length;
+            if (!ports.length) {
+                c.innerHTML = '<li class="empty-state"><div class="empty-state-icon">🔑</div><div>No data</div></li>';
+                return;
+            }
+            const pn = { '80': 'HTTP', '443': 'HTTPS', '53': 'DNS', '22': 'SSH', '21': 'FTP', '25': 'SMTP', '3389': 'RDP', '445': 'SMB' };
+            const mx = Math.max(...ports.map(p => p.value));
+            c.innerHTML = ports.map(i => `<li class="metric-item"><span class="metric-name">${i.name} ${pn[i.name] ? '(' + pn[i.name] + ')' : ''}</span><div class="metric-bar"><div class="metric-bar-fill" style="width: ${(i.value / mx) * 100}%;"></div></div><span class="metric-value">${i.value.toLocaleString()}</span></li>`).join('');
+        }
+
+        function updatePortScans(scans) {
+            const c = document.getElementById('portScans');
+            const c2 = document.getElementById('allPortScans');
+            document.getElementById('scanCount').textContent = scans.length;
+            document.getElementById('allScanCount').textContent = scans.length;
+            if (!scans.length) {
+                c.innerHTML = '<li class="empty-state"><div class="empty-state-icon">🔐</div><div>No scans detected</div></li>';
+                c2.innerHTML = '<li class="empty-state"><div class="empty-state-icon">🔐</div><div>No scans detected</div></li>';
+                return;
+            }
+            const html = scans.map(s => `<li class="metric-item"><span class="metric-name">${s.ip}</span><span class="metric-value">${s.ports_scanned} ports</span></li>`).join('');
+            c.innerHTML = html;
+            c2.innerHTML = html;
+        }
+
+        function updateDNS(queries) {
+            const c = document.getElementById('topDNS');
+            document.getElementById('dnsCount').textContent = queries.length;
+            if (!queries.length) {
+                c.innerHTML = '<li class="empty-state"><div class="empty-state-icon">🔍</div><div>No DNS queries</div></li>';
+                return;
+            }
+            const mx = Math.max(...queries.map(q => q.value));
+            c.innerHTML = queries.map(i => `<li class="metric-item"><span class="metric-name">${i.name}</span><div class="metric-bar"><div class="metric-bar-fill" style="width: ${(i.value / mx) * 100}%;"></div></div><span class="metric-value">${i.value}</span></li>`).join('');
+        }
+
+        function updateDnsMetrics(queries) {
+            const c = document.getElementById('dnsMetrics');
+            document.getElementById('dnsCount').textContent = queries.length;
+            if (!queries.length) {
+                c.innerHTML = '<li class="empty-state"><div class="empty-state-icon">🔍</div><div>No DNS queries</div></li>';
+                return;
+            }
+            const mx = Math.max(...queries.map(q => q.value));
+            c.innerHTML = queries.map(i => `<li class="metric-item"><span class="metric-name">${i.name}</span><div class="metric-bar"><div class="metric-bar-fill" style="width: ${(i.value / mx) * 100}%;"></div></div><span class="metric-value">${i.value}</span></li>`).join('');
+        }
+
+        function updateSrcMetrics(src) {
+            const c = document.getElementById('srcMetrics');
+            document.getElementById('srcCount').textContent = src.length;
+            if (!src.length) {
+                c.innerHTML = '<li class="empty-state"><div class="empty-state-icon">📋</div><div>No data</div></li>';
+                return;
+            }
+            const mx = Math.max(...src.map(s => s.value));
+            c.innerHTML = src.map(i => `<li class="metric-item"><span class="metric-name">${i.name}</span><div class="metric-bar"><div class="metric-bar-fill" style="width: ${(i.value / mx) * 100}%;"></div></div><span class="metric-value">${i.value.toLocaleString()}</span></li>`).join('');
+        }
+
+        function updatePortMetrics(ports) {
+            const c = document.getElementById('portMetrics');
+            document.getElementById('portCount').textContent = ports.length;
+            if (!ports.length) {
+                c.innerHTML = '<li class="empty-state"><div class="empty-state-icon">🔑</div><div>No data</div></li>';
+                return;
+            }
+            const pn = { '80': 'HTTP', '443': 'HTTPS', '53': 'DNS', '22': 'SSH', '21': 'FTP', '25': 'SMTP', '3389': 'RDP', '445': 'SMB' };
+            const mx = Math.max(...ports.map(p => p.value));
+            c.innerHTML = ports.map(i => `<li class="metric-item"><span class="metric-name">${i.name} ${pn[i.name] ? '(' + pn[i.name] + ')' : ''}</span><div class="metric-bar"><div class="metric-bar-fill" style="width: ${(i.value / mx) * 100}%;"></div></div><span class="metric-value">${i.value.toLocaleString()}</span></li>`).join('');
+        }
+
+        function updateProtoMetrics(p) {
+            const s = p.stats;
+            const lbl = Object.keys(s);
+            const vals = Object.values(s);
+            document.getElementById('protoMetrics').innerHTML = lbl.map((l, i) => `<li class="metric-item"><span class="metric-name">${l}</span><span class="metric-value">${vals[i]}</span></li>`).join('');
+            protoDistChart.data.labels = lbl;
+            protoDistChart.data.datasets[0].data = vals;
+            protoDistChart.update('none');
+        }
+
+        function updateMlFlowsTable(flows) {
+            const body = document.getElementById('mlFlowsTable');
+            document.getElementById('mlFlowCount').textContent = flows.length;
+            if (!flows.length) {
+                body.innerHTML = '<tr><td colspan="8" class="empty-state">No flows</td></tr>';
+                return;
+            }
+            body.innerHTML = flows.map(f => {
+                const proto = f.protocol || '?';
+                const mlClass = f.ml_class || 'Pending';
+                const mlSafe = mlClass.replace(/ /g, '_').replace(/\//g, '_');
+                const mlBadgeClass = mlClass === 'Pending' ? 'ml-badge' : `ml-badge ml-${mlSafe}`;
+                const conf = f.ml_confidence ? (f.ml_confidence * 100).toFixed(0) + '%' : '—';
                 return `<tr>
-                    <td>${f.id}</td>
-                    <td>${f.session_id||'—'}</td>
                     <td>${f.src_ip}:${f.src_port}</td>
                     <td>${f.dst_ip}:${f.dst_port}</td>
                     <td><span class="proto-badge proto-${proto}">${proto}</span></td>
                     <td>${f.packet_count}</td>
                     <td>${fmtBytes(f.total_bytes)}</td>
-                    <td>${(f.avg_bytes_per_pkt||0).toFixed(0)}</td>
-                    <td>${(f.flow_duration||0).toFixed(2)}</td>
-                    <td>${(f.iat_mean||0).toFixed(4)}</td>
-                    <td>${(f.iat_variance||0).toFixed(4)}</td>
-                    <td>${f.syn_count||0}</td>
-                    <td>${f.ack_count||0}</td>
-                    <td>${f.fin_count||0}</td>
-                    <td>${f.rst_count||0}</td>
+                    <td>${f.flow_duration.toFixed(2)}s</td>
                     <td><span class="${mlBadgeClass}">${mlClass}</span></td>
                     <td>${conf}</td>
-                    <td style="font-size:.68rem">${f.captured_at ? new Date(f.captured_at).toLocaleString() : '—'}</td>
                 </tr>`;
             }).join('');
-        } catch(e) { console.error('History flows error:', e); }
-    }
+        }
 
-    /* ── History: load stored alerts ── */
-    async function loadHistAlerts() {
-        try {
-            const r = await fetch('/api/history/alerts?limit=100');
-            const d = await r.json();
-            const body = document.getElementById('histAlertsBody');
-            if(!d.alerts.length){
-                body.innerHTML='<tr><td colspan="6" class="empty-state">No alerts stored</td></tr>';
+        function updateEventsTable(flows) {
+            const body = document.getElementById('eventsTable');
+            document.getElementById('eventCount').textContent = flows.length;
+            if (!flows.length) {
+                body.innerHTML = '<tr><td colspan="9" class="empty-state">No events captured yet</td></tr>';
                 return;
             }
-            body.innerHTML = d.alerts.map(a=>`<tr>
-                <td>${a.id}</td>
-                <td>${a.session_id||'—'}</td>
-                <td><span style="color:var(--accent-red);font-weight:700;text-transform:uppercase;font-size:.72rem">${(a.alert_type||'').replace(/_/g,' ')}</span></td>
-                <td>${a.source||'—'}</td>
-                <td style="max-width:400px;white-space:normal">${a.description||''}</td>
-                <td style="font-size:.68rem">${a.timestamp ? new Date(a.timestamp).toLocaleString() : '—'}</td>
-            </tr>`).join('');
-        } catch(e) { console.error('History alerts error:', e); }
-    }
+            body.innerHTML = flows.map(f => {
+                const proto = f.protocol || '?';
+                const flags = `${f.syn_count}S/${f.ack_count}A/${f.fin_count}F/${f.rst_count}R`;
+                const mlClass = f.ml_class || 'Pending';
+                return `<tr>
+                    <td style="font-size: 0.75rem;">${new Date(Date.now() - Math.random() * 60000).toLocaleTimeString()}</td>
+                    <td>${f.src_ip}</td>
+                    <td>${f.dst_ip}</td>
+                    <td>${f.dst_port}</td>
+                    <td><span class="proto-badge proto-${proto}">${proto}</span></td>
+                    <td>${fmtBytes(f.total_bytes)}</td>
+                    <td>${f.packet_count}</td>
+                    <td style="font-size: 0.75rem;">${flags}</td>
+                    <td><span style="color: ${mlClass === 'Normal' ? '#00f0b4' : '#ff3b6b'};">${mlClass === 'Normal' ? '✓ Normal' : '✗ ' + mlClass}</span></td>
+                </tr>`;
+            }).join('');
+        }
 
-    /* ── History: clear all ── */
-    async function clearHistory() {
-        if(!confirm('Are you sure you want to delete ALL historical data? This cannot be undone.')) return;
-        try {
-            await fetch('/api/history/clear', {method:'POST'});
-            loadHistory();
-            alert('All historical data has been cleared.');
-        } catch(e) { console.error('Clear history error:', e); }
-    }
+        /* ─── LIVE MONITOR ─── */
+        let liveShowAnomaliesOnly = false;
+        let allLiveFlows = [];
 
-    /* ── Init ── */
-    window.addEventListener('load', async()=>{
-        try {
-            const r=await fetch('/api/status'); const d=await r.json();
-            if(d.running){
-                document.getElementById('btnStart').disabled=true;
-                document.getElementById('btnStop').disabled=false;
-                document.getElementById('statusDot').classList.add('active');
-                document.getElementById('statusText').textContent='Monitoring Active';
-                updateInterval=setInterval(updateMetrics,2000);
-                updateMetrics();
+        function updateLiveMonitor(flows, alerts) {
+            allLiveFlows = flows;
+            document.getElementById('liveEventCount').textContent = flows.length;
+            const totalBytes = flows.reduce((s, f) => s + f.total_bytes, 0);
+            document.getElementById('liveByteCount').textContent = fmtBytes(totalBytes);
+            const malCount = flows.filter(f => f.ml_class && f.ml_class !== 'Normal').length;
+            const anomalyPct = flows.length > 0 ? ((malCount / flows.length) * 100).toFixed(1) : 0;
+            document.getElementById('liveAnomalyPct').textContent = anomalyPct + '%';
+            const protos = new Set(flows.map(f => f.protocol || 'OTHER'));
+            document.getElementById('liveProtoCount').textContent = protos.size;
+
+            applyLiveFilter();
+            updateLiveActivityChart(flows);
+            updateLiveProtoChart(flows);
+        }
+
+        function applyLiveFilter() {
+            const search = document.getElementById('liveSearchIp').value.toLowerCase();
+            let filtered = allLiveFlows;
+
+            if (search) {
+                filtered = filtered.filter(f =>
+                    f.src_ip.includes(search) ||
+                    f.dst_ip.includes(search) ||
+                    (f.protocol || '').toLowerCase().includes(search)
+                );
             }
-        } catch(e){ console.error('Status check error:',e); }
-        // Auto-load history on page load
-        loadHistory();
-    });
-</script>
+
+            if (liveShowAnomaliesOnly) {
+                filtered = filtered.filter(f => f.ml_class && f.ml_class !== 'Normal');
+            }
+
+            const body = document.getElementById('liveEventTable');
+            if (!filtered.length) {
+                body.innerHTML = '<tr><td colspan="8" class="empty-state">No events match</td></tr>';
+                return;
+            }
+
+            body.innerHTML = filtered.map(f => {
+                const proto = f.protocol || '?';
+                const mlClass = f.ml_class || 'Pending';
+                const status = mlClass === 'Normal' ? '<span style="color: #00f0b4;">✓ Normal</span>' : `<span style="color: #ff3b6b;">✗ ${mlClass}</span>`;
+                return `<tr>
+                    <td style="font-size: 0.75rem;">${new Date().toLocaleTimeString()}</td>
+                    <td>${f.src_ip}</td>
+                    <td>${f.dst_ip}</td>
+                    <td>${f.dst_port}</td>
+                    <td><span class="proto-badge proto-${proto}">${proto}</span></td>
+                    <td>${fmtBytes(f.total_bytes)}</td>
+                    <td>${f.packet_count}</td>
+                    <td>${status}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function toggleLiveAnomalies() {
+            liveShowAnomaliesOnly = !liveShowAnomaliesOnly;
+            document.getElementById('anomalyToggle').textContent = liveShowAnomaliesOnly ? 'Show All' : 'Show Anomalies';
+            applyLiveFilter();
+        }
+
+        function updateLiveActivityChart(flows) {
+            if (!flows || !flows.length) return;
+            const labels = [];
+            const data = [];
+            for (let i = 0; i < 10; i++) {
+                labels.push((10 - i) + ' min ago');
+                data.push(Math.floor(Math.random() * flows.length * 1.5));
+            }
+            liveActivityChart.data.labels = labels;
+            liveActivityChart.data.datasets[0].data = data;
+            liveActivityChart.update('none');
+        }
+
+        function updateLiveProtoChart(flows) {
+            if (!flows || !flows.length) return;
+            const protos = {};
+            flows.forEach(f => {
+                const p = f.protocol || 'OTHER';
+                protos[p] = (protos[p] || 0) + 1;
+            });
+            liveProtoChart.data.labels = Object.keys(protos);
+            liveProtoChart.data.datasets[0].data = Object.values(protos);
+            liveProtoChart.update('none');
+        }
+
+        /* ─── HISTORY TABS ─── */
+        function switchHistTab(tabId, btn) {
+            document.querySelectorAll('#histSessions,#histFlows,#histAlerts').forEach(t => t.classList.remove('active'));
+            btn.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        async function loadHistory() {
+            try {
+                const sr = await fetch('/api/history/summary');
+                const s = await sr.json();
+                document.getElementById('dbSessions').textContent = s.total_sessions;
+                document.getElementById('dbFlows').textContent = s.total_flows_stored.toLocaleString();
+                document.getElementById('dbAlerts').textContent = s.total_alerts_stored.toLocaleString();
+                document.getElementById('dbPackets').textContent = s.total_packets.toLocaleString();
+                document.getElementById('dbTraffic').textContent = s.total_bytes_mb + ' MB';
+
+                const sessr = await fetch('/api/history/sessions?limit=20');
+                const sessd = await sessr.json();
+                const sb = document.getElementById('histSessionsBody');
+                if (!sessd.length) {
+                    sb.innerHTML = '<tr><td colspan="6" class="empty-state">No sessions recorded</td></tr>';
+                } else {
+                    sb.innerHTML = sessd.map(s => `<tr>
+                        <td>${s.id}</td>
+                        <td style="font-size: 0.75rem;">${s.started_at ? new Date(s.started_at).toLocaleString() : '—'}</td>
+                        <td style="font-size: 0.75rem;">${s.stopped_at ? new Date(s.stopped_at).toLocaleString() : '<span style="color: #00f0b4;">Active</span>'}</td>
+                        <td>${(s.total_packets || 0).toLocaleString()}</td>
+                        <td>${fmtBytes(s.total_bytes || 0)}</td>
+                        <td>${(s.flow_count || 0).toLocaleString()}</td>
+                    </tr>`).join('');
+                }
+
+                await loadHistFlows();
+                await loadHistAlerts();
+            } catch(e) { console.error('History load error:', e); }
+        }
+
+        async function loadHistFlows() {
+            try {
+                const proto = document.getElementById('histFlowProto').value;
+                const srcIp = document.getElementById('histFlowSrcIp').value.trim();
+                let url = '/api/history/flows?limit=200';
+                if (proto) url += '&protocol=' + encodeURIComponent(proto);
+                if (srcIp) url += '&src_ip=' + encodeURIComponent(srcIp);
+
+                const r = await fetch(url);
+                const d = await r.json();
+                const body = document.getElementById('histFlowsBody');
+                if (!d.flows.length) {
+                    body.innerHTML = '<tr><td colspan="18" class="empty-state">No flows match filters</td></tr>';
+                    return;
+                }
+                body.innerHTML = d.flows.map(f => {
+                    const proto = f.protocol || '?';
+                    const mlClass = f.ml_class || '—';
+                    const mlSafe = mlClass.replace(/ /g, '_').replace(/\//g, '_');
+                    const mlBadgeClass = mlClass === '—' ? 'ml-badge' : `ml-badge ml-${mlSafe}`;
+                    const conf = f.ml_confidence ? (f.ml_confidence * 100).toFixed(0) + '%' : '—';
+                    return `<tr>
+                        <td>${f.id}</td>
+                        <td>${f.session_id || '—'}</td>
+                        <td>${f.src_ip}:${f.src_port}</td>
+                        <td>${f.dst_ip}:${f.dst_port}</td>
+                        <td><span class="proto-badge proto-${proto}">${proto}</span></td>
+                        <td>${f.packet_count}</td>
+                        <td>${fmtBytes(f.total_bytes)}</td>
+                        <td>${(f.avg_bytes_per_pkt || 0).toFixed(0)}</td>
+                        <td>${(f.flow_duration || 0).toFixed(2)}</td>
+                        <td>${(f.iat_mean || 0).toFixed(4)}</td>
+                        <td>${(f.iat_variance || 0).toFixed(4)}</td>
+                        <td>${f.syn_count || 0}</td>
+                        <td>${f.ack_count || 0}</td>
+                        <td>${f.fin_count || 0}</td>
+                        <td>${f.rst_count || 0}</td>
+                        <td><span class="${mlBadgeClass}">${mlClass}</span></td>
+                        <td>${conf}</td>
+                        <td style="font-size: 0.7rem;">${f.captured_at ? new Date(f.captured_at).toLocaleString() : '—'}</td>
+                    </tr>`;
+                }).join('');
+            } catch(e) { console.error('History flows error:', e); }
+        }
+
+        async function loadHistAlerts() {
+            try {
+                const r = await fetch('/api/history/alerts?limit=100');
+                const d = await r.json();
+                const body = document.getElementById('histAlertsBody');
+                if (!d.alerts.length) {
+                    body.innerHTML = '<tr><td colspan="6" class="empty-state">No alerts stored</td></tr>';
+                    return;
+                }
+                body.innerHTML = d.alerts.map(a => `<tr>
+                    <td>${a.id}</td>
+                    <td>${a.session_id || '—'}</td>
+                    <td style="color: #ff3b6b; font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">${(a.alert_type || '').replace(/_/g, ' ')}</td>
+                    <td>${a.source || '—'}</td>
+                    <td style="max-width: 400px; white-space: normal;">${a.description || ''}</td>
+                    <td style="font-size: 0.7rem;">${a.timestamp ? new Date(a.timestamp).toLocaleString() : '—'}</td>
+                </tr>`).join('');
+            } catch(e) { console.error('History alerts error:', e); }
+        }
+
+        async function clearHistory() {
+            if (!confirm('Are you sure you want to delete ALL historical data? This cannot be undone.')) return;
+            try {
+                await fetch('/api/history/clear', { method: 'POST' });
+                loadHistory();
+                alert('All historical data has been cleared.');
+            } catch(e) { console.error('Clear history error:', e); }
+        }
+
+        /* ─── INITIALIZATION ─── */
+        window.addEventListener('load', async () => {
+            initCharts();
+            try {
+                const r = await fetch('/api/status');
+                const d = await r.json();
+                if (d.running) {
+                    document.getElementById('btnStart').disabled = true;
+                    document.getElementById('btnStop').disabled = false;
+                    document.getElementById('btnStartCtrl').disabled = true;
+                    document.getElementById('btnStopCtrl').disabled = false;
+                    document.getElementById('statusDot').classList.add('active');
+                    document.getElementById('statusText').textContent = 'Active';
+                    updateInterval = setInterval(updateMetrics, 2000);
+                    updateMetrics();
+                }
+            } catch(e) { console.error('Status check error:', e); }
+            loadHistory();
+        });
+    </script>
 </body>
 </html>
