@@ -25,6 +25,7 @@ import ml_engine
 import os
 import sys
 import logging
+import csv
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(name)s: %(message)s')
@@ -44,6 +45,10 @@ CORS(app)
 
 sniffer_thread = None
 _shutdown_done = Event()
+
+# Cache for pre-computed model metrics from Results/production_final_metrics.csv
+_MODEL_METRICS_CACHE = None
+_CONFUSION_MATRIX_CACHE = None
 
 # MODULE-LEVEL DEBUG: Log that this file was loaded
 with open('MODULE_LOADED.log', 'w') as f:
@@ -129,6 +134,77 @@ def get_metrics():
     metrics["ml_stats"] = ml_stats
 
     return jsonify(metrics)
+
+
+@app.route("/api/model-metrics")
+def get_model_metrics():
+    """Pre-computed model evaluation metrics from Results/production_final_metrics.csv."""
+    global _MODEL_METRICS_CACHE
+
+    if _MODEL_METRICS_CACHE is None:
+        try:
+            path = os.path.join(os.path.dirname(__file__), "Results", "production_final_metrics.csv")
+            rows = []
+            with open(path, newline="") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    rows.append(row)
+            _MODEL_METRICS_CACHE = rows
+        except Exception as e:
+            logger.error(f"Failed to load model metrics: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    return jsonify(_MODEL_METRICS_CACHE)
+
+
+@app.route("/api/confusion-matrix")
+def get_confusion_matrix():
+    """Extract confusion matrix values from Results/plots/confusion_matrix_binary.html."""
+    global _CONFUSION_MATRIX_CACHE
+
+    if _CONFUSION_MATRIX_CACHE is None:
+        try:
+            import re
+            path = os.path.join(os.path.dirname(__file__), "Results", "plots", "confusion_matrix_binary.html")
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+
+            # Extract values from Plotly annotations (text elements in the heatmap)
+            # Pattern: "text":"VALUE","x":"COLUMN","xref":"x","y":"ROW","yref":"y"
+            # Extract all numeric values from text annotations in the heatmap
+            pattern = r'"text":"(\d+)","x":"([^"]+)","xref":"x","y":"([^"]+)","yref":"y"'
+            matches = re.findall(pattern, content)
+
+            if matches and len(matches) >= 4:
+                # Build a dict mapping (real_label, predicted_label) -> value
+                matrix_values = {}
+                for text, x_label, y_label in matches:
+                    matrix_values[(y_label, x_label)] = int(text)
+
+                # Extract specific values:
+                # BENIGN (real) -> BENIGN (predicted) = TN
+                # BENIGN (real) -> Ataque (predicted) = FP
+                # Ataque (real) -> BENIGN (predicted) = FN
+                # Ataque (real) -> Ataque (predicted) = TP
+                tn = matrix_values.get(("BENIGN", "BENIGN"), 0)
+                fp = matrix_values.get(("BENIGN", "Ataque"), 0)
+                fn = matrix_values.get(("Ataque", "BENIGN"), 0)
+                tp = matrix_values.get(("Ataque", "Ataque"), 0)
+
+                _CONFUSION_MATRIX_CACHE = {
+                    "tn": tn,
+                    "fp": fp,
+                    "fn": fn,
+                    "tp": tp
+                }
+            else:
+                logger.warning(f"Could not extract confusion matrix values. Found {len(matches)} matches.")
+                _CONFUSION_MATRIX_CACHE = {"tn": None, "fp": None, "fn": None, "tp": None}
+        except Exception as e:
+            logger.error(f"Failed to load confusion matrix: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    return jsonify(_CONFUSION_MATRIX_CACHE)
 
 
 @app.route("/api/flows")

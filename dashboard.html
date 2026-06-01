@@ -1100,6 +1100,14 @@ function showView(id, el) {
   el.classList.add('active');
   // Show DB section only on monitor view
   document.getElementById('db-section').style.display = (id === 'monitor') ? 'block' : 'none';
+  // Load model metrics and refresh top sources when opening analisis view
+  if (id === 'analisis') {
+    loadModelMetrics();
+    const html = _lastTopSources.length
+      ? buildMetricRows(_lastTopSources, false)
+      : '<div class="empty"><div class="empty-icon">📡</div>No data available</div>';
+    document.getElementById('analyticsTopSources').innerHTML = html;
+  }
 }
 
 /* ═══════════════════════════════════
@@ -1308,6 +1316,7 @@ function switchHistTab(id, btn) {
 ═══════════════════════════════════ */
 let updateInterval;
 let _lastAlerts = [];
+let _lastTopSources = [];
 let _showAnomalyOnly = false;
 
 function setMonitoringState(running) {
@@ -1504,20 +1513,44 @@ function updateMLCharts(ml) {
   document.getElementById('soc-critical').textContent = Math.floor(attackTotal*.2)||'—';
   document.getElementById('soc-active').textContent   = attackTotal||'—';
   document.getElementById('soc-critical-sub').textContent = `+${Math.floor(attackTotal*.5)} alertas de alto riesgo`;
-  // Analisis view radar
-  const acc=normal>0?(normal/(normal+attackTotal)*100).toFixed(0):0;
-  const pre=attackTotal>0?((1-(attackTotal*.15)/Math.max(attackTotal,1))*100).toFixed(0):0;
-  radarChart.data.datasets[0].data = [acc,pre,70,60];
-  radarChart.update('none');
-  document.getElementById('m-accuracy').textContent  = acc+'%';
-  document.getElementById('m-precision').textContent = pre+'%';
-  document.getElementById('m-recall').textContent    = '—';
-  document.getElementById('m-f1').textContent        = '—';
-  // CM
-  document.getElementById('cm-tp').textContent = Math.floor(attackTotal*.7)||'—';
-  document.getElementById('cm-fp').textContent = Math.floor(attackTotal*.15)||'—';
-  document.getElementById('cm-tn').textContent = normal||'—';
-  document.getElementById('cm-fn').textContent = Math.floor(attackTotal*.15)||'—';
+  // NOTE: Analisis view metrics (m-accuracy, m-precision, m-recall, m-f1, cm-*) are now
+  // managed exclusively by loadModelMetrics() which reads from /api/model-metrics endpoint.
+  // They are NOT updated by live flow metrics to avoid conflicts.
+}
+
+async function loadModelMetrics() {
+  try {
+    const r = await fetch('/api/model-metrics');
+    if(!r.ok) return;
+    const rows = await r.json();
+    const binaryRow = rows.find(row => row.Tarea === 'binary' || row.Tarea === 'Binary');
+    if(!binaryRow) return;
+    const acc = parseFloat(binaryRow.Accuracy) * 100;
+    const pre = parseFloat(binaryRow.Precision) * 100;
+    const rec = parseFloat(binaryRow.Recall) * 100;
+    const f1 = parseFloat(binaryRow.F1_Score) * 100;
+    document.getElementById('m-accuracy').textContent = acc.toFixed(2) + '%';
+    document.getElementById('m-precision').textContent = pre.toFixed(2) + '%';
+    document.getElementById('m-recall').textContent = rec.toFixed(2) + '%';
+    document.getElementById('m-f1').textContent = f1.toFixed(2) + '%';
+    radarChart.data.datasets[0].data = [acc.toFixed(0), pre.toFixed(0), rec.toFixed(0), f1.toFixed(0)];
+    radarChart.update('none');
+    // Load confusion matrix from pre-computed plot
+    try {
+      const cmResp = await fetch('/api/confusion-matrix');
+      if(cmResp.ok) {
+        const cm = await cmResp.json();
+        document.getElementById('cm-tp').textContent = cm.tp || '—';
+        document.getElementById('cm-fp').textContent = cm.fp || '—';
+        document.getElementById('cm-tn').textContent = cm.tn || '—';
+        document.getElementById('cm-fn').textContent = cm.fn || '—';
+      }
+    } catch(cmErr) {
+      console.warn('Failed to load confusion matrix:', cmErr);
+    }
+  } catch(e) {
+    console.warn('Failed to load model metrics:', e);
+  }
 }
 
 function updateFlowTable(flows) {
@@ -1664,6 +1697,7 @@ function updatePortScans(scans) {
 }
 
 function updateTopSources(src) {
+  _lastTopSources = src;
   document.getElementById('topSourcesCount').textContent = src.length;
   document.getElementById('uniqueIPs').textContent = src.length;
   const html = src.length
@@ -1886,6 +1920,7 @@ window.addEventListener('load', async () => {
     }
   } catch(e) {}
   loadHistory();
+  loadModelMetrics();
 });
 </script>
 </body>
